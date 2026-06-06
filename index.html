@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TutorApp</title>
+<meta name="description" content="Управление репетиторством: расписание, ученики, финансы"/>
+<meta name="color-scheme" content="light"/>
+<meta name="theme-color" content="#fffdf2"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='24' fill='%230a0a0a'/><text x='96' y='140' text-anchor='middle' font-size='120' font-family='sans-serif' font-weight='900' fill='%23FFE500'>T</text></svg>"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23181713'/%3E%3Cpath d='M9 8h14v4H9zM9 14h14v4H9zM9 20h10v4H9z' fill='%23ffd84d'/%3E%3C/svg%3E"/>
+<script src="./vendor/react.production.min.js"></script>
+<script src="./vendor/react-dom.production.min.js"></script>
+<script>
+if (location.protocol !== 'file:') {
+  const manifestLink = document.createElement('link');
+  manifestLink.rel = 'manifest';
+  manifestLink.href = 'manifest.json';
+  document.head.appendChild(manifestLink);
+}
+</script>
+<link rel="stylesheet" href="./styles.css?v=71"/>
+</head>
+<body>
+<div id="root"></div>
+<script src="./financeLogic.js?v=2"></script>
+<script src="./app.js?v=80"></script>
+</body>
+</html>
