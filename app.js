@@ -1652,11 +1652,18 @@ const useSwipe = (onLeft, onRight, threshold = 60) => {
     if (!el) return;
     let sx = 0,
       sy = 0;
+    const ignored = target => target?.closest?.('.mobile-week-table-shell, .mobile-week-table-scroll, .schedule-grid-wrap, .modal, .modal-overlay, button, input, textarea, select');
     const ts = e => {
+      if (ignored(e.target)) {
+        sx = null;
+        sy = null;
+        return;
+      }
       sx = e.touches[0].clientX;
       sy = e.touches[0].clientY;
     };
     const te = e => {
+      if (sx === null || sy === null || ignored(e.target)) return;
       const dx = e.changedTouches[0].clientX - sx,
         dy = e.changedTouches[0].clientY - sy;
       if (Math.abs(dx) > threshold && Math.abs(dy) < Math.abs(dx) * 0.6) {
@@ -5986,11 +5993,13 @@ function GroupDetailModal({
   students,
   lessons,
   onClose,
-  onEdit
+  onEdit,
+  onStopGroup
 }) {
   const members = group.studentIds.map(id => students.find(s => sameId(s.id, id))).filter(Boolean);
   const groupLessons = lessons.filter(l => l.type === 'group' && sameId(l.targetId, group.id));
-  const upcoming = groupLessons.filter(l => l.status === 'planned').sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)).slice(0, 5);
+  const plannedLessons = groupLessons.filter(l => l.status === 'planned').sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  const upcoming = plannedLessons.slice(0, 5);
   const completedCount = groupLessons.filter(l => l.status === 'completed').length;
   return _jsxs(Modal, {
     title: `${group.emoji ? group.emoji + ' ' : ''}${getGroupDisplayName(group, students)}`,
@@ -6007,7 +6016,7 @@ function GroupDetailModal({
         children: group.subject || 'История'
       }), _jsxs("span", {
         className: "group-detail-meta",
-        children: [completedCount, " \u043F\u0440\u043E\u0432\u0435\u0434\u0435\u043D\u043E \xB7 ", upcoming.length, " \u0437\u0430\u043F\u043B\u0430\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u043E"]
+        children: [completedCount, " \u043F\u0440\u043E\u0432\u0435\u0434\u0435\u043D\u043E \xB7 ", plannedLessons.length, " \u0437\u0430\u043F\u043B\u0430\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u043E"]
       }), group.archived && _jsx("span", {
         className: "badge badge-yellow",
         children: "\u0410\u0420\u0425\u0418\u0412"
@@ -6050,6 +6059,20 @@ function GroupDetailModal({
           children: l.time
         })]
       }, l.id))
+    }), _jsxs("div", {
+      className: "group-detail-stop-panel",
+      children: [_jsxs("div", {
+        children: [_jsx("strong", {
+          children: "\u0413\u0440\u0443\u043F\u043F\u0430 \u0440\u0430\u0441\u043F\u0430\u043B\u0430\u0441\u044C?"
+        }), _jsxs("span", {
+          children: ["\u0423\u0431\u0435\u0440\u0451\u0442 \u0431\u0443\u0434\u0443\u0449\u0438\u0435 \u0443\u0440\u043E\u043A\u0438 \u0438\u0437 \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u044F, \u043D\u043E \u043E\u0441\u0442\u0430\u0432\u0438\u0442 \u0438\u0441\u0442\u043E\u0440\u0438\u044E, \u043E\u043F\u043B\u0430\u0442\u044B \u0438 \u043F\u0440\u043E\u0432\u0435\u0434\u0451\u043D\u043D\u044B\u0435 \u0437\u0430\u043D\u044F\u0442\u0438\u044F. \u0421\u0435\u0439\u0447\u0430\u0441 \u0432 \u043F\u043B\u0430\u043D\u0435: ", plannedLessons.length]
+        })]
+      }), _jsx("button", {
+        className: "btn btn-white btn-sm",
+        onClick: onStopGroup,
+        disabled: group.archived && plannedLessons.length === 0,
+        children: group.archived && plannedLessons.length === 0 ? "\u0413\u0440\u0443\u043F\u043F\u0430 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u0430" : "\u041E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C"
+      })]
     }), _jsxs("div", {
       className: "modal-actions group-detail-actions",
       children: [_jsx("button", {
@@ -7003,6 +7026,26 @@ function App() {
     setTxs(cleanedFinance.txs);
     triggerUndo('Группа удалена', snapL, snapS, snapT, snapG);
   };
+  const stopGroupLessons = id => {
+    const group = groups.find(g => sameId(g.id, id));
+    if (!group) return;
+    const plannedLessons = lessons.filter(l => l.type === 'group' && sameId(l.targetId, id) && l.status === 'planned');
+    const title = getGroupDisplayName(group, students);
+    const message = plannedLessons.length ? `Остановить группу "${title}"?\n\nБудущие уроки будут удалены из расписания: ${plannedLessons.length}.\nИстория проведённых занятий и оплаты останутся.` : `Перенести группу "${title}" в архив?\n\nБудущих уроков нет. История и оплаты останутся.`;
+    if (!confirm(message)) return;
+    const snapL = [...lessons],
+      snapS = [...students],
+      snapT = [...txs],
+      snapG = [...groups];
+    setGroups(groups.map(g => sameId(g.id, id) ? {
+      ...g,
+      archived: true,
+      stoppedAt: getTodayDate()
+    } : g));
+    setLessons(lessons.filter(l => !(l.type === 'group' && sameId(l.targetId, id) && l.status === 'planned')));
+    setModal(null);
+    triggerUndo('Занятия группы остановлены', snapL, snapS, snapT, snapG);
+  };
   const saveTx = data => {
     const edit = modal?.type === 'transaction' && modal?.payload?.id ? modal?.payload : null;
     const nextState = financeCore.saveTransactionState({
@@ -7598,10 +7641,12 @@ function App() {
     const todayLessons = lessons.filter(l => l.date === getTodayDate()).sort((a, b) => a.time.localeCompare(b.time));
     const activeStudents = students.filter(s => !s.archived);
     const debt = activeStudents.filter(s => s.balance < 0).reduce((s, st) => s + Math.abs(st.balance), 0);
-    const debtors = activeStudents.filter(s => s.balance < 0).length;
+    const debtorStudents = activeStudents.filter(s => s.balance < 0).sort((a, b) => a.balance - b.balance);
+    const debtors = debtorStudents.length;
     const now = new Date();
     const plannedToday = todayLessons.filter(l => l.status === 'planned');
     const dueToday = plannedToday.filter(l => new Date(`${l.date}T${l.time}`) <= now);
+    const dueChargeTotal = dueToday.reduce((sum, lesson) => sum + getLessonStudents(lesson, students, groups).reduce((subtotal, student) => subtotal + getLessonRate(lesson, student, groups), 0), 0);
     const todayTxs = txs.filter(tx => tx.date === getTodayDate());
     const earnedToday = todayTxs.filter(tx => tx.type === 'payment').reduce((s, tx) => s + tx.amount, 0);
     const chargedToday = todayTxs.filter(tx => tx.type === 'charge').reduce((s, tx) => s + tx.amount, 0);
@@ -7753,6 +7798,64 @@ function App() {
         }),
         secondary: "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0435\u043C\u043E-\u0433\u0440\u0443\u043F\u043F\u0443",
         onSecondary: () => loadDemoData(groups.length || txs.length ? true : false)
+      }), _jsxs("section", {
+        className: "today-work-panel",
+        children: [_jsxs("div", {
+          className: "today-work-head",
+          children: [_jsxs("div", {
+            children: [_jsx("span", {
+              children: "\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0444\u043E\u043A\u0443\u0441"
+            }), _jsx("strong", {
+              children: "\u0427\u0442\u043E \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u0441\u0435\u0433\u043E\u0434\u043D\u044F"
+            })]
+          }), _jsx("button", {
+            type: "button",
+            className: "btn btn-sm btn-black today-work-add",
+            onClick: () => setModal({
+              type: 'lesson',
+              payload: {
+                date: getTodayDate()
+              }
+            }),
+            children: "+ \u0423\u0440\u043E\u043A"
+          })]
+        }), _jsxs("div", {
+          className: "today-work-grid",
+          children: [_jsxs("button", {
+            type: "button",
+            className: `today-work-card ${dueToday.length ? 'hot' : 'done'}`,
+            onClick: dueToday.length ? closeTodayLessons : () => setTab('schedule'),
+            children: [_jsx("span", {
+              children: "\u0417\u0430\u043A\u0440\u044B\u0442\u044C \u0443\u0440\u043E\u043A\u0438"
+            }), _jsx("strong", {
+              children: dueToday.length ? `${dueToday.length} \u0443\u0440.` : "\u0433\u043E\u0442\u043E\u0432\u043E"
+            }), _jsx("small", {
+              children: dueToday.length ? `\u043E\u0440\u0438\u0435\u043D\u0442\u0438\u0440 \u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0439: ${money(dueChargeTotal)}` : "\u043F\u0440\u043E\u0448\u0435\u0434\u0448\u0438\u0445 \u043D\u0435\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043D\u0435\u0442"
+            })]
+          }), _jsxs("button", {
+            type: "button",
+            className: `today-work-card ${debtors ? 'debt' : 'done'}`,
+            onClick: () => setTab('finance'),
+            children: [_jsx("span", {
+              children: "\u0414\u043E\u043B\u0433\u0438"
+            }), _jsx("strong", {
+              children: debtors ? money(debt) : "\u043D\u0435\u0442"
+            }), _jsx("small", {
+              children: debtors ? `${debtors} \u0447\u0435\u043B. \u00B7 \u043E\u0442\u043A\u0440\u044B\u0442\u044C \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u044C` : "\u0431\u0430\u043B\u0430\u043D\u0441\u044B \u0447\u0438\u0441\u0442\u044B\u0435"
+            })]
+          }), _jsxs("button", {
+            type: "button",
+            className: "today-work-card neutral",
+            onClick: () => setTab('schedule'),
+            children: [_jsx("span", {
+              children: "\u0423\u0440\u043E\u043A\u0438 \u0441\u0435\u0433\u043E\u0434\u043D\u044F"
+            }), _jsx("strong", {
+              children: todayLessons.length ? `${todayLessons.length} \u0443\u0440.` : "\u043F\u0443\u0441\u0442\u043E"
+            }), _jsx("small", {
+              children: plannedToday[0] ? `${plannedToday[0].time} \u00B7 ${getLessonName(plannedToday[0])}` : "\u043C\u043E\u0436\u043D\u043E \u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0443\u0440\u043E\u043A"
+            })]
+          })]
+        })]
       }), _jsxs("div", {
         className: "today-stats-grid",
         children: [_jsxs("div", {
@@ -7974,6 +8077,13 @@ function App() {
     const WeekView = () => {
       const mobileDragRef = useRef(null);
       const mobileSuppressClickRef = useRef(false);
+      const mobileTableScrollRef = useRef(null);
+      const mobileTapRef = useRef({
+        lessonId: null,
+        lastAt: 0,
+        timer: null
+      });
+      const [mobileMoveLessonId, setMobileMoveLessonId] = useState(null);
       // Mon–Sun of selected week
       const getWeekDates = offset => {
         const today = new Date();
@@ -8011,9 +8121,28 @@ function App() {
         isToday: d === today,
         lessons: scheduleLessons.filter(l => l.date === d).sort((a, b) => a.time.localeCompare(b.time))
       }));
+      const mobileMoveLesson = mobileMoveLessonId ? scheduleLessons.find(l => sameId(l.id, mobileMoveLessonId) && l.status === 'planned') : null;
       const mobileDay = Math.max(0, weekDates.indexOf(weekDates.includes(selDate) ? selDate : weekDates.includes(today) ? today : weekDates[0]));
       const mobileDayData = weekDaySummaries[mobileDay] || weekDaySummaries[0];
       const mobileDayLessons = mobileDayData?.lessons || [];
+      useEffect(() => {
+        if (mobileMoveLessonId && !mobileMoveLesson) setMobileMoveLessonId(null);
+      }, [mobileMoveLessonId, mobileMoveLesson]);
+      useEffect(() => () => {
+        if (mobileTapRef.current.timer) clearTimeout(mobileTapRef.current.timer);
+      }, []);
+      useEffect(() => {
+        const scroller = mobileTableScrollRef.current;
+        if (!scroller) return;
+        const selected = scroller.querySelector(`.mobile-week-table-day[data-date="${selDate}"]`);
+        if (!selected) return;
+        const selectedCenter = selected.offsetLeft + selected.offsetWidth / 2;
+        const targetLeft = Math.max(0, selectedCenter - scroller.clientWidth / 2);
+        scroller.scrollTo({
+          left: targetLeft,
+          behavior: 'smooth'
+        });
+      }, [selDate, weekOffset]);
       const mobileMarkers = l => {
         const markers = [];
         if (l.homework) markers.push(['homework', 'ДЗ']);
@@ -8041,6 +8170,46 @@ function App() {
           type: 'lesson',
           payload
         });
+      };
+      const moveSelectedMobileLesson = (date, time) => {
+        if (!mobileMoveLesson) return false;
+        setSelDate(date);
+        moveLesson(mobileMoveLesson.id, date, time);
+        setMobileMoveLessonId(null);
+        return true;
+      };
+      const selectMobileMoveLesson = lesson => {
+        if (lesson.status !== 'planned') return;
+        const tap = mobileTapRef.current;
+        if (tap.timer) clearTimeout(tap.timer);
+        tap.lessonId = null;
+        tap.lastAt = 0;
+        tap.timer = null;
+        setSelDate(lesson.date);
+        setMobileMoveLessonId(lesson.id);
+      };
+      const handleMobileLessonTap = lesson => {
+        if (mobileSuppressClickRef.current) return;
+        const now = Date.now();
+        const tap = mobileTapRef.current;
+        if (tap.lessonId === lesson.id && now - tap.lastAt < 330) {
+          if (tap.timer) clearTimeout(tap.timer);
+          tap.lessonId = null;
+          tap.lastAt = 0;
+          tap.timer = null;
+          selectMobileMoveLesson(lesson);
+          return;
+        }
+        if (tap.timer) clearTimeout(tap.timer);
+        tap.lessonId = lesson.id;
+        tap.lastAt = now;
+        tap.timer = setTimeout(() => {
+          setSelDate(lesson.date);
+          openLessonCard(lesson);
+          tap.lessonId = null;
+          tap.lastAt = 0;
+          tap.timer = null;
+        }, 260);
       };
       const startMobileLessonDrag = (e, lesson) => {
         if (lesson.status !== 'planned' || !e.pointerId) return;
@@ -8108,16 +8277,19 @@ function App() {
           if (cell.length === 0) {
             return _jsx("button", {
               type: "button",
-              className: `mobile-week-table-cell empty ${date === selDate ? 'selected-day' : ''}`,
+              className: `mobile-week-table-cell empty ${date === selDate ? 'selected-day' : ''} ${mobileMoveLesson ? 'move-target' : ''}`,
               "data-date": date,
               "data-time": time,
               "data-mobile-week-drop": "1",
-              "aria-label": `Добавить урок ${date} ${time}`,
-              onClick: () => openAddLessonAt(date, time),
+              "aria-label": mobileMoveLesson ? `Перенести урок на ${date} ${time}` : `Добавить урок ${date} ${time}`,
+              onClick: () => {
+                if (moveSelectedMobileLesson(date, time)) return;
+                openAddLessonAt(date, time);
+              },
               onDragOver: e => e.preventDefault(),
               onDrop: e => dropLessonTo(e, date, time),
               children: _jsx("span", {
-                children: "+"
+                children: mobileMoveLesson ? "↘" : "+"
               })
             }, `${date}-${time}`);
           }
@@ -8136,11 +8308,13 @@ function App() {
                 role: "button",
                 tabIndex: 0,
                 draggable: l.status === 'planned',
-                className: `mobile-week-table-lesson ${l.type === 'group' ? 'group' : 'individual'} status-${l.status} ${done ? 'done' : 'planned'}`,
+                className: `mobile-week-table-lesson ${l.type === 'group' ? 'group' : 'individual'} status-${l.status} ${done ? 'done' : 'planned'} ${sameId(mobileMoveLessonId, l.id) ? 'move-selected' : ''}`,
                 onClick: () => {
-                  if (mobileSuppressClickRef.current) return;
-                  setSelDate(l.date);
-                  openLessonCard(l);
+                  handleMobileLessonTap(l);
+                },
+                onDoubleClick: e => {
+                  e.preventDefault();
+                  selectMobileMoveLesson(l);
                 },
                 onKeyDown: e => {
                   if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -8226,12 +8400,9 @@ function App() {
           className: "sched-mobile",
           children: [_jsxs("div", {
             className: "mobile-week-table-shell",
-            children: [_jsx("div", {
-              className: "mobile-week-table-hint",
-              children: "\u0421\u0434\u0432\u0438\u0433\u0430\u0439\u0442\u0435 \u0441\u0435\u0442\u043A\u0443 \u0432\u0431\u043E\u043A. \u041F\u0443\u0441\u0442\u0430\u044F \u044F\u0447\u0435\u0439\u043A\u0430 \u0434\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u0443\u0440\u043E\u043A."
-            }), _jsxs("div", {
-              className: "mobile-week-table-toolbar",
-              children: [_jsxs("div", {
+            children: [_jsxs("div", {
+            className: "mobile-week-table-toolbar",
+            children: [_jsxs("div", {
                 className: "mobile-week-table-current",
                 children: [_jsx("span", {
                   children: "\u0412\u044B\u0431\u0440\u0430\u043D\u043E"
@@ -8244,8 +8415,24 @@ function App() {
                 onClick: () => openAddLessonAt(mobileDayData?.date || weekDates[0]),
                 children: ["+ \u0423\u0440\u043E\u043A"]
               })]
+            }), mobileMoveLesson && _jsxs("div", {
+              className: "mobile-week-move-bar",
+              children: [_jsxs("div", {
+                children: [_jsx("span", {
+                  children: "\u041F\u0435\u0440\u0435\u043D\u043E\u0441"
+                }), _jsx("strong", {
+                  children: getLessonName(mobileMoveLesson)
+                }), _jsxs("small", {
+                  children: [mobileMoveLesson.time, " \u00B7 \u043D\u0430\u0436\u043C\u0438\u0442\u0435 \u043F\u0443\u0441\u0442\u0443\u044E \u044F\u0447\u0435\u0439\u043A\u0443"]
+                })]
+              }), _jsx("button", {
+                type: "button",
+                onClick: () => setMobileMoveLessonId(null),
+                children: "\u041E\u0442\u043C\u0435\u043D\u0430"
+              })]
             }), _jsx("div", {
               className: "mobile-week-table-scroll",
+              ref: mobileTableScrollRef,
               children: _jsxs("div", {
                 className: "mobile-week-table",
                 children: [_jsx("div", {
@@ -8254,6 +8441,7 @@ function App() {
                 }), weekDaySummaries.map(day => _jsxs("button", {
                   type: "button",
                   className: `mobile-week-table-day ${mobileDay === day.index ? 'selected' : ''} ${day.isToday ? 'today' : ''}`,
+                  "data-date": day.date,
                   onClick: () => setSelDate(day.date),
                   children: [_jsx("span", {
                     children: DAY_LABELS[day.index]
@@ -9068,6 +9256,7 @@ function App() {
       if (subjectFilter !== 'all' && g.subject !== subjectFilter) return false;
       return getGroupDisplayName(g, students).toLowerCase().includes(q.toLowerCase());
     });
+    const getStudentNextLesson = student => lessons.filter(l => l.status === 'planned' && (l.type === 'individual' && sameId(l.targetId, student.id) || l.type === 'group' && groups.find(g => sameId(g.id, l.targetId))?.studentIds?.some(id => sameId(id, student.id)))).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
     return _jsxs("div", {
       className: "students-page",
       children: [_jsxs("div", {
@@ -9131,7 +9320,9 @@ function App() {
           })
         }, subject))]
       }), view === 'students' ? _jsxs(_Fragment, {
-        children: [filtered.map(s => _jsxs("div", {
+        children: [filtered.map(s => {
+          const nextLesson = getStudentNextLesson(s);
+          return _jsxs("div", {
           className: "student-item",
           onClick: () => setModal({
             type: 'studentDetail',
@@ -9159,7 +9350,7 @@ function App() {
                 fontSize: 11,
                 color: 'var(--text-sec)'
               },
-              children: [money(s.rate), "/\u0443\u0440\u043E\u043A \xB7 ", s.phone]
+              children: [money(s.rate), "/\u0443\u0440\u043E\u043A", s.phone ? ` · ${s.phone}` : '', " · \u0441\u043B\u0435\u0434. ", nextLesson ? `${fmtDate(nextLesson.date)} · ${nextLesson.time}` : 'уроков нет']
             }), _jsx("div", {
               style: {
                 display: 'flex',
@@ -9211,87 +9402,67 @@ function App() {
                 children: "\u0410\u0420\u0425\u0418\u0412"
               })]
             })]
-          }), _jsxs("div", {
-            style: {
-              display: 'flex',
-              gap: 6,
-              marginLeft: 8,
-              alignItems: 'center'
-            },
-            children: [s.phone && _jsx("a", {
-              href: `tel:${s.phone}`,
-              title: s.phone,
-              className: "btn btn-sm btn-white",
-              style: {
-                padding: '4px 7px',
-                display: 'flex',
-                alignItems: 'center',
-                textDecoration: 'none',
-                color: 'inherit'
-              },
-              onClick: e => e.stopPropagation(),
-              children: _jsx(IcoPhone, {
-                size: 14
-              })
-            }), _jsxs("button", {
-              title: s.tgId ? 'Открыть в Telegram' : 'Написать',
-              className: `btn btn-sm ${s.tgId ? 'btn-blue' : 'btn-white'}`,
-              style: {
-                padding: '4px 8px',
-                fontSize: 9,
-                gap: 4
-              },
-              onClick: e => {
-                e.stopPropagation();
-                if (s.tgId) {
-                  const id = String(s.tgId).trim();
-                  window.open(id.startsWith('@') ? `https://t.me/${id.slice(1)}` : `https://t.me/${id}`, '_blank');
-                } else {
-                  setModal({
-                    type: 'message',
-                    payload: {
-                      student: s
-                    }
-                  });
-                }
-              },
-              children: [s.tgId ? _jsx(IcoTg, {
-                size: 12
-              }) : null, "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C"]
-            }), _jsx("button", {
-              style: {
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 6
-              },
-              onClick: e => {
-                e.stopPropagation();
-                setModal({
+          }), _jsxs("details", {
+            className: "student-actions-menu",
+            onClick: e => e.stopPropagation(),
+            children: [_jsx("summary", {
+              title: "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044F",
+              children: "\u22EF"
+            }), _jsxs("div", {
+              className: "student-actions-popover",
+              children: [_jsx("button", {
+                type: "button",
+                onClick: () => setModal({
+                  type: 'studentDetail',
+                  payload: s
+                }),
+                children: "\u041A\u0430\u0440\u0442\u043E\u0447\u043A\u0430"
+              }), s.phone && _jsxs("a", {
+                href: `tel:${s.phone}`,
+                children: [_jsx(IcoPhone, {
+                  size: 14
+                }), " \u041F\u043E\u0437\u0432\u043E\u043D\u0438\u0442\u044C"]
+              }), _jsxs("button", {
+                type: "button",
+                onClick: () => {
+                  if (s.tgId) {
+                    const id = String(s.tgId).trim();
+                    window.open(id.startsWith('@') ? `https://t.me/${id.slice(1)}` : `https://t.me/${id}`, '_blank');
+                  } else {
+                    setModal({
+                      type: 'message',
+                      payload: {
+                        student: s
+                      }
+                    });
+                  }
+                },
+                children: [s.tgId ? _jsx(IcoTg, {
+                  size: 13
+                }) : _jsx(IcoEdit, {
+                  size: 13
+                }), " \u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C"]
+              }), _jsxs("button", {
+                type: "button",
+                onClick: () => setModal({
                   type: 'student',
                   payload: s
-                });
-              },
-              children: _jsx(IcoEdit, {
-                size: 18
-              })
-            }), _jsx("button", {
-              style: {
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 6
-              },
-              onClick: e => {
-                e.stopPropagation();
-                delStudent(s.id);
-              },
-              children: _jsx(IcoTrash, {
-                size: 18
-              })
+                }),
+                children: [_jsx(IcoEdit, {
+                  size: 13
+                }), " \u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C"]
+              }), _jsxs("button", {
+                type: "button",
+                className: "danger",
+                onClick: () => delStudent(s.id),
+                children: [_jsx(IcoTrash, {
+                  size: 13
+                }), " \u0423\u0434\u0430\u043B\u0438\u0442\u044C"]
+              })]
             })]
           })]
-        }, s.id)), filtered.length === 0 && _jsx(EmptyState, {
+        }, s.id);
+        }), filtered.length === 0 && _jsx(EmptyState, {
           title: students.length ? 'Ничего не найдено' : 'Добавьте первого ученика',
           text: students.length ? 'Измените фильтр или строку поиска.' : 'Карточка ученика хранит ставку, предметы, долги, ДЗ и историю занятий.',
           action: "\u041D\u043E\u0432\u044B\u0439 \u0443\u0447\u0435\u043D\u0438\u043A",
@@ -9360,43 +9531,38 @@ function App() {
                 },
                 children: ["\u0411\u0443\u0434\u0443\u0449\u0438\u0445 \u0443\u0440\u043E\u043A\u043E\u0432: ", futureCount]
               })]
-            }), _jsxs("div", {
-              style: {
-                display: 'flex',
-                gap: 8,
-                marginLeft: 8
-              },
-              children: [_jsx("button", {
-                style: {
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 6
-                },
-                onClick: e => {
-                  e.stopPropagation();
-                  setModal({
+            }), _jsxs("details", {
+              className: "student-actions-menu",
+              onClick: e => e.stopPropagation(),
+              children: [_jsx("summary", {
+                title: "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044F",
+                children: "\u22EF"
+              }), _jsxs("div", {
+                className: "student-actions-popover",
+                children: [_jsx("button", {
+                  type: "button",
+                  onClick: () => setModal({
+                    type: 'groupDetail',
+                    payload: g
+                  }),
+                  children: "\u041A\u0430\u0440\u0442\u043E\u0447\u043A\u0430"
+                }), _jsxs("button", {
+                  type: "button",
+                  onClick: () => setModal({
                     type: 'group',
                     payload: g
-                  });
-                },
-                children: _jsx(IcoEdit, {
-                  size: 18
-                })
-              }), _jsx("button", {
-                style: {
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 6
-                },
-                onClick: e => {
-                  e.stopPropagation();
-                  delGroup(g.id);
-                },
-                children: _jsx(IcoTrash, {
-                  size: 18
-                })
+                  }),
+                  children: [_jsx(IcoEdit, {
+                    size: 13
+                  }), " \u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C"]
+                }), _jsxs("button", {
+                  type: "button",
+                  className: "danger",
+                  onClick: () => delGroup(g.id),
+                  children: [_jsx(IcoTrash, {
+                    size: 13
+                  }), " \u0423\u0434\u0430\u043B\u0438\u0442\u044C"]
+                })]
               })]
             })]
           }, g.id);
@@ -9417,7 +9583,7 @@ function App() {
 
   // FINANCE PAGE (with full analytics, deduplication-safe)
   const PageFinance = () => {
-    const [finTab, setFinTab] = useState('control'); // 'control' | 'analytics' | 'trust'
+    const [finTab, setFinTab] = useState('control'); // 'control' | 'history' | 'analytics' | 'trust'
     const [analyticsPeriod, setAnalyticsPeriod] = useState('current_month');
     const [txStudentFilter, setTxStudentFilter] = useState('all');
     const [txTypeFilter, setTxTypeFilter] = useState('all');
@@ -9437,6 +9603,10 @@ function App() {
       finance: getStudentFinanceSummary(s, txs, lessons, groups)
     }));
     const recentMoneyEvents = txs.slice().sort((a, b) => txSortKey(b).localeCompare(txSortKey(a))).slice(0, 5);
+    const trustExplainedCount = balanceSummaries.filter(x => x.finance.hasHistory || x.finance.balance !== 0).length;
+    const trustDebtCount = balanceSummaries.filter(x => x.finance.balance < 0).length;
+    const trustNoHistoryCount = balanceSummaries.filter(x => !x.finance.hasHistory && x.finance.balance === 0).length;
+    const trustMismatchCount = balanceSummaries.filter(x => Math.abs(x.finance.mismatch || 0) > 0.5).length;
     const upcomingCharges = activeStudents.map(s => ({
       student: s,
       finance: getStudentFinanceSummary(s, txs, lessons, groups)
@@ -10103,7 +10273,10 @@ function App() {
             children: "\u041F\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u044C"
           })]
         }, s.id))]
-      }), _jsxs("div", {
+      })]
+    });
+    const HistoryTab = () => _jsxs("div", {
+      children: [_jsxs("div", {
         style: {
           display: 'flex',
           justifyContent: 'space-between',
@@ -10253,22 +10426,18 @@ function App() {
         className: "btn btn-sm btn-white finance-history-more",
         onClick: () => setHistoryExpanded(v => !v),
         children: historyExpanded ? "\u0421\u0432\u0435\u0440\u043D\u0443\u0442\u044C \u0436\u0443\u0440\u043D\u0430\u043B" : ["\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0435\u0449\u0435 ", hiddenHistoryCount]
-      }), _jsxs("div", {
+      }), _jsx("div", {
         style: {
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          gridTemplateColumns: 'minmax(0, 240px)',
           gap: 8,
           marginTop: 14
         },
-        children: [_jsx("button", {
+        children: _jsx("button", {
           className: "btn btn-sm btn-white btn-full",
           onClick: exportCsv,
           children: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 CSV"
-        }), _jsx("button", {
-          className: "btn btn-sm btn-red btn-full",
-          onClick: clearDemoData,
-          children: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0434\u0435\u043C\u043E"
-        })]
+        })
       }), _jsxs("div", {
         className: "finance-panel",
         style: {
@@ -10338,7 +10507,7 @@ function App() {
             children: "\u0420\u0430\u0441\u0448\u0438\u0444\u0440\u043E\u0432\u0430\u043D\u043E"
           }), _jsx("div", {
             className: "finance-trust-score",
-            children: balanceSummaries.filter(x => x.finance.hasHistory || x.finance.balance !== 0).length
+            children: trustExplainedCount
           }), _jsx("div", {
             className: "metric-sub",
             children: "\u0443\u0447\u0435\u043D\u0438\u043A\u043E\u0432, \u0433\u0434\u0435 \u0431\u0430\u043B\u0430\u043D\u0441 \u043C\u043E\u0436\u043D\u043E \u043E\u0431\u044A\u044F\u0441\u043D\u0438\u0442\u044C \u043F\u043E \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u044F\u043C"
@@ -10367,6 +10536,30 @@ function App() {
             children: "\u041E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442"
           })]
         })]
+      }), _jsxs("div", {
+        className: "finance-trust-metrics",
+        children: [_jsxs("div", {
+          className: "finance-trust-metric",
+          children: [_jsx("span", {
+            children: "\u0414\u043E\u043B\u0433\u0438"
+          }), _jsx("strong", {
+            children: trustDebtCount
+          })]
+        }), _jsxs("div", {
+          className: "finance-trust-metric",
+          children: [_jsx("span", {
+            children: "\u0411\u0435\u0437 \u0438\u0441\u0442\u043E\u0440\u0438\u0438"
+          }), _jsx("strong", {
+            children: trustNoHistoryCount
+          })]
+        }), _jsxs("div", {
+          className: `finance-trust-metric ${trustMismatchCount ? 'danger' : 'ok'}`,
+          children: [_jsx("span", {
+            children: "\u0420\u0430\u0441\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u044F"
+          }), _jsx("strong", {
+            children: trustMismatchCount
+          })]
+        })]
       }), _jsx("div", {
         className: "finance-section-title",
         children: "\u0411\u0410\u041B\u0410\u041D\u0421\u042B \u0423\u0427\u0415\u041D\u0418\u041A\u041E\u0412"
@@ -10382,7 +10575,7 @@ function App() {
             payload: s
           }),
           children: [_jsxs("span", {
-            children: [s.name, finance.hasHistory ? " \xB7 \u0435\u0441\u0442\u044C \u0438\u0441\u0442\u043E\u0440\u0438\u044F" : " \xB7 \u043D\u0443\u0436\u043D\u0430 \u0438\u0441\u0442\u043E\u0440\u0438\u044F"]
+            children: [s.name, " \xB7 ", finance.events.length, " \u043E\u043F.", finance.hasHistory ? "" : " \xB7 \u043D\u0435\u0442 \u0438\u0441\u0442\u043E\u0440\u0438\u0438"]
           }), _jsx("strong", {
             style: {
               color: balanceColor(finance.balance)
@@ -11139,15 +11332,19 @@ function App() {
           onClick: () => setFinTab('control'),
           children: "\u041A\u043E\u043D\u0442\u0440\u043E\u043B\u044C"
         }), _jsx("button", {
-          className: `toggle-opt ${finTab === 'trust' ? 'active' : ''}`,
-          onClick: () => setFinTab('trust'),
-          children: "\u0414\u043E\u0432\u0435\u0440\u0438\u0435"
+          className: `toggle-opt ${finTab === 'history' ? 'active' : ''}`,
+          onClick: () => setFinTab('history'),
+          children: "\u0418\u0441\u0442\u043E\u0440\u0438\u044F"
         }), _jsx("button", {
           className: `toggle-opt ${finTab === 'analytics' ? 'active' : ''}`,
           onClick: () => setFinTab('analytics'),
           children: "\u0410\u043D\u0430\u043B\u0438\u0442\u0438\u043A\u0430"
+        }), _jsx("button", {
+          className: `toggle-opt ${finTab === 'trust' ? 'active' : ''}`,
+          onClick: () => setFinTab('trust'),
+          children: "\u0414\u043E\u0432\u0435\u0440\u0438\u0435"
         })]
-      }), finTab === 'control' ? _jsx(ControlTab, {}) : finTab === 'trust' ? _jsx(TrustTab, {}) : _jsx(AnalyticsTab, {})]
+      }), finTab === 'control' ? _jsx(ControlTab, {}) : finTab === 'history' ? _jsx(HistoryTab, {}) : finTab === 'analytics' ? _jsx(AnalyticsTab, {}) : _jsx(TrustTab, {})]
     });
   };
   const dataStats = {
@@ -11495,7 +11692,8 @@ function App() {
       onEdit: () => setModal({
         type: 'group',
         payload: modal.payload
-      })
+      }),
+      onStopGroup: () => stopGroupLessons(modal.payload.id)
     }), modal?.type === 'lessonStatus' && _jsx(LessonStatusModal, {
       lesson: modal.payload,
       onClose: () => setModal(null),
@@ -11574,15 +11772,7 @@ function LessonCard({
   const done = isFinalLesson(lesson);
   const statusInfo = LESSON_STATUS[lesson.status] || LESSON_STATUS.planned;
   const openCard = () => {
-    if (lesson.status === 'completed') {
-      onAttend();
-      return;
-    }
-    if (lesson.status === 'planned') {
-      onEdit();
-      return;
-    }
-    onStatus();
+    onEdit();
   };
   const handleCardKey = e => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
