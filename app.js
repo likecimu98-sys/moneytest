@@ -2919,7 +2919,8 @@ function LessonModal({
   initialTime,
   lessonToEdit,
   onClose,
-  onSave
+  onSave,
+  onDelete
 }) {
   const [type, setType] = useState(lessonToEdit?.type || initialType || (initialStudentId ? 'individual' : 'group'));
   const [targetId, setTgt] = useState(lessonToEdit ? String(lessonToEdit.targetId) : initialTargetId ? String(initialTargetId) : initialStudentId ? String(initialStudentId) : '');
@@ -3304,8 +3305,13 @@ function LessonModal({
           children: "Прошлые и проведённые занятия не изменятся."
         })]
       }), _jsxs("div", {
-        className: "modal-actions",
-        children: [_jsx("button", {
+        className: `modal-actions ${lessonToEdit ? 'lesson-edit-actions' : ''}`,
+        children: [lessonToEdit && _jsx("button", {
+          type: "button",
+          className: "btn btn-red btn-full lesson-edit-delete",
+          onClick: () => onDelete?.(lessonToEdit),
+          children: "Удалить"
+        }), _jsx("button", {
           type: "button",
           className: "btn btn-white btn-full",
           onClick: onClose,
@@ -6679,6 +6685,8 @@ function App() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [calMonth, setCalMonth] = useState(new Date());
   const [schedSubject, setSchedSubject] = useState('all');
+  const [mobileMoveLessonId, setMobileMoveLessonId] = useState(null);
+  const [mobileScheduleMode, setMobileScheduleMode] = useState('days');
   const [customTemplates, setCustomTemplates] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
@@ -8083,7 +8091,6 @@ function App() {
         lastAt: 0,
         timer: null
       });
-      const [mobileMoveLessonId, setMobileMoveLessonId] = useState(null);
       // Mon–Sun of selected week
       const getWeekDates = offset => {
         const today = new Date();
@@ -8267,6 +8274,320 @@ function App() {
         window.addEventListener('pointerup', onUp);
         window.addEventListener('pointercancel', onCancel);
       };
+      const mobileThreeStart = Math.min(4, Math.max(0, mobileDay - 1));
+      const mobileThreeDays = weekDaySummaries.slice(mobileThreeStart, mobileThreeStart + 3);
+      const mobileFocusPosition = Math.max(0, mobileThreeDays.findIndex(day => day.date === selDate));
+      const mobileFocusClass = mobileFocusPosition === 0 ? 'focus-left' : mobileFocusPosition === 2 ? 'focus-right' : 'focus-middle';
+      const mobileCloseRows = weekDaySummaries.map(day => {
+        const closed = day.lessons.filter(isFinalLesson).length;
+        const pending = day.lessons.length - closed;
+        const hasDebt = day.lessons.some(l => getLessonStudents(l, students, groups).some(s => s.balance < 0));
+        return {
+          ...day,
+          closed,
+          pending,
+          hasDebt
+        };
+      });
+      const mobileCloseCandidate = weekLessons.filter(l => l.date <= today && !isFinalLesson(l)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0] || weekLessons.filter(l => !isFinalLesson(l)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
+      const mobileGroupRows = groups.map(group => {
+        const rowLessons = weekLessons.filter(l => l.type === 'group' && sameId(l.targetId, group.id)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+        return {
+          group,
+          lessons: rowLessons
+        };
+      }).filter(row => row.lessons.length > 0);
+      const renderMobileLabLesson = (l, variant = 'cell') => {
+        const markers = mobileMarkers(l);
+        const statusInfo = LESSON_STATUS[l.status] || LESSON_STATUS.planned;
+        return _jsxs("div", {
+          className: `mobile-lab-lesson ${variant} ${l.type === 'group' ? 'group' : 'individual'} status-${l.status} ${isFinalLesson(l) ? 'final' : ''} ${sameId(mobileMoveLessonId, l.id) ? 'move-selected' : ''}`,
+          children: [_jsxs("button", {
+            type: "button",
+            className: "mobile-lab-lesson-open",
+            onClick: () => handleMobileLessonTap(l),
+            onDoubleClick: e => {
+              e.preventDefault();
+              selectMobileMoveLesson(l);
+            },
+            children: [_jsxs("div", {
+              className: "mobile-lab-lesson-main",
+              children: [_jsx("b", {
+                children: variant === 'cell' ? getLessonName(l).replace(/\s*\(.+\)$/, '') : getLessonName(l)
+              }), _jsxs("span", {
+                children: [l.time, " · ", getLessonSubject(l, groups), " · ", statusInfo.label]
+              })]
+            }), markers.length > 0 && _jsx("div", {
+              className: "mobile-lab-dots",
+              children: markers.slice(0, 4).map(([kind, title]) => _jsx("i", {
+                className: `week-dot ${kind}`,
+                title
+              }, kind))
+            })]
+          }), variant !== 'cell' && l.status === 'planned' && _jsx("button", {
+            type: "button",
+            className: "mobile-lab-action move",
+            title: "Перенести",
+            onPointerDown: e => {
+              e.stopPropagation();
+            },
+            onClick: e => {
+              e.stopPropagation();
+              selectMobileMoveLesson(l);
+            },
+            children: _jsx(IcoRepeat, {
+              size: 13
+            })
+          }), variant !== 'cell' && _jsx("button", {
+            type: "button",
+            className: `mobile-lab-action ${l.status === 'planned' ? 'primary' : ''}`,
+            title: l.status === 'planned' ? "Провести" : "Открыть статус",
+            onClick: e => {
+              e.stopPropagation();
+              setModal({
+                type: l.status === 'planned' || l.status === 'completed' ? 'attendance' : 'lessonStatus',
+                payload: l
+              });
+            },
+            children: l.status === 'planned' ? _jsx(IcoPlay, {
+              size: 13
+            }) : _jsx(IcoCheck, {
+              size: 13
+            })
+          })]
+        }, `${variant}-${l.id}`);
+      };
+      const mobileLabShell = _jsxs("div", {
+        className: `mobile-lab-shell ${mobileMoveLesson ? 'is-moving' : ''}`,
+        children: [_jsxs("div", {
+          className: "mobile-lab-tabs",
+          children: [['days', 'Дни'], ['groups', 'Группы'], ['close', 'Закрытие']].map(([mode, label]) => _jsx("button", {
+            type: "button",
+            className: mobileScheduleMode === mode ? 'active' : '',
+            onClick: () => setMobileScheduleMode(mode),
+            children: label
+          }, mode))
+        }), mobileMoveLesson && _jsxs("div", {
+          className: "mobile-lab-move-bar",
+          children: [_jsxs("div", {
+            children: [_jsx("span", {
+              children: "Выбран перенос"
+            }), _jsx("strong", {
+              children: getLessonName(mobileMoveLesson)
+            }), _jsxs("small", {
+              children: [fmtDate(mobileMoveLesson.date), " · ", mobileMoveLesson.time, " · нажмите свободную ячейку"]
+            })]
+          }), _jsx("button", {
+            type: "button",
+            onClick: () => setMobileMoveLessonId(null),
+            children: "Отмена"
+          })]
+        }), mobileScheduleMode === 'days' && _jsxs("section", {
+          className: "mobile-lab-days",
+          children: [_jsxs("div", {
+            className: "mobile-lab-current",
+            children: [_jsxs("div", {
+              children: [_jsx("span", {
+                children: "3 дня на экране"
+              }), _jsx("strong", {
+                children: new Date((mobileDayData?.date || weekDates[0]) + 'T00:00:00').toLocaleDateString('ru-RU', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long'
+                })
+              })]
+            }), _jsx("button", {
+              type: "button",
+              onClick: () => openAddLessonAt(mobileDayData?.date || weekDates[0]),
+              children: "+ Урок"
+            })]
+          }), _jsxs("div", {
+            className: `mobile-lab-grid ${mobileFocusClass}`,
+            children: [_jsx("div", {
+              className: "mobile-lab-grid-corner",
+              children: "Время"
+            }), mobileThreeDays.map(day => _jsxs("button", {
+              type: "button",
+              className: `mobile-lab-day-head ${day.date === selDate ? 'selected' : ''} ${day.isToday ? 'today' : ''}`,
+              onClick: () => setSelDate(day.date),
+              children: [_jsx("span", {
+                children: DAY_LABELS[day.index]
+              }), _jsx("strong", {
+                children: day.num
+              }), _jsxs("em", {
+                children: [day.lessons.length, " ур."]
+              })]
+            }, day.date)), mobileTableTimes.flatMap(time => [_jsx("div", {
+              className: "mobile-lab-time",
+              children: time
+            }, `lab-time-${time}`), ...mobileThreeDays.map(day => {
+              const cellLessons = scheduleLessons.filter(l => l.date === day.date && l.time === time).sort((a, b) => String(a.id).localeCompare(String(b.id)));
+              if (!cellLessons.length) return _jsx("button", {
+                type: "button",
+                "aria-label": mobileMoveLesson ? `Перенести урок на ${DAY_LABELS[day.index]} ${time}` : `Добавить урок на ${DAY_LABELS[day.index]} ${time}`,
+                className: `mobile-lab-cell empty ${day.date === selDate ? 'selected-day' : ''} ${mobileMoveLesson ? 'move-target' : ''}`,
+                onClick: () => {
+                  if (moveSelectedMobileLesson(day.date, time)) return;
+                  openAddLessonAt(day.date, time);
+                },
+                children: mobileMoveLesson ? _jsxs("span", {
+                  className: "mobile-lab-target-label",
+                  children: [_jsx("b", {
+                    children: "Сюда"
+                  }), _jsxs("small", {
+                    children: [DAY_LABELS[day.index], " · ", time]
+                  })]
+                }) : _jsx("span", {
+                  className: "mobile-lab-plus",
+                  children: "+"
+                })
+              }, `lab-empty-${day.date}-${time}`);
+              return _jsx("div", {
+                className: `mobile-lab-cell filled ${day.date === selDate ? 'selected-day' : ''}`,
+                children: cellLessons.map(l => renderMobileLabLesson(l, 'cell'))
+              }, `lab-filled-${day.date}-${time}`);
+            })])]
+          }), _jsxs("section", {
+            className: "mobile-lab-selected-day",
+            children: [_jsxs("div", {
+              className: "mobile-lab-selected-head",
+              children: [_jsxs("div", {
+                children: [_jsx("span", {
+                  children: "Выбранный день"
+                }), _jsx("strong", {
+                  children: new Date((mobileDayData?.date || weekDates[0]) + 'T00:00:00').toLocaleDateString('ru-RU', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long'
+                  })
+                })]
+              }), _jsxs("b", {
+                children: [mobileDayLessons.length, " ур."]
+              })]
+            }), mobileDayLessons.length ? _jsx("div", {
+              className: "mobile-lab-selected-list",
+              children: mobileDayLessons.map(l => renderMobileLabLesson(l, 'agenda'))
+            }) : _jsx("button", {
+              type: "button",
+              className: "mobile-lab-selected-empty",
+              onClick: () => openAddLessonAt(mobileDayData?.date || weekDates[0]),
+              children: "Нет уроков · добавить"
+            })]
+          }), _jsxs("div", {
+            className: "week-marker-legend",
+            children: [_jsxs("span", {
+              children: [_jsx("i", {
+                className: "week-dot homework"
+              }), "ДЗ"]
+            }), _jsxs("span", {
+              children: [_jsx("i", {
+                className: "week-dot note"
+              }), "заметка"]
+            }), _jsxs("span", {
+              children: [_jsx("i", {
+                className: "week-dot debt"
+              }), "долг"]
+            })]
+          })]
+        }), mobileScheduleMode === 'groups' && _jsxs("section", {
+          className: "mobile-lab-groups",
+          children: [_jsxs("div", {
+            className: "mobile-lab-section-head",
+            children: [_jsxs("div", {
+              children: [_jsx("span", {
+                children: "Режим групп"
+              }), _jsx("strong", {
+                children: `${mobileGroupRows.length} групп на неделе`
+              })]
+            }), _jsx("button", {
+              type: "button",
+              onClick: () => setModal({
+                type: 'group'
+              }),
+              children: "+ Группа"
+            })]
+          }), mobileGroupRows.length ? _jsx("div", {
+            className: "mobile-lab-group-list",
+            children: mobileGroupRows.map(({
+              group,
+              lessons: rowLessons
+            }) => _jsxs("article", {
+              className: "mobile-lab-group-card",
+              children: [_jsxs("button", {
+                type: "button",
+                className: "mobile-lab-group-title",
+                onClick: () => setModal({
+                  type: 'groupDetail',
+                  payload: group
+                }),
+                children: [_jsx("strong", {
+                  children: getGroupDisplayName(group, students)
+                }), _jsxs("span", {
+                  children: [rowLessons.length, " уроков"]
+                })]
+              }), _jsx("div", {
+                className: "mobile-lab-group-week",
+                children: weekDates.map((date, index) => {
+                  const dayLessons = rowLessons.filter(l => l.date === date);
+                  return _jsxs("button", {
+                    type: "button",
+                    className: `mobile-lab-group-day ${date === selDate ? 'selected' : ''} ${dayLessons.length ? 'busy' : ''}`,
+                    onClick: () => dayLessons[0] ? openLessonCard(dayLessons[0]) : openAddLessonAt(date),
+                    children: [_jsx("b", {
+                      children: DAY_LABELS[index]
+                    }), dayLessons.length ? dayLessons.map(l => _jsxs("span", {
+                      children: [l.time, " ", getLessonName(l).replace(/\s*\(.+\)$/, '')]
+                    }, l.id)) : _jsx("em", {
+                      children: "+"
+                    })]
+                  }, `${group.id}-${date}`);
+                })
+              })]
+            }, group.id))
+          }) : _jsx("button", {
+            type: "button",
+            className: "mobile-lab-empty",
+            onClick: () => setModal({
+              type: 'group'
+            }),
+            children: "На этой неделе нет групп · добавить"
+          })]
+        }), mobileScheduleMode === 'close' && _jsxs("section", {
+          className: "mobile-lab-close",
+          children: [_jsxs("div", {
+            className: "mobile-lab-section-head",
+            children: [_jsxs("div", {
+              children: [_jsx("span", {
+                children: "Закрытие недели"
+              }), _jsx("strong", {
+                children: mobileCloseCandidate ? "Есть что обработать" : "Все уроки закрыты"
+              })]
+            }), _jsx("button", {
+              type: "button",
+              disabled: !mobileCloseCandidate,
+              onClick: () => mobileCloseCandidate && setModal({
+                type: 'attendance',
+                payload: mobileCloseCandidate
+              }),
+              children: "Закрыть следующий"
+            })]
+          }), _jsx("div", {
+            className: "mobile-lab-close-list",
+            children: mobileCloseRows.map(day => _jsxs("button", {
+              type: "button",
+              className: `mobile-lab-close-row ${day.pending ? 'todo' : 'done'} ${day.hasDebt ? 'debt' : ''}`,
+              onClick: () => setSelDate(day.date),
+              children: [_jsxs("span", {
+                children: [DAY_LABELS[day.index], " ", day.num]
+              }), _jsxs("strong", {
+                children: [day.closed, "/", day.lessons.length || 0]
+              }), _jsx("em", {
+                children: day.pending ? `${day.pending} обработать` : day.lessons.length ? "готово" : "свободно"
+              })]
+            }, day.date))
+          })]
+        })]
+      });
       const mobileTableCells = mobileTableTimes.flatMap(time => {
         const timeCell = _jsx("div", {
           className: "mobile-week-table-time",
@@ -8370,7 +8691,6 @@ function App() {
         return [timeCell, ...dayCells];
       });
       return _jsxs("div", {
-        ref: swipeRef,
         className: "sched-swipe",
         children: [_jsxs("div", {
           className: "week-nav",
@@ -8398,7 +8718,7 @@ function App() {
           })]
         }), _jsxs("div", {
           className: "sched-mobile",
-          children: [_jsxs("div", {
+          children: [mobileLabShell, _jsxs("div", {
             className: "mobile-week-table-shell",
             children: [_jsxs("div", {
             className: "mobile-week-table-toolbar",
@@ -11582,6 +11902,7 @@ function App() {
       initialTime: modal.payload?.time || null,
       lessonToEdit: modal.payload?.lesson || null,
       onClose: () => setModal(null),
+      onDelete: lesson => requestDeleteLesson(lesson),
       onSave: (data, options) => saveLesson(data, modal.payload?.lesson?.id || null, options)
     }), modal?.type === 'attendance' && _jsx(AttendanceModal, {
       lesson: modal.payload,
@@ -11905,13 +12226,7 @@ function LessonCard({
         type: "button",
         title: "Статус и перенос",
         "aria-label": "Статус и перенос",
-        style: {
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: 6,
-          color: '#555'
-        },
+        className: "lesson-icon-action",
         onClick: e => {
           e.stopPropagation();
           onStatus();
@@ -11923,13 +12238,7 @@ function LessonCard({
         type: "button",
         title: "Изменить занятие",
         "aria-label": "Изменить занятие",
-        style: {
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: 6,
-          color: '#555'
-        },
+        className: "lesson-icon-action",
         onClick: e => {
           e.stopPropagation();
           onEdit();
@@ -11941,13 +12250,7 @@ function LessonCard({
         type: "button",
         title: "Удалить занятие",
         "aria-label": "Удалить занятие",
-        style: {
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: 6,
-          color: '#999'
-        },
+        className: "lesson-icon-action danger",
         onClick: e => {
           e.stopPropagation();
           onDelete(e);
