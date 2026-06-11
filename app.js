@@ -8167,9 +8167,10 @@ function App() {
         setSelDate(date);
         moveLesson(id, date, time);
       };
-      const openAddLessonAt = (date, time) => {
+      const openAddLessonAt = (date, time, defaults = {}) => {
         const payload = {
-          date
+          date,
+          ...defaults
         };
         if (time) payload.time = time;
         setSelDate(date);
@@ -8297,6 +8298,13 @@ function App() {
           lessons: rowLessons
         };
       }).filter(row => row.lessons.length > 0);
+      const mobileIndividualRows = students.filter(student => !student.archived).map(student => {
+        const rowLessons = weekLessons.filter(l => l.type === 'individual' && sameId(l.targetId, student.id)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+        return {
+          student,
+          lessons: rowLessons
+        };
+      });
       const renderMobileLabLesson = (l, variant = 'cell') => {
         const markers = mobileMarkers(l);
         const statusInfo = LESSON_STATUS[l.status] || LESSON_STATUS.planned;
@@ -8495,9 +8503,9 @@ function App() {
             className: "mobile-lab-section-head",
             children: [_jsxs("div", {
               children: [_jsx("span", {
-                children: "Режим групп"
+                children: "Группы и индивидуальные"
               }), _jsx("strong", {
-                children: `${mobileGroupRows.length} групп на неделе`
+                children: `${mobileGroupRows.length} групп · ${mobileIndividualRows.length} индив.`
               })]
             }), _jsx("button", {
               type: "button",
@@ -8505,6 +8513,13 @@ function App() {
                 type: 'group'
               }),
               children: "+ Группа"
+            })]
+          }), _jsxs("div", {
+            className: "mobile-lab-track-title",
+            children: [_jsx("span", {
+              children: "Группы"
+            }), _jsxs("b", {
+              children: [mobileGroupRows.length, " активн."]
             })]
           }), mobileGroupRows.length ? _jsx("div", {
             className: "mobile-lab-group-list",
@@ -8532,7 +8547,10 @@ function App() {
                   return _jsxs("button", {
                     type: "button",
                     className: `mobile-lab-group-day ${date === selDate ? 'selected' : ''} ${dayLessons.length ? 'busy' : ''}`,
-                    onClick: () => dayLessons[0] ? openLessonCard(dayLessons[0]) : openAddLessonAt(date),
+                    onClick: () => dayLessons[0] ? openLessonCard(dayLessons[0]) : openAddLessonAt(date, null, {
+                      initialType: 'group',
+                      targetId: group.id
+                    }),
                     children: [_jsx("b", {
                       children: DAY_LABELS[index]
                     }), dayLessons.length ? dayLessons.map(l => _jsxs("span", {
@@ -8551,6 +8569,65 @@ function App() {
               type: 'group'
             }),
             children: "На этой неделе нет групп · добавить"
+          }), _jsxs("div", {
+            className: "mobile-lab-track-title",
+            children: [_jsx("span", {
+              children: "Индивидуальные"
+            }), _jsxs("b", {
+              children: [mobileIndividualRows.length, " учен."]
+            })]
+          }), mobileIndividualRows.length ? _jsx("div", {
+            className: "mobile-lab-group-list mobile-lab-individual-list",
+            children: mobileIndividualRows.map(({
+              student,
+              lessons: rowLessons
+            }) => _jsxs("article", {
+              className: "mobile-lab-group-card individual",
+              children: [_jsxs("button", {
+                type: "button",
+                className: "mobile-lab-group-title",
+                onClick: () => setModal({
+                  type: 'studentDetail',
+                  payload: student
+                }),
+                children: [_jsx("strong", {
+                  children: student.name
+                }), _jsxs("span", {
+                  children: [rowLessons.length, " уроков"]
+                })]
+              }), _jsx("div", {
+                className: "mobile-lab-group-week",
+                children: weekDates.map((date, index) => {
+                  const dayLessons = rowLessons.filter(l => l.date === date);
+                  return _jsxs("button", {
+                    type: "button",
+                    className: `mobile-lab-group-day individual ${date === selDate ? 'selected' : ''} ${dayLessons.length ? 'busy' : ''}`,
+                    onClick: () => dayLessons[0] ? openLessonCard(dayLessons[0]) : openAddLessonAt(date, null, {
+                      initialType: 'individual',
+                      targetId: student.id,
+                      studentId: student.id
+                    }),
+                    children: [_jsx("b", {
+                      children: DAY_LABELS[index]
+                    }), dayLessons.length ? dayLessons.map(l => _jsxs("span", {
+                      children: [l.time, " ", getLessonSubject(l, groups)]
+                    }, l.id)) : _jsx("em", {
+                      children: "+"
+                    })]
+                  }, `${student.id}-${date}`);
+                })
+              })]
+            }, student.id))
+          }) : _jsx("button", {
+            type: "button",
+            className: "mobile-lab-empty",
+            onClick: () => setModal({
+              type: 'lesson',
+              payload: {
+                initialType: 'individual'
+              }
+            }),
+            children: "На этой неделе нет индивидуальных · добавить"
           })]
         }), mobileScheduleMode === 'close' && _jsxs("section", {
           className: "mobile-lab-close",

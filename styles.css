@@ -386,6 +386,23 @@
   display: grid;
   gap: 9px;
 }
+.mobile-lab-track-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 2px 2px -2px;
+  color: var(--text-sec);
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.mobile-lab-track-title b {
+  color: var(--black);
+  font-size: 9px;
+  white-space: nowrap;
+}
 .mobile-lab-group-card,
 .mobile-lab-close-row,
 .mobile-lab-empty {
@@ -398,6 +415,10 @@
   padding: 10px;
   display: grid;
   gap: 8px;
+}
+.mobile-lab-group-card.individual {
+  border-color: color-mix(in srgb, var(--blue) 34%, var(--border-light));
+  background: color-mix(in srgb, var(--blue) 6%, var(--surface));
 }
 .mobile-lab-group-title {
   border: 0;
@@ -440,6 +461,10 @@
 .mobile-lab-group-day.busy {
   border-style: solid;
   background: color-mix(in srgb, var(--yellow) 10%, var(--surface));
+}
+.mobile-lab-group-day.individual.busy {
+  background: color-mix(in srgb, var(--blue) 7%, var(--surface));
+  border-color: color-mix(in srgb, var(--blue) 34%, var(--border-light));
 }
 .mobile-lab-group-day.selected {
   border-color: var(--yellow);
@@ -570,6 +595,10 @@ body[data-theme="dark"] .mobile-lab-empty,
 body[data-theme="dark"] .mobile-lab-selected-day {
   background: var(--surface);
   border-color: var(--border-light);
+}
+body[data-theme="dark"] .mobile-lab-group-card.individual {
+  background: color-mix(in srgb, var(--blue) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--blue) 34%, var(--border-light));
 }
 body[data-theme="dark"] .mobile-lab-selected-head {
   background: color-mix(in srgb, var(--yellow) 9%, var(--surface));
@@ -8108,17 +8137,15 @@ body[data-theme="dark"] .today-work-card.neutral {
 
 @media(max-width:1199px) {
   .sched-mobile > .mobile-lab-shell {
-    display: none;
+    display: grid;
   }
 
   .sched-mobile > .mobile-week-table-shell {
-    display: grid;
+    display: none;
   }
 
   .sched-mobile > .mobile-week-shell {
-    display: grid;
-    max-width: 920px;
-    margin: 10px auto 0;
+    display: none;
   }
 
   .sched-mobile > .mobile-week-shell > .mobile-week-strip,
