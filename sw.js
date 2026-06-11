@@ -1,12 +1,16 @@
-const CACHE_NAME = 'tutor-app-v147-mobile-week-lab';
+const CACHE_NAME = 'tutor-app-v149-mobile-week-lab';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=93',
+  './styles.css?v=95',
   './financeLogic.js?v=2',
-  './app.js?v=104',
+  './app.js?v=106',
   './vendor/react.production.min.js',
   './vendor/react-dom.production.min.js',
+  './vendor/fonts/unbounded-cyrillic.woff2',
+  './vendor/fonts/unbounded-latin.woff2',
+  './vendor/fonts/martian-mono-cyrillic.woff2',
+  './vendor/fonts/martian-mono-latin.woff2',
   './manifest.json',
 ];
 

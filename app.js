@@ -3507,29 +3507,12 @@ function AttendanceModal({
     onClose: onClose,
     className: "attendance-flow-modal",
     children: [_jsxs("div", {
-      className: "attendance-flow-hero",
+      className: "attendance-flow-hero compact",
       children: [_jsxs("div", {
-        children: [_jsx("span", {
-          children: "\u0418\u0442\u043E\u0433\u0438 \u0437\u0430\u043D\u044F\u0442\u0438\u044F"
-        }), _jsx("strong", {
+        children: [_jsx("strong", {
           children: lessonTitle
         }), _jsxs("p", {
           children: [fmtDate(lesson.date), " \u00B7 ", lesson.time, " \u00B7 ", getLessonSubject(lesson, groups)]
-        })]
-      }), _jsxs("div", {
-        className: "attendance-flow-kpis",
-        children: [_jsxs("div", {
-          children: [_jsx("span", {
-            children: "\u041F\u0440\u0438\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044E\u0442"
-          }), _jsxs("b", {
-            children: [presentStudents.length, "/", ls.length]
-          })]
-        }), _jsxs("div", {
-          children: [_jsx("span", {
-            children: "\u0421\u043F\u0438\u0441\u0430\u043D\u0438\u0435"
-          }), _jsx("b", {
-            children: money(chargeTotal)
-          })]
         })]
       })]
     }), _jsxs("form", {
@@ -3905,7 +3888,7 @@ function AttendanceModal({
       })]
         })]
       }), _jsxs("div", {
-        className: "modal-actions",
+        className: "modal-actions attendance-sticky-actions",
         children: [_jsx("button", {
           type: "button",
           className: "btn btn-white btn-full",
@@ -6717,6 +6700,7 @@ function App() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [calMonth, setCalMonth] = useState(new Date());
   const [schedSubject, setSchedSubject] = useState('all');
+  const [schedFilterOpen, setSchedFilterOpen] = useState(false);
   const [mobileMoveLessonId, setMobileMoveLessonId] = useState(null);
   const [mobileScheduleMode, setMobileScheduleMode] = useState('days');
   const [customTemplates, setCustomTemplates] = useState([]);
@@ -7838,7 +7822,7 @@ function App() {
         }),
         secondary: "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0435\u043C\u043E-\u0433\u0440\u0443\u043F\u043F\u0443",
         onSecondary: () => loadDemoData(groups.length || txs.length ? true : false)
-      }), _jsxs("section", {
+      }), (students.length > 0 || lessons.length > 0) && _jsxs("section", {
         className: "today-work-panel",
         children: [_jsxs("div", {
           className: "today-work-head",
@@ -7848,16 +7832,6 @@ function App() {
             }), _jsx("strong", {
               children: "\u0427\u0442\u043E \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u0441\u0435\u0433\u043E\u0434\u043D\u044F"
             })]
-          }), _jsx("button", {
-            type: "button",
-            className: "btn btn-sm btn-black today-work-add",
-            onClick: () => setModal({
-              type: 'lesson',
-              payload: {
-                date: getTodayDate()
-              }
-            }),
-            children: "+ \u0423\u0440\u043E\u043A"
           })]
         }), _jsxs("div", {
           className: "today-work-grid",
@@ -7875,7 +7849,12 @@ function App() {
           }), _jsxs("button", {
             type: "button",
             className: `today-work-card ${debtors ? 'debt' : 'done'}`,
-            onClick: () => setTab('finance'),
+            onClick: () => {
+              setTab('finance');
+              setTimeout(() => document.getElementById('debtors-section')?.scrollIntoView({
+                block: 'start'
+              }), 500);
+            },
             children: [_jsx("span", {
               children: "\u0414\u043E\u043B\u0433\u0438"
             }), _jsx("strong", {
@@ -8047,7 +8026,7 @@ function App() {
             })]
           }, i);
         })]
-      }), _jsxs("div", {
+      }), (students.length > 0 || lessons.length > 0) && _jsxs("div", {
         className: "today-lessons-head",
         style: {
           display: 'flex',
@@ -8062,19 +8041,8 @@ function App() {
             fontWeight: 900
           },
           children: "\u0421\u0415\u0413\u041E\u0414\u041D\u042F"
-        }), _jsxs("button", {
-          className: "btn btn-sm btn-black today-section-add",
-          onClick: () => setModal({
-            type: 'lesson',
-            payload: {
-              date: getTodayDate()
-            }
-          }),
-          children: [_jsx(IcoPlus, {
-            size: 14
-          }), " \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C"]
         })]
-      }), todayLessons.length === 0 ? _jsx("div", {
+      }), (students.length > 0 || lessons.length > 0) && (todayLessons.length === 0 ? _jsx("div", {
         className: "card",
         style: {
           padding: 24,
@@ -8107,7 +8075,7 @@ function App() {
           payload: l
         }),
         onDelete: e => requestDeleteLesson(l, e)
-      }, l.id))]
+      }, l.id)))]
     });
   };
 
@@ -8427,23 +8395,6 @@ function App() {
         }), mobileScheduleMode === 'days' && _jsxs("section", {
           className: "mobile-lab-days",
           children: [_jsxs("div", {
-            className: "mobile-lab-current",
-            children: [_jsxs("div", {
-              children: [_jsx("span", {
-                children: "3 дня на экране"
-              }), _jsx("strong", {
-                children: new Date((mobileDayData?.date || weekDates[0]) + 'T00:00:00').toLocaleDateString('ru-RU', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long'
-                })
-              })]
-            }), _jsx("button", {
-              type: "button",
-              onClick: () => openAddLessonAt(mobileDayData?.date || weekDates[0]),
-              children: "+ Урок"
-            })]
-          }), _jsxs("div", {
             className: `mobile-lab-grid ${mobileFocusClass}`,
             children: [_jsx("div", {
               className: "mobile-lab-grid-corner",
@@ -9482,14 +9433,13 @@ function App() {
               }), _jsxs("div", {
                 className: "month-agenda-meta",
                 children: [_jsx("span", {
-                  children: l.type === 'group' ? 'Группа' : 'Инд'
-                }), _jsx("span", {
+                  children: getLessonSubject(l, groups)
+                }), l.status !== 'planned' && _jsx("span", {
+                  className: "status",
                   style: {
                     '--month-accent': lessonAccent(l)
                   },
                   children: statusInfo.label
-                }), _jsx("span", {
-                  children: getLessonSubject(l, groups)
                 }), markers.length > 0 && _jsx("em", {
                   children: markers.slice(0, 5).map(([kind, title]) => _jsx("i", {
                     className: `week-dot ${kind}`,
@@ -9501,7 +9451,7 @@ function App() {
               className: "month-agenda-actions",
               children: [l.status === 'planned' ? _jsx("button", {
               type: "button",
-              className: "month-agenda-action main",
+              className: "month-agenda-action primary",
               title: "Провести",
               onClick: () => setModal({
                 type: 'attendance',
@@ -9631,32 +9581,45 @@ function App() {
         const wDates = schedView === 'week' ? getWeekDatesForFilter(weekOffset) : null;
         const weekLessonsAll = wDates ? lessons.filter(l => wDates.includes(l.date)) : lessons;
         const weekSubjects = [...new Set(weekLessonsAll.map(l => getLessonSubject(l, groups)))].filter(s => SUBJECTS.includes(s));
+        if (weekSubjects.length < 2 && schedSubject === 'all') return null;
+        const filterVisible = schedFilterOpen || schedSubject !== 'all';
         return _jsxs("div", {
-          className: "day-strip",
-          style: {
-            marginBottom: 14
-          },
-          children: [_jsx("button", {
-            className: `day-btn ${schedSubject === 'all' ? 'active' : ''}`,
-            onClick: () => setSchedSubject('all'),
+          className: "schedule-filter-block",
+          children: [!filterVisible && _jsxs("button", {
+            type: "button",
+            className: "btn btn-sm btn-white schedule-filter-toggle",
+            onClick: () => setSchedFilterOpen(true),
+            children: ["\u0424\u0438\u043b\u044c\u0442\u0440: ", schedSubject === 'all' ? '\u0432\u0441\u0435 \u043f\u0440\u0435\u0434\u043c\u0435\u0442\u044b' : schedSubject]
+          }), filterVisible && _jsxs("div", {
+            className: "day-strip",
             style: {
-              minWidth: 82
+              marginBottom: 14
             },
-            children: _jsx("span", {
-              className: "day-btn-name",
-              children: "\u0412\u0441\u0435"
-            })
-          }), weekSubjects.map(subject => _jsx("button", {
-            className: `day-btn ${schedSubject === subject ? 'active' : ''}`,
-            onClick: () => setSchedSubject(subject),
-            style: {
-              minWidth: 96
-            },
-            children: _jsx("span", {
-              className: "day-btn-name",
-              children: subject
-            })
-          }, subject))]
+            children: [_jsx("button", {
+              className: `day-btn ${schedSubject === 'all' ? 'active' : ''}`,
+              onClick: () => {
+                setSchedSubject('all');
+                setSchedFilterOpen(false);
+              },
+              style: {
+                minWidth: 82
+              },
+              children: _jsx("span", {
+                className: "day-btn-name",
+                children: "\u0412\u0441\u0435"
+              })
+            }), weekSubjects.map(subject => _jsx("button", {
+              className: `day-btn ${schedSubject === subject ? 'active' : ''}`,
+              onClick: () => setSchedSubject(subject),
+              style: {
+                minWidth: 96
+              },
+              children: _jsx("span", {
+                className: "day-btn-name",
+                children: subject
+              })
+            }, subject))]
+          })]
         });
       })(), schedView === 'week' ? _jsx(WeekView, {}) : _jsx(MonthView, {})]
     });
@@ -10064,7 +10027,7 @@ function App() {
       if (!nextState.tx) return;
       setStudents(nextState.students);
       setTxs(nextState.txs);
-      triggerUndo('Оплата добавлена', lessons, snapS, snapT, undefined, 3000);
+      triggerUndo(`Оплата ${money(nextState.tx.amount)} записана`, lessons, snapS, snapT, undefined, 6000);
     };
 
     // ── ANALYTICS ───────────────────────────────────────────────────────────
@@ -10518,7 +10481,7 @@ function App() {
           sub: "\u043D\u0430\u0447\u0438\u0441\u043B\u0435\u043D\u0438\u044F"
         }), _jsx(Stat, {
           label: "\u041F\u0440\u043E\u0433\u043D\u043E\u0437",
-          value: `${Math.round(totalRealistic).toLocaleString()} ₽`,
+          value: `≈ ${(Math.round(totalRealistic / 1000) * 1000).toLocaleString()} ₽`,
           color: "#2f6fed",
           sub: "\u0440\u0435\u0430\u043B\u0438\u0441\u0442\u0438\u0447\u043D\u043E"
         }), _jsx(Stat, {
@@ -10533,7 +10496,7 @@ function App() {
           className: "finance-panel finance-trust-panel finance-control-trust-preview",
           children: [_jsx("div", {
             className: "metric-label",
-            children: "\u0414\u043E\u0432\u0435\u0440\u0438\u0435 \u043A \u0431\u0430\u043B\u0430\u043D\u0441\u0430\u043C"
+            children: "\u0420\u0430\u0441\u0448\u0438\u0444\u0440\u043E\u0432\u043A\u0430 \u0431\u0430\u043B\u0430\u043D\u0441\u043E\u0432"
           }), _jsx("div", {
             className: "finance-trust-score",
             children: balanceSummaries.filter(x => x.finance.hasHistory || x.finance.balance !== 0).length
@@ -10591,6 +10554,7 @@ function App() {
         })
       }), debtors.length > 0 && _jsxs(_Fragment, {
         children: [_jsx("div", {
+          id: "debtors-section",
           style: {
             fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
             fontSize: 12,
@@ -12354,18 +12318,6 @@ function LessonCard({
           onEdit();
         },
         children: _jsx(IcoEdit, {
-          size: 16
-        })
-      }), _jsx("button", {
-        type: "button",
-        title: "Удалить занятие",
-        "aria-label": "Удалить занятие",
-        className: "lesson-icon-action danger",
-        onClick: e => {
-          e.stopPropagation();
-          onDelete(e);
-        },
-        children: _jsx(IcoTrash, {
           size: 16
         })
       })]

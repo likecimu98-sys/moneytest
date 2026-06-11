@@ -666,14 +666,35 @@ body[data-theme="dark"] .mobile-lab-cell.empty.move-target {
 }
 @font-face {
   font-family: 'Unbounded';
-  src: local('Segoe UI Black'), local('Arial Black'), local('Segoe UI Semibold'), local('Arial');
+  src: url('vendor/fonts/unbounded-cyrillic.woff2') format('woff2');
   font-weight: 400 900;
   font-style: normal;
+  font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Unbounded';
+  src: url('vendor/fonts/unbounded-latin.woff2') format('woff2');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Martian Mono';
-  src: local('Consolas');
-  font-weight: 400 900;
+  src: url('vendor/fonts/martian-mono-cyrillic.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Martian Mono';
+  src: url('vendor/fonts/martian-mono-latin.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 :root {
   color-scheme: light;
@@ -1289,12 +1310,12 @@ body[data-theme="dark"] .badge-yellow {
 .month-agenda-name{min-width:0;font-family:var(--font-display);font-size:12px;font-weight:900;line-height:1.25;overflow:hidden;text-overflow:ellipsis}
 .month-agenda-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .month-agenda-meta span{border:1px solid var(--border-light);border-radius:4px;background:var(--surface);padding:2px 6px;font-size:9px;font-weight:900;color:var(--text-sec)}
-.month-agenda-meta span:nth-child(2){border-color:var(--month-accent,var(--border-light));color:var(--black)}
+.month-agenda-meta span.status{border-color:var(--month-accent,var(--border-light));color:var(--black)}
 .month-agenda-meta em{display:flex;gap:3px}
 .month-agenda-actions{width:148px;display:grid;grid-template-columns:repeat(4,32px);align-items:center;justify-content:end;gap:5px}
 .month-agenda-action{width:32px;height:32px;min-width:32px;min-height:32px;max-width:32px;max-height:32px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--text-sec);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;line-height:1;flex:0 0 32px;align-self:center}
 .month-agenda-action svg{width:15px;height:15px;display:block;flex:0 0 auto;pointer-events:none}
-.month-agenda-action.main{border:var(--border);background:var(--green);color:var(--black);box-shadow:3px 3px 0 var(--shadow-color)}
+.month-agenda-action.primary{border:var(--border);background:var(--green);color:var(--black);box-shadow:3px 3px 0 var(--shadow-color)}
 .month-agenda-action.danger{color:var(--text-muted)}
 .finance-chart-panel{max-width:680px;margin-right:auto}
 .finance-chart-scroll{overflow-x:auto;padding:2px 2px 0}
@@ -1713,7 +1734,7 @@ body[data-theme="dark"] .month-selected-panel{background:var(--surface)}
 body[data-theme="dark"] .month-selected-header,
 body[data-theme="dark"] .month-agenda-time{background:var(--ink);color:var(--yellow)}
 body[data-theme="dark"] .month-agenda-row.final{background:#20242d}
-body[data-theme="dark"] .month-agenda-meta span:nth-child(2){color:var(--black)}
+body[data-theme="dark"] .month-agenda-meta span.status{color:var(--black)}
 body[data-theme="dark"] .mobile-week-strip{background:var(--white)}
 body[data-theme="dark"] .mobile-week-strip-day{background:var(--surface);color:var(--black);border-color:var(--border-light)}
 body[data-theme="dark"] .mobile-week-strip-day.selected{background:var(--yellow);color:var(--on-yellow);border-color:var(--yellow)}
@@ -1757,7 +1778,7 @@ body[data-theme="dark"] .schedule-lesson-meta{color:#c5bcad}
   --border-dashed: #b8ad9a;
   --text-sec: #5d6572;
   --text-muted: #8a9099;
-  --bg-subtle: #fff1ac;
+  --bg-subtle: #faf3da;
   --bg-danger: #ffe3e1;
   --bg-success: #dff8ec;
   --done-bg: #ede9df;
@@ -1778,7 +1799,7 @@ body[data-theme="dark"] {
   --red: #ff6b72;
   --green: #24d08a;
   --blue: #8ba8ff;
-  --line: #d7c59a;
+  --line: rgba(215, 197, 154, .55);
   --line-soft: #4c5260;
   --shadow-color: rgba(0,0,0,.28);
   --shadow-strong: rgba(0,0,0,.38);
@@ -2736,9 +2757,14 @@ body[data-theme="dark"] .finance-forecast-hero {
   line-height: 1.25;
 }
 .attendance-flow-modal .modal-actions {
-  position: static;
+  position: sticky;
+  bottom: -1px;
+  z-index: 5;
   background: var(--surface);
   backdrop-filter: none;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-top: 1.5px solid var(--border-light);
 }
 .attendance-flow-section {
   border: 1.5px solid var(--border-light);
@@ -4637,7 +4663,7 @@ body[data-theme="dark"] {
   --on-red: #fff8f5;
   --on-green: #061912;
   --on-blue: #101425;
-  --line: #d8bd6a;
+  --line: rgba(216, 189, 106, .5);
   --line-soft: #3c372b;
   --border: 1.5px solid var(--line);
   --border-light: #474032;
@@ -8501,4 +8527,97 @@ body[data-theme="dark"] .today-work-card.neutral {
   textarea {
     font-size: 16px;
   }
+}
+
+/* Compact attendance hero + sticky confirm bar */
+.attendance-flow-hero.compact { padding: 10px 12px; }
+.attendance-flow-hero.compact strong { font-size: 14px; }
+.attendance-sticky-actions {
+  position: sticky;
+  bottom: -1px;
+  z-index: 5;
+  background: var(--surface);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-top: 4px;
+  border-top: 1.5px solid var(--border-light);
+}
+
+/* Compact schedule controls */
+.schedule-filter-block { margin-bottom: 12px; }
+.schedule-filter-toggle { margin-bottom: 2px; }
+@media (max-width: 768px) {
+  .schedule-print-btn { display: none; }
+  .schedule-toolbar-actions { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── DESIGN POLISH PASS ───────────────────────────────────────── */
+
+/* 1. Quiet "all good" cards: status that needs no action stays small */
+.today-work-card.done {
+  min-height: 0;
+  padding: 10px 14px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.today-work-card.done span { margin: 0; }
+.today-work-card.done strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+.today-work-card.done strong::before { content: "✓ "; color: var(--green); }
+.today-work-card.done small { width: 100%; }
+
+/* 2. Tiny labels read better in the body font; display font stays for 13px+ */
+.btn-sm,
+.toggle-opt,
+.finance-period-btn,
+.detail-tab,
+.lesson-tag,
+.badge,
+.day-btn-name,
+.schedule-view-toggle-option,
+.mobile-lab-tabs button,
+.week-marker-legend,
+.month-agenda-meta span {
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+.month-agenda-meta span { font-size: 10px; }
+.finance-period-btn { font-size: 11px; }
+.modal .detail-tabs button { font-size: 11px; }
+
+/* 3. Flat list rows: shadows reserved for floating/interactive layers */
+.lesson-card,
+.student-item,
+.stat-card,
+.metric-card,
+.finance-panel,
+.parent-kpi-card,
+.mobile-agenda-card,
+.month-day,
+.btn-sm {
+  box-shadow: none;
+}
+.btn-sm:active { transform: translateY(1px); }
+
+/* 4. Week grid: dashed = empty slot only; lessons sit on calm solid cells */
+.mobile-lab-cell.filled {
+  border-style: solid;
+  border-color: transparent;
+  background: transparent;
+  padding: 0;
+}
+.mobile-lab-cell.filled.selected-day {
+  border-color: color-mix(in srgb, var(--yellow) 55%, transparent);
+  background: color-mix(in srgb, var(--yellow) 7%, transparent);
+  padding: 3px;
+}
+
+/* 5. Content never hides behind the FAB */
+@media (max-width: 768px) {
+  .main { padding-bottom: 124px; }
 }
