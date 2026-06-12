@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tutor-app-v149-mobile-week-lab';
+const CACHE_NAME = 'tutor-app-v150-mobile-week-lab';
 const ASSETS = [
   './',
   './index.html',

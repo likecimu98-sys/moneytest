@@ -8544,11 +8544,10 @@ body[data-theme="dark"] .today-work-card.neutral {
 }
 
 /* Compact schedule controls */
-.schedule-filter-block { margin-bottom: 12px; }
-.schedule-filter-toggle { margin-bottom: 2px; }
 @media (max-width: 768px) {
   .schedule-print-btn { display: none; }
-  .schedule-toolbar-actions { grid-template-columns: minmax(0, 1fr); }
+  .schedule-toolbar-actions { grid-template-columns: auto minmax(0, 1fr); }
+  .schedule-slots-btn { min-height: 38px; }
 }
 
 /* ── DESIGN POLISH PASS ───────────────────────────────────────── */
@@ -8620,4 +8619,194 @@ body[data-theme="dark"] .today-work-card.neutral {
 /* 5. Content never hides behind the FAB */
 @media (max-width: 768px) {
   .main { padding-bottom: 124px; }
+}
+
+/* Money tools: tax report, month recap, free slots */
+.month-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.month-switcher strong {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 900;
+}
+.month-switcher .btn {
+  min-width: 44px;
+}
+.money-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.money-tool-grid .stat-card {
+  box-shadow: none;
+}
+.money-tool-list {
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+  margin-bottom: 12px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.money-tool-hint {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-sec);
+  margin: 0 0 12px;
+}
+.money-tool-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 14px 0;
+  margin: 0 0 12px;
+}
+.recap-hero {
+  display: grid;
+  gap: 4px;
+  border: 1.5px solid color-mix(in srgb, var(--green) 40%, var(--border-light));
+  background: color-mix(in srgb, var(--green) 9%, var(--surface));
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.recap-hero span {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-sec);
+}
+.recap-hero strong {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+.recap-hero em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+}
+.recap-hero em.up { color: var(--green); }
+.recap-hero em.down { color: var(--red); }
+.recap-top-student {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.recap-top-student span {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-sec);
+}
+.recap-top-student strong {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 900;
+}
+.recap-top-student em {
+  font-style: normal;
+  font-weight: 800;
+  color: var(--green);
+}
+.free-slots-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-light);
+}
+.free-slots-row:first-child { border-top: none; }
+.free-slots-row > span {
+  flex: 0 0 86px;
+  font-weight: 800;
+  font-size: 12px;
+}
+.free-slots-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.free-slots-chips b {
+  border: 1.5px solid color-mix(in srgb, var(--green) 45%, var(--border-light));
+  background: color-mix(in srgb, var(--green) 10%, var(--surface));
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.free-slots-row em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding-top: 3px;
+}
+.month-recap-teaser {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-color: color-mix(in srgb, var(--yellow) 60%, var(--border-light));
+  background: color-mix(in srgb, var(--yellow) 10%, var(--surface));
+}
+.month-recap-teaser > div { flex: 1; }
+.month-recap-teaser strong {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* ===== Student card quiet actions ===== */
+.student-quiet-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.student-quiet-actions .btn {
+  flex: 1;
+  min-height: 36px;
+}
+
+/* ===== Week dot legend (mobile) ===== */
+.week-dot-legend {
+  display: none;
+}
+@media (max-width: 768px) {
+  .week-dot-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1.5px dashed var(--border-light);
+    border-radius: 12px;
+    font-size: 11px;
+    color: var(--text-sec);
+  }
+  .week-dot-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .week-dot-legend .week-dot {
+    width: 9px;
+    height: 9px;
+  }
+  .mobile-lab-lesson.cell .week-dot {
+    width: 9px;
+    height: 9px;
+  }
 }

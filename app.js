@@ -4705,10 +4705,13 @@ function StudentDetailModal({
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gap: 8,
-        marginBottom: 14
+        marginBottom: 8
       },
       children: [student.balance < 0 && _jsx("button", {
         className: "btn btn-green btn-full",
+        style: {
+          gridColumn: '1 / -1'
+        },
         onClick: () => onPay(student.id),
         children: "\u041E\u043F\u043B\u0430\u0442\u0438\u043B \u0434\u043E\u043B\u0433"
       }), _jsx("button", {
@@ -4719,22 +4722,17 @@ function StudentDetailModal({
         className: "btn btn-white btn-full",
         onClick: () => onPackage(student),
         children: "\u0410\u0431\u043E\u043D\u0435\u043C\u0435\u043D\u0442"
-      }), _jsx("button", {
-        className: "btn btn-white btn-full",
+      })]
+    }), _jsxs("div", {
+      className: "student-quiet-actions",
+      children: [_jsx("button", {
+        className: "btn btn-sm btn-white",
         onClick: onProfile,
-        children: "\u041F\u0440\u043E\u0444\u0438\u043B\u044C"
-      }), _jsx("button", {
-        className: "btn btn-white btn-full",
-        onClick: onReport,
-        children: "Отчёт"
-      }), _jsx("button", {
-        className: "btn btn-white btn-full",
-        onClick: onEdit,
         children: "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C"
       }), _jsx("button", {
-        className: `btn btn-full ${student.archived ? 'btn-green' : 'btn-white'}`,
+        className: `btn btn-sm ${student.archived ? 'btn-green' : 'btn-white'}`,
         onClick: () => onArchive(student.id, !student.archived),
-        children: student.archived ? 'Вернуть' : 'В архив'
+        children: student.archived ? 'Вернуть из архива' : 'В архив'
       })]
     }), _jsx("div", {
       className: "detail-tabs",
@@ -4957,7 +4955,7 @@ function StudentDetailModal({
             children: finance.balance < 0 ? "\u041E\u043F\u043B\u0430\u0442\u0438\u0442\u044C \u0434\u043E\u043B\u0433" : "\u0412\u043D\u0435\u0441\u0442\u0438 \u043E\u043F\u043B\u0430\u0442\u0443"
           }), _jsx("button", {
             className: "btn btn-white btn-full",
-            onClick: onEdit,
+            onClick: onProfile,
             children: "\u041F\u0440\u0430\u0432\u0438\u0442\u044C \u0443\u0447\u0435\u043D\u0438\u043A\u0430"
           })]
         })]
@@ -5161,7 +5159,15 @@ function StudentDetailModal({
           })]
         }, g.id);
       })]
-    }), detailTab === 'parent' && _jsx(ParentPortalPanel, {
+    }), detailTab === 'parent' && _jsxs(_Fragment, {
+      children: [_jsx("button", {
+        className: "btn btn-white btn-full",
+        style: {
+          marginBottom: 10
+        },
+        onClick: onReport,
+        children: "Отчёт об успеваемости"
+      }), _jsx(ParentPortalPanel, {
       student: student,
       students: students,
       groups: groups,
@@ -5170,6 +5176,7 @@ function StudentDetailModal({
       onSave: onSaveParentPortal,
       onAcceptPaymentNotice: onAcceptPaymentNotice,
       onDismissPaymentNotice: onDismissPaymentNotice
+      })]
     }), detailTab === 'notes' && _jsxs("div", {
       className: "card",
       style: {
@@ -5225,7 +5232,7 @@ function StudentDetailModal({
         style: {
           marginTop: 12
         },
-        onClick: onEdit,
+        onClick: onProfile,
         children: "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0437\u0430\u043C\u0435\u0442\u043A\u0438"
       })]
     })]
@@ -5676,8 +5683,13 @@ function MessageModal({
     name: 'Долг подробно',
     body: buildDebtParentMessage(student, txs || [], lessons, groups)
   } : null;
-  const allTemplates = [...(debtTemplate ? [debtTemplate] : []), ...DEFAULT_TEMPLATES, ...(templates || [])];
-  const [selId, setSelId] = useState(debtTemplate?.id || allTemplates[0]?.id || '');
+  const packageTemplate = mode === 'package' ? {
+    id: 'package_renew',
+    name: 'Продление абонемента',
+    body: `Здравствуйте! У {name} на абонементе осталось ${pluralClasses(student.packageLessons || 0)}. Продлим на следующий пакет, чтобы занятия не прерывались? Ближайший урок: {lessonDate}.`
+  } : null;
+  const allTemplates = [...(debtTemplate ? [debtTemplate] : []), ...(packageTemplate ? [packageTemplate] : []), ...DEFAULT_TEMPLATES, ...(templates || [])];
+  const [selId, setSelId] = useState(debtTemplate?.id || packageTemplate?.id || allTemplates[0]?.id || '');
   const [editMode, setEditMode] = useState(false); // manage custom templates
   const [customText, setCustomText] = useState('');
   const [editingTpl, setEditingTpl] = useState(null); // {id,name,body} | 'new'
@@ -5928,7 +5940,7 @@ function MessageModal({
     });
   }
   return _jsxs(Modal, {
-    title: `${mode === 'debt' ? 'Сообщение о долге' : 'Сообщение'} · ${student.name}`,
+    title: `${mode === 'debt' ? 'Сообщение о долге' : mode === 'package' ? 'Продление абонемента' : 'Сообщение'} · ${student.name}`,
     onClose: onClose,
     children: [_jsxs("div", {
       style: {
@@ -6699,8 +6711,6 @@ function App() {
   const [schedView, setSchedView] = useState('week');
   const [weekOffset, setWeekOffset] = useState(0);
   const [calMonth, setCalMonth] = useState(new Date());
-  const [schedSubject, setSchedSubject] = useState('all');
-  const [schedFilterOpen, setSchedFilterOpen] = useState(false);
   const [mobileMoveLessonId, setMobileMoveLessonId] = useState(null);
   const [mobileScheduleMode, setMobileScheduleMode] = useState('days');
   const [customTemplates, setCustomTemplates] = useState([]);
@@ -7675,11 +7685,11 @@ function App() {
     const earnedToday = todayTxs.filter(tx => tx.type === 'payment').reduce((s, tx) => s + tx.amount, 0);
     const chargedToday = todayTxs.filter(tx => tx.type === 'charge').reduce((s, tx) => s + tx.amount, 0);
     const futureLessons = lessons.filter(l => l.status === 'planned' && l.date >= getTodayDate());
-    const lowPackages = activeStudents.filter(s => (s.packageLessons || 0) === 1).length;
+    const lowPackages = activeStudents.filter(s => (s.packageLessons || 0) > 0 && (s.packageLessons || 0) <= 2).length;
     const todayNotes = todayLessons.filter(l => l.lessonNote).length;
-    const attention = [...activeStudents.filter(s => (s.packageLessons || 0) === 1).slice(0, 3).map(s => ({
+    const attention = [...activeStudents.filter(s => (s.packageLessons || 0) > 0 && (s.packageLessons || 0) <= 2).slice(0, 3).map(s => ({
       kind: 'Абонемент',
-      text: `${s.name}: остался 1 урок`,
+      text: `${s.name}: осталось ${pluralClasses(s.packageLessons)}`,
       student: s
     })), ...activeStudents.filter(s => !futureLessons.some(l => getLessonStudents(l, students, groups).some(st => sameId(st.id, s.id)))).slice(0, 3).map(s => ({
       kind: 'Нет уроков',
@@ -7875,7 +7885,46 @@ function App() {
             })]
           })]
         })]
-      }), _jsxs("div", {
+      }), (() => {
+        const now = new Date();
+        if (now.getDate() > 3) return null;
+        const recapKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        if (settings.monthRecapSeen === recapKey) return null;
+        const prevBounds = monthBoundsFor(-1);
+        if (!lessons.some(l => l.status === 'completed' && inMonthBounds(l.date, prevBounds))) return null;
+        const dismissRecap = () => setSettings({
+          ...settings,
+          monthRecapSeen: recapKey
+        });
+        return _jsxs("div", {
+          className: "card month-recap-teaser",
+          children: [_jsxs("div", {
+            children: [_jsx("div", {
+              className: "metric-label",
+              children: "Месяц закрыт"
+            }), _jsxs("strong", {
+              children: ["Готов итог: ", monthBoundsTitle(prevBounds).toLowerCase()]
+            })]
+          }), _jsx("button", {
+            className: "btn btn-sm btn-black",
+            onClick: () => {
+              dismissRecap();
+              setModal({
+                type: 'monthRecap',
+                payload: {
+                  initialOffset: -1
+                }
+              });
+            },
+            children: "Открыть"
+          }), _jsx("button", {
+            className: "btn btn-sm btn-white",
+            onClick: dismissRecap,
+            "aria-label": "Скрыть итог месяца",
+            children: "×"
+          })]
+        });
+      })(), _jsxs("div", {
         className: "today-stats-grid",
         children: [_jsxs("div", {
           className: "stat-card stat-card-ink",
@@ -8019,7 +8068,7 @@ function App() {
                 type: 'message',
                 payload: {
                   student: item.student,
-                  mode: item.student.balance < 0 ? 'debt' : null
+                  mode: item.kind === '\u0410\u0431\u043E\u043D\u0435\u043C\u0435\u043D\u0442' ? 'package' : item.student.balance < 0 ? 'debt' : null
                 }
               }),
               children: "\u0422\u0435\u043A\u0441\u0442"
@@ -8081,7 +8130,7 @@ function App() {
 
   // SCHEDULE PAGE
   const PageSchedule = () => {
-    const scheduleLessons = schedSubject === 'all' ? lessons : lessons.filter(l => getLessonSubject(l, groups) === schedSubject);
+    const scheduleLessons = lessons;
     const WeekView = () => {
       const mobileDragRef = useRef(null);
       const mobileSuppressClickRef = useRef(false);
@@ -9533,6 +9582,13 @@ function App() {
         }), _jsxs("div", {
           className: "schedule-toolbar-actions",
           children: [_jsx("button", {
+            className: "btn btn-sm btn-white schedule-slots-btn",
+            title: "Свободные окна недели",
+            onClick: () => setModal({
+              type: 'freeSlots'
+            }),
+            children: "Окна"
+          }), _jsx("button", {
             className: "btn btn-sm btn-white schedule-print-btn",
             title: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 PDF",
             onClick: () => setModal({
@@ -9564,64 +9620,32 @@ function App() {
         }),
         secondary: "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0435\u043C\u043E-\u0433\u0440\u0443\u043F\u043F\u0443",
         onSecondary: () => loadDemoData(groups.length || txs.length ? true : false)
-      }), (() => {
-        const getWeekDatesForFilter = offset => {
-          const today = new Date();
-          const dow = today.getDay() || 7;
-          const mon = new Date(today);
-          mon.setDate(today.getDate() - dow + 1 + offset * 7);
-          return Array.from({
-            length: 7
-          }, (_, i) => {
-            const d = new Date(mon);
-            d.setDate(mon.getDate() + i);
-            return localDateString(d);
-          });
+      }), schedView === 'week' ? _jsx(WeekView, {}) : _jsx(MonthView, {}), (() => {
+        const legendLabels = {
+          homework: 'есть ДЗ',
+          note: 'заметка',
+          conflict: 'конфликт времени',
+          debt: 'есть долг',
+          series: 'повторяется'
         };
-        const wDates = schedView === 'week' ? getWeekDatesForFilter(weekOffset) : null;
-        const weekLessonsAll = wDates ? lessons.filter(l => wDates.includes(l.date)) : lessons;
-        const weekSubjects = [...new Set(weekLessonsAll.map(l => getLessonSubject(l, groups)))].filter(s => SUBJECTS.includes(s));
-        if (weekSubjects.length < 2 && schedSubject === 'all') return null;
-        const filterVisible = schedFilterOpen || schedSubject !== 'all';
-        return _jsxs("div", {
-          className: "schedule-filter-block",
-          children: [!filterVisible && _jsxs("button", {
-            type: "button",
-            className: "btn btn-sm btn-white schedule-filter-toggle",
-            onClick: () => setSchedFilterOpen(true),
-            children: ["\u0424\u0438\u043b\u044c\u0442\u0440: ", schedSubject === 'all' ? '\u0432\u0441\u0435 \u043f\u0440\u0435\u0434\u043c\u0435\u0442\u044b' : schedSubject]
-          }), filterVisible && _jsxs("div", {
-            className: "day-strip",
-            style: {
-              marginBottom: 14
-            },
-            children: [_jsx("button", {
-              className: `day-btn ${schedSubject === 'all' ? 'active' : ''}`,
-              onClick: () => {
-                setSchedSubject('all');
-                setSchedFilterOpen(false);
-              },
-              style: {
-                minWidth: 82
-              },
-              children: _jsx("span", {
-                className: "day-btn-name",
-                children: "\u0412\u0441\u0435"
-              })
-            }), weekSubjects.map(subject => _jsx("button", {
-              className: `day-btn ${schedSubject === subject ? 'active' : ''}`,
-              onClick: () => setSchedSubject(subject),
-              style: {
-                minWidth: 96
-              },
-              children: _jsx("span", {
-                className: "day-btn-name",
-                children: subject
-              })
-            }, subject))]
-          })]
+        const kinds = new Set();
+        scheduleLessons.forEach(l => {
+          if (l.homework) kinds.add('homework');
+          if (l.lessonNote) kinds.add('note');
+          if (l.seriesId) kinds.add('series');
+          if (!kinds.has('debt') && getLessonStudents(l, students, groups).some(s => s.balance < 0)) kinds.add('debt');
+          if (!kinds.has('conflict') && findLessonConflicts(l, lessons, students, groups, l.id).length) kinds.add('conflict');
         });
-      })(), schedView === 'week' ? _jsx(WeekView, {}) : _jsx(MonthView, {})]
+        if (!kinds.size) return null;
+        return _jsx("div", {
+          className: "week-dot-legend",
+          children: ['homework', 'note', 'conflict', 'debt', 'series'].filter(k => kinds.has(k)).map(kind => _jsxs("span", {
+            children: [_jsx("i", {
+              className: `week-dot ${kind}`
+            }), legendLabels[kind]]
+          }, kind))
+        });
+      })()]
     });
   };
 
@@ -9782,10 +9806,11 @@ function App() {
                 title: s.balance > 0 ? 'Предоплата' : 'Баланс',
                 children: [s.balance > 0 ? '+' : '', money(s.balance)]
               }), (s.packageLessons || 0) > 0 && _jsxs("span", {
-                className: "badge badge-green",
+                className: `badge ${s.packageLessons <= 2 ? 'badge-yellow' : 'badge-green'}`,
                 style: {
                   marginLeft: 6
                 },
+                title: s.packageLessons <= 2 ? '\u0410\u0431\u043E\u043D\u0435\u043C\u0435\u043D\u0442 \u0437\u0430\u043A\u0430\u043D\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F' : '\u0410\u0431\u043E\u043D\u0435\u043C\u0435\u043D\u0442',
                 children: [s.packageLessons, " \u0437\u0430\u043D."]
               }), s.archived && _jsx("span", {
                 className: "badge badge-yellow",
@@ -9990,7 +10015,7 @@ function App() {
     const debt = activeStudents.filter(s => s.balance < 0).reduce((s, st) => s + Math.abs(st.balance), 0);
     const prepaid = activeStudents.filter(s => s.balance > 0).reduce((s, st) => s + st.balance, 0);
     const debtors = activeStudents.filter(s => s.balance < 0).sort((a, b) => a.balance - b.balance);
-    const lowPackages = students.filter(s => !s.archived && (s.packageLessons || 0) > 0 && (s.packageLessons || 0) <= 1);
+    const lowPackages = students.filter(s => !s.archived && (s.packageLessons || 0) > 0 && (s.packageLessons || 0) <= 2);
     const balanceSummaries = activeStudents.map(s => ({
       student: s,
       finance: getStudentFinanceSummary(s, txs, lessons, groups)
@@ -10654,8 +10679,18 @@ function App() {
                 fontSize: 11,
                 color: 'var(--text-sec)'
               },
-              children: ["\u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C ", s.packageLessons, " \u0437\u0430\u043D\u044F\u0442\u0438\u0435"]
+              children: ["\u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C ", pluralClasses(s.packageLessons)]
             })]
+          }), _jsx("button", {
+            className: "btn btn-sm btn-white",
+            onClick: () => setModal({
+              type: 'message',
+              payload: {
+                student: s,
+                mode: 'package'
+              }
+            }),
+            children: "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C"
           }), _jsx("button", {
             className: "btn btn-sm btn-blue",
             onClick: () => setModal({
@@ -11705,6 +11740,19 @@ function App() {
           }), _jsx("button", {
             className: "btn btn-sm btn-white",
             onClick: () => setModal({
+              type: 'monthRecap',
+              payload: null
+            }),
+            children: "\u0418\u0442\u043E\u0433 \u043C\u0435\u0441\u044F\u0446\u0430"
+          }), _jsx("button", {
+            className: "btn btn-sm btn-white",
+            onClick: () => setModal({
+              type: 'taxReport'
+            }),
+            children: "\u041D\u0430\u043B\u043E\u0433"
+          }), _jsx("button", {
+            className: "btn btn-sm btn-white",
+            onClick: () => setModal({
               type: 'data'
             }),
             children: "\u0414\u0430\u043D\u043D\u044B\u0435"
@@ -12150,6 +12198,407 @@ function App() {
       entries: deletionLog,
       onRestore: restoreDeletion,
       onClose: () => setModal(null)
+    }), modal?.type === 'taxReport' && _jsx(TaxReportModal, {
+      students: students,
+      txs: txs,
+      onClose: () => setModal(null)
+    }), modal?.type === 'monthRecap' && _jsx(MonthRecapModal, {
+      students: students,
+      groups: groups,
+      lessons: lessons,
+      txs: txs,
+      initialOffset: modal.payload?.initialOffset || 0,
+      onClose: () => setModal(null)
+    }), modal?.type === 'freeSlots' && _jsx(FreeSlotsModal, {
+      lessons: lessons,
+      onClose: () => setModal(null)
+    })]
+  });
+}
+
+// ── Money tools: tax report, month recap, free slots ──
+const monthBoundsFor = offset => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0, 23, 59, 59);
+  return {
+    start,
+    end
+  };
+};
+const inMonthBounds = (dateStr, bounds) => {
+  if (!dateStr) return false;
+  const d = new Date(String(dateStr).slice(0, 10) + 'T00:00:00');
+  return d >= bounds.start && d <= bounds.end;
+};
+const monthBoundsTitle = bounds => {
+  const raw = bounds.start.toLocaleDateString('ru-RU', {
+    month: 'long',
+    year: 'numeric'
+  });
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+};
+const copyPlainText = async text => {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const a = document.createElement('textarea');
+    a.value = text;
+    document.body.appendChild(a);
+    a.select();
+    document.execCommand('copy');
+    a.remove();
+  }
+};
+const sharePlainText = async (title, text) => {
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title,
+        text
+      });
+      return true;
+    } catch {}
+  }
+  await copyPlainText(text);
+  return false;
+};
+function MonthSwitcher({
+  bounds,
+  onPrev,
+  onNext,
+  nextDisabled
+}) {
+  return _jsxs("div", {
+    className: "month-switcher",
+    children: [_jsx("button", {
+      type: "button",
+      className: "btn btn-sm btn-white",
+      onClick: onPrev,
+      "aria-label": "Предыдущий месяц",
+      children: "‹"
+    }), _jsx("strong", {
+      children: monthBoundsTitle(bounds)
+    }), _jsx("button", {
+      type: "button",
+      className: "btn btn-sm btn-white",
+      onClick: onNext,
+      disabled: nextDisabled,
+      "aria-label": "Следующий месяц",
+      children: "›"
+    })]
+  });
+}
+function TaxReportModal({
+  students,
+  txs,
+  onClose
+}) {
+  const [offset, setOffset] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const bounds = monthBoundsFor(offset);
+  const payments = txs.filter(tx => tx.type === 'payment' && inMonthBounds(tx.date, bounds)).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const total = payments.reduce((s, tx) => s + Number(tx.amount || 0), 0);
+  const nameOf = id => students.find(s => sameId(s.id, id))?.name || 'Ученик';
+  const reportText = [`Доход за ${monthBoundsTitle(bounds).toLowerCase()}: ${money(total)}`, '', ...payments.map(tx => `${fmtDate(tx.date)} · ${nameOf(tx.studentId)} · ${money(Number(tx.amount || 0))}`), '', `НПД 4% (оплаты от физлиц): ${money(Math.round(total * 0.04))}`].join('\n');
+  const copyReport = async () => {
+    await copyPlainText(reportText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return _jsxs(Modal, {
+    title: "Налог самозанятого",
+    onClose: onClose,
+    children: [_jsx(MonthSwitcher, {
+      bounds: bounds,
+      onPrev: () => setOffset(o => o - 1),
+      onNext: () => setOffset(o => o + 1),
+      nextDisabled: offset >= 0
+    }), _jsxs("div", {
+      className: "money-tool-grid",
+      children: [_jsxs("div", {
+        className: "stat-card",
+        children: [_jsx("div", {
+          className: "stat-label",
+          children: "Получено оплат"
+        }), _jsx("div", {
+          className: "stat-value",
+          children: money(total)
+        })]
+      }), _jsxs("div", {
+        className: "stat-card",
+        children: [_jsx("div", {
+          className: "stat-label",
+          children: "НПД 4%"
+        }), _jsx("div", {
+          className: "stat-value",
+          children: money(Math.round(total * 0.04))
+        })]
+      }), _jsxs("div", {
+        className: "stat-card",
+        children: [_jsx("div", {
+          className: "stat-label",
+          children: "НПД 6%"
+        }), _jsx("div", {
+          className: "stat-value",
+          children: money(Math.round(total * 0.06))
+        })]
+      })]
+    }), payments.length ? _jsx("div", {
+      className: "money-tool-list",
+      children: payments.map(tx => _jsxs("div", {
+        className: "finance-kpi-row",
+        children: [_jsx("span", {
+          children: `${fmtDate(tx.date)} · ${nameOf(tx.studentId)}`
+        }), _jsx("strong", {
+          children: money(Number(tx.amount || 0))
+        }), _jsx("em", {
+          children: tx.kind === 'package' ? 'абонемент' : 'оплата'
+        })]
+      }, tx.id))
+    }) : _jsx("p", {
+      className: "money-tool-empty",
+      children: "В этом месяце оплат пока нет."
+    }), _jsx("p", {
+      className: "money-tool-hint",
+      children: "4% — оплаты от физлиц, 6% — от юрлиц. Каждую оплату вносите в приложение «Мой налог» в день получения; этот список — готовая шпаргалка."
+    }), _jsxs("div", {
+      className: "modal-actions",
+      children: [_jsx("button", {
+        type: "button",
+        className: "btn btn-white btn-full",
+        onClick: onClose,
+        children: "Закрыть"
+      }), _jsx("button", {
+        type: "button",
+        className: "btn btn-black btn-full",
+        onClick: copyReport,
+        children: copied ? "Скопировано" : "Скопировать отчёт"
+      })]
+    })]
+  });
+}
+function MonthRecapModal({
+  students,
+  groups,
+  lessons,
+  txs,
+  initialOffset = 0,
+  onClose
+}) {
+  const [offset, setOffset] = useState(initialOffset);
+  const [copied, setCopied] = useState(false);
+  const statsFor = off => {
+    const bounds = monthBoundsFor(off);
+    const monthLessons = lessons.filter(l => inMonthBounds(l.date, bounds));
+    const completed = monthLessons.filter(l => l.status === 'completed');
+    const noShow = monthLessons.filter(l => l.status === 'no_show');
+    const hours = completed.reduce((s, l) => s + (Number(l.duration) || 60), 0) / 60;
+    const received = txs.filter(tx => tx.type === 'payment' && inMonthBounds(tx.date, bounds)).reduce((s, tx) => s + Number(tx.amount || 0), 0);
+    const attendanceBase = completed.length + noShow.length;
+    const attendanceRate = attendanceBase ? Math.round(completed.length / attendanceBase * 100) : null;
+    const byStudent = {};
+    let earned = 0;
+    completed.forEach(l => {
+      getLessonStudents(l, students, groups, {
+        includeArchived: true
+      }).forEach(s => {
+        if (l.attendance?.[s.id] === false) return;
+        const rate = getLessonRate(l, s, groups);
+        earned += rate;
+        byStudent[s.id] = (byStudent[s.id] || 0) + rate;
+      });
+    });
+    const topEntry = Object.entries(byStudent).sort((a, b) => b[1] - a[1])[0];
+    const topStudent = topEntry ? {
+      name: students.find(s => sameId(s.id, topEntry[0]))?.name || 'Ученик',
+      earned: topEntry[1]
+    } : null;
+    return {
+      bounds,
+      completedCount: completed.length,
+      hours,
+      earned,
+      received,
+      attendanceRate,
+      topStudent
+    };
+  };
+  const cur = statsFor(offset);
+  const prev = statsFor(offset - 1);
+  const delta = cur.earned - prev.earned;
+  const deltaPct = prev.earned > 0 ? Math.round(delta / prev.earned * 100) : null;
+  const deltaLabel = prev.earned > 0 ? `${delta >= 0 ? '+' : '−'}${Math.abs(deltaPct)}% к прошлому месяцу` : 'прошлый месяц без начислений';
+  const recapText = [`${monthBoundsTitle(cur.bounds)}: ${pluralLessons(cur.completedCount)} (~${Math.round(cur.hours)} ч), заработано ${money(cur.earned)}${deltaPct != null ? ` (${delta >= 0 ? '+' : '−'}${Math.abs(deltaPct)}%)` : ''}.`, cur.attendanceRate != null ? `Посещаемость: ${cur.attendanceRate}%.` : '', cur.topStudent ? `Самый активный ученик: ${cur.topStudent.name} (${money(cur.topStudent.earned)}).` : ''].filter(Boolean).join('\n');
+  const copyRecap = async () => {
+    await copyPlainText(recapText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return _jsxs(Modal, {
+    title: "Итог месяца",
+    onClose: onClose,
+    children: [_jsx(MonthSwitcher, {
+      bounds: cur.bounds,
+      onPrev: () => setOffset(o => o - 1),
+      onNext: () => setOffset(o => o + 1),
+      nextDisabled: offset >= 0
+    }), _jsxs("div", {
+      className: "recap-hero",
+      children: [_jsx("span", {
+        children: "Заработано"
+      }), _jsx("strong", {
+        children: money(cur.earned)
+      }), _jsx("em", {
+        className: delta >= 0 ? 'up' : 'down',
+        children: deltaLabel
+      })]
+    }), _jsxs("div", {
+      className: "money-tool-grid",
+      children: [_jsxs("div", {
+        className: "stat-card",
+        children: [_jsx("div", {
+          className: "stat-label",
+          children: "Проведено"
+        }), _jsx("div", {
+          className: "stat-value",
+          children: pluralLessons(cur.completedCount)
+        })]
+      }), _jsxs("div", {
+        className: "stat-card",
+        children: [_jsx("div", {
+          className: "stat-label",
+          children: "Часов"
+        }), _jsx("div", {
+          className: "stat-value",
+          children: Math.round(cur.hours)
+        })]
+      }), _jsxs("div", {
+        className: "stat-card",
+        children: [_jsx("div", {
+          className: "stat-label",
+          children: "Посещаемость"
+        }), _jsx("div", {
+          className: "stat-value",
+          children: cur.attendanceRate != null ? `${cur.attendanceRate}%` : '—'
+        })]
+      }), _jsxs("div", {
+        className: "stat-card",
+        children: [_jsx("div", {
+          className: "stat-label",
+          children: "Получено оплат"
+        }), _jsx("div", {
+          className: "stat-value",
+          children: money(cur.received)
+        })]
+      })]
+    }), cur.topStudent && _jsxs("div", {
+      className: "recap-top-student",
+      children: [_jsx("span", {
+        children: "Самый активный ученик"
+      }), _jsx("strong", {
+        children: cur.topStudent.name
+      }), _jsx("em", {
+        children: money(cur.topStudent.earned)
+      })]
+    }), _jsxs("div", {
+      className: "modal-actions",
+      children: [_jsx("button", {
+        type: "button",
+        className: "btn btn-white btn-full",
+        onClick: onClose,
+        children: "Закрыть"
+      }), _jsx("button", {
+        type: "button",
+        className: "btn btn-black btn-full",
+        onClick: copyRecap,
+        children: copied ? "Скопировано" : "Скопировать итог"
+      })]
+    })]
+  });
+}
+function FreeSlotsModal({
+  lessons,
+  onClose
+}) {
+  const [copied, setCopied] = useState(false);
+  const busyStatuses = ['planned', 'completed', 'no_show'];
+  const days = Array.from({
+    length: 7
+  }, (_, i) => shiftDate(getTodayDate(), i));
+  const rows = days.map(date => {
+    const ranges = lessons.filter(l => l.date === date && busyStatuses.includes(l.status)).map(lessonRange).sort((a, b) => a.start - b.start);
+    const slots = [];
+    let cursor = 9 * 60;
+    const dayEnd = 21 * 60;
+    ranges.forEach(r => {
+      if (r.start - cursor >= 60) slots.push({
+        start: cursor,
+        end: r.start
+      });
+      cursor = Math.max(cursor, r.end);
+    });
+    if (dayEnd - cursor >= 60) slots.push({
+      start: cursor,
+      end: dayEnd
+    });
+    const d = new Date(date + 'T00:00:00');
+    const label = d.toLocaleDateString('ru-RU', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short'
+    });
+    return {
+      date,
+      label: label.charAt(0).toUpperCase() + label.slice(1),
+      slots
+    };
+  });
+  const withSlots = rows.filter(r => r.slots.length);
+  const slotText = (slot) => `${minToTime(slot.start)}–${minToTime(slot.end)}`;
+  const shareText = ['Свободные окна на ближайшую неделю:', ...withSlots.map(r => `${r.label}: ${r.slots.map(slotText).join(', ')}`)].join('\n');
+  const copySlots = async () => {
+    await copyPlainText(shareText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return _jsxs(Modal, {
+    title: "Свободные окна",
+    onClose: onClose,
+    children: [_jsx("p", {
+      className: "money-tool-hint",
+      children: "Окна от часа в рабочее время 09:00–21:00 на ближайшие 7 дней. Отправьте список родителям — пустые слоты заполняются быстрее."
+    }), _jsx("div", {
+      className: "money-tool-list",
+      children: rows.map(r => _jsxs("div", {
+        className: "free-slots-row",
+        children: [_jsx("span", {
+          children: r.label
+        }), r.slots.length ? _jsx("div", {
+          className: "free-slots-chips",
+          children: r.slots.map(slot => _jsx("b", {
+            children: slotText(slot)
+          }, `${r.date}-${slot.start}`))
+        }) : _jsx("em", {
+          children: "занято"
+        })]
+      }, r.date))
+    }), _jsxs("div", {
+      className: "modal-actions",
+      children: [_jsx("button", {
+        type: "button",
+        className: "btn btn-white btn-full",
+        onClick: onClose,
+        children: "Закрыть"
+      }), _jsx("button", {
+        type: "button",
+        className: "btn btn-black btn-full",
+        disabled: !withSlots.length,
+        onClick: () => sharePlainText('Свободные окна', shareText).then(shared => {
+          if (!shared) copySlots();
+        }),
+        children: copied ? "Скопировано" : "Поделиться"
+      })]
     })]
   });
 }
