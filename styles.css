@@ -8831,32 +8831,16 @@ body[data-theme="dark"] .today-work-card.neutral {
   min-height: 36px;
 }
 
-/* ===== Week dot legend (mobile) ===== */
-.week-dot-legend {
-  display: none;
+/* ===== Attendance quick-toggle states ===== */
+.quick-toggle.is-on {
+  box-shadow: inset 0 0 0 2px var(--yellow);
 }
+.quick-toggle:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
 @media (max-width: 768px) {
-  .week-dot-legend {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 14px;
-    margin-top: 12px;
-    padding: 10px 12px;
-    border: 1.5px dashed var(--border-light);
-    border-radius: 12px;
-    font-size: 11px;
-    color: var(--text-sec);
-  }
-  .week-dot-legend span {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .week-dot-legend .week-dot {
-    width: 9px;
-    height: 9px;
-  }
   .mobile-lab-lesson.cell .week-dot {
     width: 9px;
     height: 9px;
@@ -8995,3 +8979,82 @@ body[data-theme="dark"] .today-work-card.neutral {
   font-size: 10px;
 }
 .detail-tab { font-size: 11px; }
+
+/* ===== Header overflow menu (Финансы) ===== */
+.header-menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.header-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.header-menu-caret {
+  font-size: 11px;
+  line-height: 1;
+}
+.header-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+.header-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.header-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--black);
+  cursor: pointer;
+}
+.header-menu button:last-child {
+  border-bottom: none;
+}
+.header-menu button:hover {
+  background: var(--surface-2);
+}
+.header-menu-divider {
+  border-top: 2px solid var(--border-light);
+}
+.header-menu-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Message modal: lift off the bottom edge on mobile ===== */
+@media (max-width: 768px) {
+  .modal.message-modal {
+    min-height: 62dvh;
+  }
+}

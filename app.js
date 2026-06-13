@@ -90,8 +90,8 @@ const buildGroupAutoName = (ids = [], students = [], subject = 'Группа') =
 };
 const getGroupDisplayName = (group, students = []) => {
   if (!group) return '?';
-  const name = String(group.name || '').trim();
-  return name || buildGroupAutoName(group.studentIds || [], students, group.subject);
+  const name = String(group.name || '').trim() || buildGroupAutoName(group.studentIds || [], students, group.subject);
+  return group.emoji ? `${group.emoji} ${name}` : name;
 };
 
 // ── AUTO-COMPLETE ──────────────────────────────────────────────────────────────
@@ -1848,7 +1848,7 @@ function SearchModal({
                 fontWeight: 700,
                 fontSize: 13
               },
-              children: [g.emoji || '', " ", getGroupDisplayName(g, students)]
+              children: getGroupDisplayName(g, students)
             })]
           }, g.id))]
         }), rLessons.length > 0 && _jsxs(_Fragment, {
@@ -2123,6 +2123,7 @@ function StudentModal({
   const [availabilityNotes, setAvailabilityNotes] = useState(student?.availabilityNotes || '');
   const [archived, setArchived] = useState(!!student?.archived);
   const [lessonRates, setLessonRates] = useState(student?.lessonRates || {});
+  const [balance, setBalance] = useState(student ? String(student.balance ?? 0) : '0');
   const toggleSubject = subject => setSubjects(p => p.includes(subject) ? p.filter(x => x !== subject) : [...p, subject]);
   const submit = e => {
     e.preventDefault();
@@ -2132,6 +2133,7 @@ function StudentModal({
       const n = Number(v);
       if (String(v).trim() !== '' && Number.isFinite(n) && n >= 0) lr[k] = n;
     });
+    const balanceNum = String(balance).trim() === '' ? 0 : Math.round(Number(balance) || 0);
     onSave({
       name: name.trim(),
       rate: normalizeMoneyInput(rate, student?.rate ?? DEFAULT_RATE),
@@ -2142,7 +2144,8 @@ function StudentModal({
       notes,
       availabilityNotes,
       archived,
-      lessonRates: lr
+      lessonRates: lr,
+      balance: balanceNum
     });
   };
   return _jsx(Modal, {
@@ -2174,6 +2177,21 @@ function StudentModal({
           min: "0",
           value: rate,
           onChange: e => setRate(e.target.value)
+        })
+      }), _jsx(FormField, {
+        label: student ? "\u0422\u0435\u043A\u0443\u0449\u0438\u0439 \u0431\u0430\u043B\u0430\u043D\u0441, \u20BD" : "\u041D\u0430\u0447\u0430\u043B\u044C\u043D\u044B\u0439 \u0431\u0430\u043B\u0430\u043D\u0441, \u20BD",
+        children: _jsxs(_Fragment, {
+          children: [_jsx("input", {
+            className: "input",
+            type: "number",
+            step: "100",
+            value: balance,
+            onChange: e => setBalance(e.target.value),
+            placeholder: "0"
+          }), _jsx("small", {
+            className: "field-help",
+            children: student ? "\u041C\u0438\u043D\u0443\u0441 \u2014 \u0443\u0447\u0435\u043D\u0438\u043A \u0434\u043E\u043B\u0436\u0435\u043D, \u043F\u043B\u044E\u0441 \u2014 \u043E\u043F\u043B\u0430\u0442\u0438\u043B \u0432\u043F\u0435\u0440\u0451\u0434. \u041C\u0435\u043D\u044F\u0439\u0442\u0435 \u0437\u0434\u0435\u0441\u044C \u0434\u043B\u044F \u0440\u0443\u0447\u043D\u043E\u0439 \u043A\u043E\u0440\u0440\u0435\u043A\u0442\u0438\u0440\u043E\u0432\u043A\u0438." : "\u0415\u0441\u043B\u0438 \u0443 \u0443\u0447\u0435\u043D\u0438\u043A\u0430 \u0443\u0436\u0435 \u0435\u0441\u0442\u044C \u0434\u043E\u043B\u0433 \u0438\u043B\u0438 \u0430\u0432\u0430\u043D\u0441 \u0441 \u043F\u0440\u043E\u0448\u043B\u043E\u0433\u043E: \u043C\u0438\u043D\u0443\u0441 \u2014 \u0434\u043E\u043B\u0433, \u043F\u043B\u044E\u0441 \u2014 \u0430\u0432\u0430\u043D\u0441. \u0415\u0441\u043B\u0438 \u043D\u0438\u0447\u0435\u0433\u043E \u2014 \u043E\u0441\u0442\u0430\u0432\u044C\u0442\u0435 0."
+          })]
         })
       }), subjects.length > 1 && _jsx(FormField, {
         label: "\u0421\u0442\u0430\u0432\u043A\u0438 \u043F\u043E \u043F\u0440\u0435\u0434\u043C\u0435\u0442\u0430\u043C (\u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E)",
@@ -3514,6 +3532,15 @@ function AttendanceModal({
     const entry = normalizeLessonProgressEntry(progressByStudent[s.id] || {});
     return entry.topicsDelta || entry.assimilationPercent != null;
   }).length;
+  // Quick-action active states (immediate feedback on the top-panel buttons)
+  const presentList = ls.filter(s => att[s.id]);
+  const allPresent = ls.length > 0 && ls.every(s => att[s.id]);
+  const nonePresent = ls.length > 0 && ls.every(s => !att[s.id]);
+  const homeworkAllIs = status => presentList.length > 0 && presentList.every(s => (homeworkStatusByStudent[s.id] || 'unset') === status);
+  const fastProgressActive = presentList.length > 0 && presentList.every(s => {
+    const entry = normalizeLessonProgressEntry(progressByStudent[s.id] || {});
+    return (entry.topicsDelta || 0) >= 1 && Number(entry.assimilationPercent) === 85;
+  });
   const submit = e => {
     e.preventDefault();
     const primaryStudentId = ls[0]?.id;
@@ -3541,7 +3568,7 @@ function AttendanceModal({
     });
   };
   return _jsxs(Modal, {
-    title: lesson.status === 'completed' ? "Редактировать урок" : "\u041F\u0440\u043E\u0432\u0435\u0441\u0442\u0438 \u0443\u0440\u043E\u043A",
+    title: lesson.status === 'completed' ? "Изменить урок" : "\u041F\u0440\u043E\u0432\u0435\u0441\u0442\u0438 \u0443\u0440\u043E\u043A",
     onClose: onClose,
     className: "attendance-flow-modal",
     children: [_jsxs("div", {
@@ -3573,32 +3600,36 @@ function AttendanceModal({
           className: "attendance-quick-actions",
           children: [_jsx("button", {
             type: "button",
-            className: "btn btn-sm btn-black",
+            className: `btn btn-sm quick-toggle ${allPresent ? 'btn-black is-on' : 'btn-white'}`,
             onClick: () => setAllAttendance(true),
             children: "Все были"
           }), _jsx("button", {
             type: "button",
-            className: "btn btn-sm btn-white",
+            className: `btn btn-sm quick-toggle ${nonePresent ? 'btn-black is-on' : 'btn-white'}`,
             onClick: () => setAllAttendance(false),
             children: "Никого"
           }), _jsx("button", {
             type: "button",
-            className: "btn btn-sm btn-white",
+            className: `btn btn-sm quick-toggle ${homeworkAllIs('done') ? 'btn-black is-on' : 'btn-white'}`,
+            disabled: !presentList.length,
             onClick: () => setHomeworkForPresent('done'),
             children: "ДЗ сделано"
           }), _jsx("button", {
             type: "button",
-            className: "btn btn-sm btn-white",
+            className: `btn btn-sm quick-toggle ${homeworkAllIs('partial') ? 'btn-black is-on' : 'btn-white'}`,
+            disabled: !presentList.length,
             onClick: () => setHomeworkForPresent('partial'),
             children: "ДЗ частично"
           }), _jsx("button", {
             type: "button",
-            className: "btn btn-sm btn-white",
+            className: `btn btn-sm quick-toggle ${homeworkAllIs('not_done') ? 'btn-black is-on' : 'btn-white'}`,
+            disabled: !presentList.length,
             onClick: () => setHomeworkForPresent('not_done'),
             children: "ДЗ не сделано"
           }), _jsx("button", {
             type: "button",
-            className: "btn btn-sm btn-white",
+            className: `btn btn-sm quick-toggle ${fastProgressActive ? 'btn-black is-on' : 'btn-white'}`,
+            disabled: !presentList.length,
             onClick: applyFastProgress,
             title: "Отметить присутствующим: пройдена 1 тема, усвоение 85%",
             children: "Тема пройдена · 85%"
@@ -6024,6 +6055,7 @@ function MessageModal({
   return _jsxs(Modal, {
     title: `${mode === 'debt' ? 'Сообщение о долге' : mode === 'package' ? 'Продление абонемента' : 'Сообщение'} · ${student.name}`,
     onClose: onClose,
+    className: "message-modal",
     children: [_jsxs("div", {
       style: {
         display: 'flex',
@@ -6117,7 +6149,7 @@ function GroupDetailModal({
   const upcoming = plannedLessons.slice(0, 5);
   const completedCount = groupLessons.filter(l => l.status === 'completed').length;
   return _jsxs(Modal, {
-    title: `${group.emoji ? group.emoji + ' ' : ''}${getGroupDisplayName(group, students)}`,
+    title: getGroupDisplayName(group, students),
     onClose: onClose,
     className: "group-detail-modal",
     children: [_jsxs("div", {
@@ -6973,7 +7005,7 @@ function App() {
     } : s));else setStudents(p => [...p, {
       ...data,
       id: Date.now(),
-      balance: 0
+      balance: Number(data.balance) || 0
     }]);
     setModal(null);
   };
@@ -8600,6 +8632,10 @@ function App() {
               }), "заметка"]
             }), _jsxs("span", {
               children: [_jsx("i", {
+                className: "week-dot conflict"
+              }), "конфликт"]
+            }), _jsxs("span", {
+              children: [_jsx("i", {
                 className: "week-dot debt"
               }), "долг"]
             })]
@@ -8932,6 +8968,10 @@ function App() {
                 }), "заметка"]
               }), _jsxs("span", {
                 children: [_jsx("i", {
+                  className: "week-dot conflict"
+                }), "конфликт"]
+              }), _jsxs("span", {
+                children: [_jsx("i", {
                   className: "week-dot debt"
                 }), "долг"]
               })]
@@ -9126,6 +9166,10 @@ function App() {
                 children: [_jsx("i", {
                   className: "week-dot note"
                 }), "заметка"]
+              }), _jsxs("span", {
+                children: [_jsx("i", {
+                  className: "week-dot conflict"
+                }), "конфликт"]
               }), _jsxs("span", {
                 children: [_jsx("i", {
                   className: "week-dot debt"
@@ -9658,30 +9702,7 @@ function App() {
         }),
         secondary: "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0435\u043C\u043E-\u0433\u0440\u0443\u043F\u043F\u0443",
         onSecondary: () => loadDemoData(groups.length || txs.length ? true : false)
-      }), schedView === 'week' ? _jsx(WeekView, {}) : _jsx(MonthView, {}), (() => {
-        const legendLabels = {
-          homework: 'есть ДЗ',
-          note: 'заметка',
-          conflict: 'конфликт времени',
-          debt: 'есть долг'
-        };
-        const kinds = new Set();
-        scheduleLessons.forEach(l => {
-          if (l.homework) kinds.add('homework');
-          if (l.lessonNote) kinds.add('note');
-          if (!kinds.has('debt') && getLessonStudents(l, students, groups).some(s => s.balance < 0)) kinds.add('debt');
-          if (!kinds.has('conflict') && findLessonConflicts(l, lessons, students, groups, l.id).length) kinds.add('conflict');
-        });
-        if (!kinds.size) return null;
-        return _jsx("div", {
-          className: "week-dot-legend",
-          children: ['homework', 'note', 'conflict', 'debt'].filter(k => kinds.has(k)).map(kind => _jsxs("span", {
-            children: [_jsx("i", {
-              className: `week-dot ${kind}`
-            }), legendLabels[kind]]
-          }, kind))
-        });
-      })()]
+      }), schedView === 'week' ? _jsx(WeekView, {}) : _jsx(MonthView, {})]
     });
   };
 
@@ -9955,13 +9976,7 @@ function App() {
                   fontSize: 13,
                   marginBottom: 4
                 },
-                children: [g.emoji && _jsx("span", {
-                  style: {
-                    marginRight: 6,
-                    fontSize: 16
-                  },
-                  children: g.emoji
-                }), getGroupDisplayName(g, students), " ", g.archived && _jsx("span", {
+                children: [getGroupDisplayName(g, students), " ", g.archived && _jsx("span", {
                   className: "badge badge-yellow",
                   children: "\u0410\u0420\u0425\u0418\u0412"
                 })]
@@ -10040,6 +10055,7 @@ function App() {
   // FINANCE PAGE (with full analytics, deduplication-safe)
   const PageFinance = () => {
     const [finTab, setFinTab] = useState('control'); // 'control' | 'history' | 'analytics' | 'trust'
+    const [finMenuOpen, setFinMenuOpen] = useState(false);
     const [analyticsPeriod, setAnalyticsPeriod] = useState('current_month');
     const [goalEdit, setGoalEdit] = useState(false);
     const [txStudentFilter, setTxStudentFilter] = useState('all');
@@ -11142,47 +11158,49 @@ function App() {
       children: [_jsxs("div", {
         className: "page-title",
         children: ["\u0424\u0438\u043D\u0430\u043D\u0441\u044B", _jsxs("div", {
-          style: {
-            display: 'flex',
-            gap: 8,
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            justifyContent: 'flex-end'
-          },
+          className: "header-menu-wrap",
           children: [_jsxs("button", {
-            className: "btn btn-sm btn-green",
-            onClick: () => setModal({
-              type: 'transaction',
-              payload: null
-            }),
-          children: [_jsx(IcoWallet, {
-            size: 13
-          }), " \u041D\u043E\u0432\u0430\u044F \u043E\u043F\u043B\u0430\u0442\u0430"]
-          }), _jsx("button", {
-            className: "btn btn-sm btn-white",
-            onClick: () => setModal({
-              type: 'monthRecap',
-              payload: null
-            }),
-            children: "\u0418\u0442\u043E\u0433 \u043C\u0435\u0441\u044F\u0446\u0430"
-          }), _jsx("button", {
-            className: "btn btn-sm btn-white",
-            onClick: () => setModal({
-              type: 'taxReport'
-            }),
-            children: "\u041D\u0430\u043B\u043E\u0433"
-          }), _jsx("button", {
-            className: "btn btn-sm btn-white",
-            onClick: () => setModal({
-              type: 'data'
-            }),
-            children: "\u0414\u0430\u043D\u043D\u044B\u0435"
-          }), _jsxs("button", {
-            className: "btn btn-sm btn-white",
-            onClick: () => setModal({
-              type: 'deletions'
-            }),
-            children: ["\u0416\u0443\u0440\u043D\u0430\u043B ", deletionLog.length ? `· ${deletionLog.length}` : '']
+            className: "btn btn-sm btn-white header-menu-btn",
+            "aria-label": "\u041E\u0442\u0447\u0451\u0442\u044B \u0438 \u0434\u0430\u043D\u043D\u044B\u0435",
+            onClick: () => setFinMenuOpen(v => !v),
+            children: ["\u041E\u0442\u0447\u0451\u0442\u044B ", _jsx("span", {
+              className: "header-menu-caret",
+              children: "\u25BE"
+            })]
+          }), finMenuOpen && _jsx("div", {
+            className: "header-menu-overlay",
+            onClick: () => setFinMenuOpen(false)
+          }), finMenuOpen && _jsxs("div", {
+            className: "header-menu",
+            children: [_jsx("button", {
+              onClick: () => {
+                setFinMenuOpen(false);
+                setModal({ type: 'monthRecap', payload: null });
+              },
+              children: "\u0418\u0442\u043E\u0433 \u043C\u0435\u0441\u044F\u0446\u0430"
+            }), _jsx("button", {
+              onClick: () => {
+                setFinMenuOpen(false);
+                setModal({ type: 'taxReport' });
+              },
+              children: "\u041D\u0430\u043B\u043E\u0433 \u0441\u0430\u043C\u043E\u0437\u0430\u043D\u044F\u0442\u043E\u0433\u043E"
+            }), _jsx("button", {
+              className: "header-menu-divider",
+              onClick: () => {
+                setFinMenuOpen(false);
+                setModal({ type: 'data' });
+              },
+              children: "\u0414\u0430\u043D\u043D\u044B\u0435 \u0438 \u0431\u044D\u043A\u0430\u043F"
+            }), _jsxs("button", {
+              onClick: () => {
+                setFinMenuOpen(false);
+                setModal({ type: 'deletions' });
+              },
+              children: ["\u0416\u0443\u0440\u043D\u0430\u043B \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u0439", deletionLog.length ? _jsx("span", {
+                className: "header-menu-badge",
+                children: deletionLog.length
+              }) : null]
+            })]
           })]
         })]
       }), _jsx(FinancePeriodPicker, {}), _jsxs("div", {
@@ -11302,6 +11320,56 @@ function App() {
           children: [_jsx(IcoWallet, {
             size: 16
           }), " \u041D\u043E\u0432\u0430\u044F \u043E\u043F\u043B\u0430\u0442\u0430"]
+        })]
+      }), _jsx("div", {
+        className: "fab",
+        onClick: () => setFabOpen(!fabOpen),
+        style: {
+          transform: fabOpen ? 'rotate(45deg)' : 'none',
+          transition: 'transform .2s'
+        },
+        children: _jsx(IcoPlus, {
+          size: 28
+        })
+      })]
+    }), tab === 'students' && _jsxs(_Fragment, {
+      children: [fabOpen && _jsx("div", {
+        className: "fab-overlay",
+        onClick: () => setFabOpen(false)
+      }), fabOpen && _jsxs("div", {
+        className: "fab-menu",
+        children: [_jsxs("div", {
+          className: "fab-item",
+          style: {
+            background: 'var(--green)',
+            color: 'var(--black)'
+          },
+          onClick: () => {
+            setFabOpen(false);
+            setModal({
+              type: 'student',
+              payload: null
+            });
+          },
+          children: [_jsx(IcoUsers, {
+            size: 16
+          }), " Новый ученик"]
+        }), _jsxs("div", {
+          className: "fab-item",
+          style: {
+            background: 'var(--yellow)',
+            color: 'var(--black)'
+          },
+          onClick: () => {
+            setFabOpen(false);
+            setModal({
+              type: 'group',
+              payload: null
+            });
+          },
+          children: [_jsx(IcoUsers, {
+            size: 16
+          }), " Новая группа"]
         })]
       }), _jsx("div", {
         className: "fab",
