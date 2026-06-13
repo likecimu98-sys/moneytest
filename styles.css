@@ -861,10 +861,10 @@ body[data-theme="dark"] .nav-btn.active { color: var(--yellow); }
 .lesson-card .lesson-note-dot{position:absolute;top:8px;right:8px}
 .lesson-markers{position:absolute;top:6px;right:6px;display:flex;gap:4px;align-items:center;z-index:1}
 .lesson-marker-dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--ink);box-shadow:1px 1px 0 var(--shadow-color)}
-.lesson-marker-note{background:var(--red)}
-.lesson-marker-conflict{background:var(--yellow)}
-.lesson-marker-debt{background:var(--red)}
-.lesson-marker-series{background:var(--blue)}
+.lesson-marker-note{background:var(--blue)}
+.lesson-marker-conflict{background:var(--red)}
+.lesson-marker-debt{background:var(--ink)}
+.lesson-marker-series{background:color-mix(in srgb, var(--ink) 35%, var(--surface))}
 
 /* BUTTONS */
 .btn {
@@ -1415,10 +1415,10 @@ body[data-theme="dark"] .badge-yellow {
 .lesson-free-chip.active{background:var(--ink);color:var(--yellow);box-shadow:none}
 .week-dot{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--ink);box-shadow:.5px .5px 0 var(--shadow-color);display:inline-block}
 .week-dot.homework{background:var(--yellow)}
-.week-dot.note{background:var(--red)}
-.week-dot.conflict{background:#ff8c00}
-.week-dot.debt{background:var(--ink);border-color:var(--yellow)}
-.week-dot.series{background:var(--blue)}
+.week-dot.note{background:var(--blue)}
+.week-dot.conflict{background:var(--red)}
+.week-dot.debt{background:var(--ink)}
+.week-dot.series{background:color-mix(in srgb, var(--ink) 35%, var(--surface))}
 .week-marker-legend{display:flex;gap:8px;flex-wrap:wrap;color:var(--text-sec);font-size:9px;font-weight:900;padding:0 2px}
 .week-marker-legend span{display:flex;gap:4px;align-items:center}
 .mobile-week-shell{display:grid;gap:10px}
@@ -4895,9 +4895,8 @@ body[data-theme="dark"] .mobile-agenda-card.status-completed .mobile-agenda-icon
 }
 body[data-theme="dark"] .week-dot.debt,
 body[data-theme="dark"] .lesson-marker-debt {
-  background: #0f0e0b;
-  border-color: var(--yellow);
-  box-shadow: 0 0 0 2px rgba(255,212,92,.25);
+  background: #f4ecd8;
+  border-color: #f4ecd8;
 }
 body[data-theme="dark"] .schedule-lesson-cell.planned.individual,
 body[data-theme="dark"] .mobile-agenda-card.individual,
@@ -5350,14 +5349,13 @@ body[data-theme="dark"] .schedule-head-cell.today.selected {
 }
 .week-dot.debt,
 .lesson-marker-debt {
-  background: var(--red);
-  border-color: color-mix(in srgb, var(--red) 72%, var(--ink));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--red) 18%, transparent);
+  background: var(--ink);
+  border-color: var(--ink);
 }
 .week-dot.series,
 .lesson-marker-series {
-  background: color-mix(in srgb, var(--yellow) 54%, var(--surface));
-  border-color: color-mix(in srgb, var(--yellow-dark) 70%, var(--ink));
+  background: color-mix(in srgb, var(--ink) 35%, var(--surface));
+  border-color: color-mix(in srgb, var(--ink) 55%, var(--surface));
 }
 .lesson-tag {
   max-width: 140px;
@@ -5415,9 +5413,8 @@ body[data-theme="dark"] .mobile-agenda-card.individual {
 }
 body[data-theme="dark"] .week-dot.debt,
 body[data-theme="dark"] .lesson-marker-debt {
-  background: #ff6b73;
-  border-color: #ffd45c;
-  box-shadow: 0 0 0 2px rgba(255,107,115,.22);
+  background: #f4ecd8;
+  border-color: #f4ecd8;
 }
 @media(max-width:768px) {
   .today-command-grid {
@@ -7202,7 +7199,7 @@ body[data-theme="dark"] .today-upcoming {
 
 .today-work-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
 }
 
@@ -8645,6 +8642,32 @@ body[data-theme="dark"] .today-work-card.neutral {
 }
 .money-tool-grid .stat-card {
   box-shadow: none;
+  min-width: 0;
+  overflow: hidden;
+}
+.money-tool-grid .stat-label {
+  font-size: 9px;
+  letter-spacing: .01em;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+.money-tool-grid .stat-value {
+  font-size: 19px;
+  overflow-wrap: anywhere;
+}
+.money-tool-grid .stat-value-money {
+  font-size: 16px;
+  white-space: nowrap;
+}
+.stat-unit {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-sec);
+  margin-top: 4px;
 }
 .money-tool-list {
   border: 1.5px solid var(--border-light);
@@ -8659,6 +8682,35 @@ body[data-theme="dark"] .today-work-card.neutral {
   line-height: 1.5;
   color: var(--text-sec);
   margin: 0 0 12px;
+}
+.work-hours-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.work-hours-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-sec);
+}
+.work-hours-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.work-hours-controls .input {
+  width: auto;
+  min-width: 84px;
+}
+.work-hours-dash {
+  color: var(--text-muted);
+  font-weight: 700;
 }
 .money-tool-empty {
   text-align: center;
@@ -8810,3 +8862,136 @@ body[data-theme="dark"] .today-work-card.neutral {
     height: 9px;
   }
 }
+
+/* ===== Analytics killer tab ===== */
+.fin-hero {
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--green) 10%, var(--surface));
+  box-shadow: 3px 3px 0 var(--shadow-color);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.fin-hero-value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 900;
+  margin: 2px 0 6px;
+  white-space: nowrap;
+}
+.fin-hero-subrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12px;
+  color: var(--text-sec);
+}
+.fin-hero-subrow b {
+  font-weight: 800;
+  white-space: nowrap;
+}
+.fin-goal-panel { margin-bottom: 16px; }
+.fin-goal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.fin-goal-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+.fin-advice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.fin-advice {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 2px 2px 0 var(--shadow-color);
+  padding: 10px 12px 10px 16px;
+}
+.fin-advice::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--blue);
+}
+.fin-advice.hot::before { background: var(--red); }
+.fin-advice.warn::before { background: var(--yellow); }
+.fin-advice.good::before { background: var(--green); }
+.fin-advice strong {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+.fin-advice span {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-sec);
+}
+.fin-week-legend {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-sec);
+}
+.fin-week-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fin-week-legend i,
+.fin-week-legend b {
+  width: 16px;
+  height: 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.fin-week-legend i { background: var(--green); }
+.fin-week-legend b { background: var(--blue); }
+
+/* ===== Micro-label typography: body font for tiny text, Unbounded only for headings/values ===== */
+.metric-label,
+.stat-label,
+.label,
+.finance-period-label,
+.detail-tab,
+.month-weekdays div,
+.month-day-more,
+.lesson-free-title,
+.lesson-free-chip,
+.tx-cancel-btn,
+.finance-week-row span,
+.fab-item,
+.schedule-empty-week,
+.month-empty,
+.desktop-selected-empty {
+  font-family: var(--font-body);
+  font-weight: 800;
+}
+.metric-label,
+.stat-label,
+.label,
+.finance-period-label {
+  letter-spacing: .06em;
+  font-size: 10px;
+}
+.detail-tab { font-size: 11px; }

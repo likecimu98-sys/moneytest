@@ -37,7 +37,9 @@ const fmtDate = str => {
 };
 const DAYS_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 const DAY_INDEXES = [1, 2, 3, 4, 5, 6, 0];
-const SUBJECTS = ['История', 'Общество', 'Русский', 'Математика', 'Английский', 'Другое'];
+const SUBJECTS_MAIN = ['История', 'Общество', 'Русский', 'Математика', 'Английский', 'Физика'];
+const SUBJECTS_EXTRA = ['Химия', 'Биология', 'География', 'Информатика', 'Литература', 'Немецкий', 'Французский', 'Испанский', 'Китайский', 'Другое'];
+const SUBJECTS = [...SUBJECTS_MAIN, ...SUBJECTS_EXTRA];
 const inferSubject = (text = '') => {
   const t = text.toLowerCase();
   if (t.includes('обществ')) return 'Общество';
@@ -45,6 +47,12 @@ const inferSubject = (text = '') => {
   if (t.includes('рус')) return 'Русский';
   if (t.includes('мат')) return 'Математика';
   if (t.includes('англ')) return 'Английский';
+  if (t.includes('физ')) return 'Физика';
+  if (t.includes('хим')) return 'Химия';
+  if (t.includes('биол')) return 'Биология';
+  if (t.includes('геогр')) return 'География';
+  if (t.includes('информ')) return 'Информатика';
+  if (t.includes('литер')) return 'Литература';
   return 'История';
 };
 const subjectColor = subject => ({
@@ -53,6 +61,16 @@ const subjectColor = subject => ({
   'Русский': '#b95757',
   'Математика': '#3f7d5b',
   'Английский': '#6f5ca8',
+  'Физика': '#2f6f8f',
+  'Химия': '#9a5fb0',
+  'Биология': '#4d8f3f',
+  'География': '#3f8f86',
+  'Информатика': '#52609c',
+  'Литература': '#a8643f',
+  'Немецкий': '#7d7340',
+  'Французский': '#7a5db0',
+  'Испанский': '#b0723f',
+  'Китайский': '#b04f4f',
   'Другое': '#6f7378'
 })[subject] || '#777';
 const subjectTagText = () => '#fff';
@@ -633,7 +651,7 @@ const HOMEWORK_STATUS = {
 };
 const FINAL_STATUSES = ['completed', 'cancelled_by_student', 'cancelled_by_tutor', 'rescheduled', 'no_show'];
 const isFinalLesson = lesson => FINAL_STATUSES.includes(lesson?.status);
-const money = n => `${Number(n || 0).toLocaleString('ru-RU')} ₽`;
+const money = n => `${Number(n || 0).toLocaleString('ru-RU')}\u00A0₽`;
 const cloneDemoState = () => withRichIrinaDemoState({
   students: mockStudents.map(s => ({
     ...s,
@@ -2057,6 +2075,39 @@ function FormField({
     }), children]
   });
 }
+function SubjectPicker({
+  selected = [],
+  onToggle,
+  gridClassName
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? SUBJECTS : [...SUBJECTS_MAIN, ...SUBJECTS_EXTRA.filter(s => selected.includes(s))];
+  const hiddenCount = SUBJECTS.length - visible.length;
+  return _jsxs("div", {
+    children: [_jsx("div", {
+      className: gridClassName,
+      style: gridClassName ? undefined : {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 8
+      },
+      children: visible.map(subject => _jsx("button", {
+        type: "button",
+        className: `btn btn-sm btn-full ${selected.includes(subject) ? 'btn-black' : 'btn-white'}`,
+        onClick: () => onToggle(subject),
+        children: subject
+      }, subject))
+    }), _jsx("button", {
+      type: "button",
+      className: "btn btn-sm btn-white btn-full",
+      style: {
+        marginTop: 8
+      },
+      onClick: () => setExpanded(!expanded),
+      children: expanded ? 'Свернуть список' : `Ещё предметы ЕГЭ/ОГЭ (${hiddenCount}) ▾`
+    })]
+  });
+}
 function StudentModal({
   student,
   onClose,
@@ -2110,18 +2161,9 @@ function StudentModal({
         })
       }), _jsx(FormField, {
         label: "\u041F\u0440\u0435\u0434\u043C\u0435\u0442\u044B",
-        children: _jsx("div", {
-          style: {
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 8
-          },
-          children: SUBJECTS.map(subject => _jsx("button", {
-            type: "button",
-            className: `btn btn-sm btn-full ${subjects.includes(subject) ? 'btn-black' : 'btn-white'}`,
-            onClick: () => toggleSubject(subject),
-            children: subject
-          }, subject))
+        children: _jsx(SubjectPicker, {
+          selected: subjects,
+          onToggle: toggleSubject
         })
       }), _jsx(FormField, {
         label: "\u0411\u0430\u0437\u043E\u0432\u0430\u044F \u0441\u0442\u0430\u0432\u043A\u0430 \u20BD/\u0443\u0440\u043E\u043A",
@@ -2459,14 +2501,10 @@ function StudentProfileModal({
               children: "Обучение"
             }), _jsx(FormField, {
               label: "Предметы",
-              children: _jsx("div", {
-                className: "profile-subject-grid",
-                children: SUBJECTS.map(subject => _jsx("button", {
-                  type: "button",
-                  className: `btn btn-sm btn-full ${subjects.includes(subject) ? 'btn-black' : 'btn-white'}`,
-                  onClick: () => toggleSubject(subject),
-                  children: subject
-                }, subject))
+              children: _jsx(SubjectPicker, {
+                selected: subjects,
+                onToggle: toggleSubject,
+                gridClassName: "profile-subject-grid"
               })
             }), _jsx(FormField, {
               label: "Цель",
@@ -4633,6 +4671,7 @@ function StudentDetailModal({
   onMessage,
   onReport,
   onArchive,
+  onAdjust,
   onSaveParentPortal,
   onAcceptPaymentNotice,
   onDismissPaymentNotice
@@ -4922,7 +4961,7 @@ function StudentDetailModal({
           className: "balance-explain-grid",
           children: [_jsxs("div", {
             children: [_jsx("span", {
-              children: "\u0421\u0442\u0430\u0440\u0442"
+              children: "\u0421\u0442\u0430\u0440\u0442\u043e\u0432\u044b\u0439 \u0431\u0430\u043b\u0430\u043d\u0441"
             }), _jsx("strong", {
               children: money(finance.opening)
             })]
@@ -4958,6 +4997,20 @@ function StudentDetailModal({
             onClick: onProfile,
             children: "\u041F\u0440\u0430\u0432\u0438\u0442\u044C \u0443\u0447\u0435\u043D\u0438\u043A\u0430"
           })]
+        }), _jsx("div", {
+          className: "metric-sub",
+          style: {
+            marginTop: 10,
+            lineHeight: 1.5
+          },
+          children: "\u0421\u0442\u0430\u0440\u0442\u043E\u0432\u044B\u0439 \u0431\u0430\u043B\u0430\u043D\u0441 \u2014 \u0434\u043E\u043B\u0433 \u0438\u043B\u0438 \u0430\u0432\u0430\u043D\u0441, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u0431\u044B\u043B \u0434\u043E \u043F\u0435\u0440\u0432\u043E\u0439 \u0437\u0430\u043F\u0438\u0441\u0430\u043D\u043D\u043E\u0439 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438. \u0415\u0441\u043B\u0438 \u043E\u043D \u043D\u0435\u0432\u0435\u0440\u043D\u044B\u0439, \u0434\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u043A\u043E\u0440\u0440\u0435\u043A\u0442\u0438\u0440\u043E\u0432\u043A\u0443."
+        }), _jsx("button", {
+          className: "btn btn-sm btn-white",
+          style: {
+            marginTop: 8
+          },
+          onClick: () => onAdjust(student),
+          children: "\u041A\u043E\u0440\u0440\u0435\u043A\u0442\u0438\u0440\u043E\u0432\u043A\u0430 \u0431\u0430\u043B\u0430\u043D\u0441\u0430"
         })]
       }), finance.nextLesson && _jsxs("div", {
         className: "finance-panel",
@@ -5538,22 +5591,35 @@ function StudentReportModal({
   });
 }
 function PackageModal({
-  student,
+  student: initialStudent,
+  students = [],
   onClose,
   onSave
 }) {
+  const pickable = students.filter(s => !s.archived);
+  const [studentId, setStudentId] = useState(initialStudent?.id ?? pickable[0]?.id ?? null);
+  const student = initialStudent && sameId(initialStudent.id, studentId) ? initialStudent : pickable.find(s => sameId(s.id, studentId)) || initialStudent || pickable[0];
   const [lessonsCount, setLessonsCount] = useState(4);
-  const [amount, setAmount] = useState(student.rate * 4);
+  const [amount, setAmount] = useState((student?.rate || 0) * 4);
   const submit = e => {
     e.preventDefault();
+    if (!student) return;
     onSave(student.id, Number(lessonsCount), Number(amount));
   };
+  if (!student) return _jsx(Modal, {
+    title: "\u0410\u0431\u043E\u043D\u0435\u043C\u0435\u043D\u0442",
+    onClose: onClose,
+    children: _jsx(EmptyState, {
+      title: "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0434\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0443\u0447\u0435\u043D\u0438\u043A\u0430",
+      text: "\u0410\u0431\u043E\u043D\u0435\u043C\u0435\u043D\u0442 \u043E\u0444\u043E\u0440\u043C\u043B\u044F\u0435\u0442\u0441\u044F \u043D\u0430 \u043A\u043E\u043D\u043A\u0440\u0435\u0442\u043D\u043E\u0433\u043E \u0443\u0447\u0435\u043D\u0438\u043A\u0430."
+    })
+  });
   return _jsx(Modal, {
     title: "\u0410\u0431\u043E\u043D\u0435\u043C\u0435\u043D\u0442",
     onClose: onClose,
     children: _jsxs("form", {
       onSubmit: submit,
-      children: [_jsxs("div", {
+      children: [initialStudent ? _jsxs("div", {
         className: "card modal-summary-card",
         children: [_jsx("div", {
           className: "label",
@@ -5565,6 +5631,21 @@ function PackageModal({
           className: "modal-summary-meta",
           children: ["\u0421\u0435\u0439\u0447\u0430\u0441 \u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C: ", student.packageLessons || 0, " \u0437\u0430\u043D."]
         })]
+      }) : _jsx(FormField, {
+        label: "\u0423\u0447\u0435\u043D\u0438\u043A",
+        children: _jsx("select", {
+          className: "input",
+          value: studentId ?? '',
+          onChange: e => {
+            const next = pickable.find(s => String(s.id) === e.target.value);
+            setStudentId(next ? next.id : null);
+            if (next) setAmount(next.rate * lessonsCount);
+          },
+          children: pickable.map(s => _jsxs("option", {
+            value: String(s.id),
+            children: [s.name, " \u00B7 \u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C ", s.packageLessons || 0, " \u0437\u0430\u043D."]
+          }, s.id))
+        })
       }), _jsx(FormField, {
         label: "\u0417\u0430\u043D\u044F\u0442\u0438\u0439 \u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C",
         children: _jsx("select", {
@@ -5737,8 +5818,9 @@ function MessageModal({
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    const id = String(student.tgId).trim();
-    window.open(id.startsWith('@') ? `https://t.me/${id.slice(1)}` : `https://t.me/${id}`, '_blank');
+    const id = String(student.tgId).trim().replace(/^@/, '');
+    // t.me/<user>?text= prefills the message draft in Telegram apps; clipboard copy above is the fallback
+    window.open(`https://t.me/${id}?text=${encodeURIComponent(text)}`, '_blank');
   };
   if (editMode) {
     const customTemplates = templates || [];
@@ -6009,12 +6091,12 @@ function MessageModal({
         className: "btn btn-blue btn-full",
         onClick: openTg,
         style: {
-          flex: 1,
+          flex: 2,
           gap: 4
         },
         children: [_jsx(IcoTg, {
           size: 14
-        }), " TG"]
+        }), " Отправить в TG"]
       })]
     })]
   });
@@ -7798,7 +7880,7 @@ function App() {
                 fontWeight: 900,
                 color: 'var(--black)'
               },
-              children: [debt.toLocaleString(), " \u20BD"]
+              children: [debt.toLocaleString(), "\u00A0\u20BD"]
             }), _jsxs("div", {
               style: {
                 fontSize: 10,
@@ -7840,25 +7922,25 @@ function App() {
             children: [_jsx("span", {
               children: "\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0444\u043E\u043A\u0443\u0441"
             }), _jsx("strong", {
-              children: "\u0427\u0442\u043E \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u0441\u0435\u0433\u043E\u0434\u043D\u044F"
+              children: dueToday.length || debtors ? "\u0427\u0442\u043E \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u0441\u0435\u0433\u043E\u0434\u043D\u044F" : "\u0412\u0441\u0451 \u0441\u0434\u0435\u043B\u0430\u043D\u043E \u2014 \u0434\u0435\u043D\u044C \u043F\u043E\u0434 \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u0435\u043C"
             })]
           })]
         }), _jsxs("div", {
           className: "today-work-grid",
-          children: [_jsxs("button", {
+          children: [dueToday.length > 0 && _jsxs("button", {
             type: "button",
-            className: `today-work-card ${dueToday.length ? 'hot' : 'done'}`,
-            onClick: dueToday.length ? closeTodayLessons : () => setTab('schedule'),
+            className: "today-work-card hot",
+            onClick: closeTodayLessons,
             children: [_jsx("span", {
               children: "\u041F\u0440\u043E\u0432\u0435\u0441\u0442\u0438 \u0443\u0440\u043E\u043A\u0438"
             }), _jsx("strong", {
-              children: dueToday.length ? `${dueToday.length} \u0443\u0440.` : "\u0433\u043E\u0442\u043E\u0432\u043E"
+              children: `${dueToday.length} \u0443\u0440.`
             }), _jsx("small", {
-              children: dueToday.length ? `\u043E\u0440\u0438\u0435\u043D\u0442\u0438\u0440 \u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0439: ${money(dueChargeTotal)}` : "\u0432\u0441\u0435 \u043F\u0440\u043E\u0448\u0435\u0434\u0448\u0438\u0435 \u043F\u0440\u043E\u0432\u0435\u0434\u0435\u043D\u044B"
+              children: `\u043E\u0440\u0438\u0435\u043D\u0442\u0438\u0440 \u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0439: ${money(dueChargeTotal)}`
             })]
-          }), _jsxs("button", {
+          }), debtors > 0 && _jsxs("button", {
             type: "button",
-            className: `today-work-card ${debtors ? 'debt' : 'done'}`,
+            className: "today-work-card debt",
             onClick: () => {
               setTab('finance');
               setTimeout(() => document.getElementById('debtors-section')?.scrollIntoView({
@@ -7868,9 +7950,9 @@ function App() {
             children: [_jsx("span", {
               children: "\u0414\u043E\u043B\u0433\u0438"
             }), _jsx("strong", {
-              children: debtors ? money(debt) : "\u043D\u0435\u0442"
+              children: money(debt)
             }), _jsx("small", {
-              children: debtors ? `${debtors} \u0447\u0435\u043B. \u00B7 \u043E\u0442\u043A\u0440\u044B\u0442\u044C \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u044C` : "\u0431\u0430\u043B\u0430\u043D\u0441\u044B \u0447\u0438\u0441\u0442\u044B\u0435"
+              children: `${debtors} \u0447\u0435\u043B. \u00B7 \u043E\u0442\u043A\u0440\u044B\u0442\u044C \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u044C`
             })]
           }), _jsxs("button", {
             type: "button",
@@ -8059,11 +8141,13 @@ function App() {
               children: _jsx(IcoTg, {
                 size: 14
               })
-            }), _jsx("button", {
+            }), _jsxs("button", {
               className: "btn btn-sm btn-white",
               style: {
-                minHeight: 'auto'
+                minHeight: 'auto',
+                gap: 4
               },
+              title: "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435",
               onClick: () => setModal({
                 type: 'message',
                 payload: {
@@ -8071,7 +8155,9 @@ function App() {
                   mode: item.kind === '\u0410\u0431\u043E\u043D\u0435\u043C\u0435\u043D\u0442' ? 'package' : item.student.balance < 0 ? 'debt' : null
                 }
               }),
-              children: "\u0422\u0435\u043A\u0441\u0442"
+              children: [_jsx(IcoEdit, {
+                size: 13
+              }), " \u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C"]
             })]
           }, i);
         })]
@@ -8205,7 +8291,6 @@ function App() {
         if (l.lessonNote) markers.push(['note', 'Заметка']);
         if (findLessonConflicts(l, lessons, students, groups, l.id).length) markers.push(['conflict', 'Конфликт']);
         if (getLessonStudents(l, students, groups).some(s => s.balance < 0)) markers.push(['debt', 'Долг']);
-        if (l.seriesId) markers.push(['series', 'Серия']);
         return markers;
       };
       const mobileTableTimes = [...new Set([...allTimes, '15:00', '16:30', '18:00'])].sort();
@@ -8328,18 +8413,6 @@ function App() {
       const mobileThreeDays = weekDaySummaries.slice(mobileThreeStart, mobileThreeStart + 3);
       const mobileFocusPosition = Math.max(0, mobileThreeDays.findIndex(day => day.date === selDate));
       const mobileFocusClass = mobileFocusPosition === 0 ? 'focus-left' : mobileFocusPosition === 2 ? 'focus-right' : 'focus-middle';
-      const mobileCloseRows = weekDaySummaries.map(day => {
-        const closed = day.lessons.filter(isFinalLesson).length;
-        const pending = day.lessons.length - closed;
-        const hasDebt = day.lessons.some(l => getLessonStudents(l, students, groups).some(s => s.balance < 0));
-        return {
-          ...day,
-          closed,
-          pending,
-          hasDebt
-        };
-      });
-      const mobileCloseCandidate = weekLessons.filter(l => l.date <= today && !isFinalLesson(l)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0] || weekLessons.filter(l => !isFinalLesson(l)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
       const mobileGroupRows = groups.map(group => {
         const rowLessons = weekLessons.filter(l => l.type === 'group' && sameId(l.targetId, group.id)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         return {
@@ -8420,7 +8493,7 @@ function App() {
         className: `mobile-lab-shell ${mobileMoveLesson ? 'is-moving' : ''}`,
         children: [_jsxs("div", {
           className: "mobile-lab-tabs",
-          children: [['days', 'Дни'], ['groups', 'Группы'], ['close', 'Итоги']].map(([mode, label]) => _jsx("button", {
+          children: [['days', 'Дни'], ['groups', 'Группы']].map(([mode, label]) => _jsx("button", {
             type: "button",
             className: mobileScheduleMode === mode ? 'active' : '',
             onClick: () => setMobileScheduleMode(mode),
@@ -8662,40 +8735,6 @@ function App() {
               }
             }),
             children: "На этой неделе нет индивидуальных · добавить"
-          })]
-        }), mobileScheduleMode === 'close' && _jsxs("section", {
-          className: "mobile-lab-close",
-          children: [_jsxs("div", {
-            className: "mobile-lab-section-head",
-            children: [_jsxs("div", {
-              children: [_jsx("span", {
-                children: "Итоги недели"
-              }), _jsx("strong", {
-                children: mobileCloseCandidate ? "Есть непроведённые уроки" : "Все уроки проведены"
-              })]
-            }), _jsx("button", {
-              type: "button",
-              disabled: !mobileCloseCandidate,
-              onClick: () => mobileCloseCandidate && setModal({
-                type: 'attendance',
-                payload: mobileCloseCandidate
-              }),
-              children: "Провести следующий"
-            })]
-          }), _jsx("div", {
-            className: "mobile-lab-close-list",
-            children: mobileCloseRows.map(day => _jsxs("button", {
-              type: "button",
-              className: `mobile-lab-close-row ${day.pending ? 'todo' : 'done'} ${day.hasDebt ? 'debt' : ''}`,
-              onClick: () => setSelDate(day.date),
-              children: [_jsxs("span", {
-                children: [DAY_LABELS[day.index], " ", day.num]
-              }), _jsxs("strong", {
-                children: [day.closed, "/", day.lessons.length || 0]
-              }), _jsx("em", {
-                children: (day.pending ? day.date > today ? `запланировано ${day.pending}` : `осталось ${day.pending}` : day.lessons.length ? "готово" : "свободно") + (day.hasDebt ? " · долг" : "")
-              })]
-            }, day.date))
           })]
         })]
       });
@@ -9321,7 +9360,6 @@ function App() {
         if (l.lessonNote) markers.push(['note', 'Заметка']);
         if (findLessonConflicts(l, lessons, students, groups, l.id).length) markers.push(['conflict', 'Конфликт']);
         if (getLessonStudents(l, students, groups).some(s => s.balance < 0)) markers.push(['debt', 'Долг']);
-        if (l.seriesId) markers.push(['series', 'Серия']);
         return markers;
       };
       const lessonAccent = l => (LESSON_STATUS[l.status] || LESSON_STATUS.planned).color || 'var(--blue)';
@@ -9625,21 +9663,19 @@ function App() {
           homework: 'есть ДЗ',
           note: 'заметка',
           conflict: 'конфликт времени',
-          debt: 'есть долг',
-          series: 'повторяется'
+          debt: 'есть долг'
         };
         const kinds = new Set();
         scheduleLessons.forEach(l => {
           if (l.homework) kinds.add('homework');
           if (l.lessonNote) kinds.add('note');
-          if (l.seriesId) kinds.add('series');
           if (!kinds.has('debt') && getLessonStudents(l, students, groups).some(s => s.balance < 0)) kinds.add('debt');
           if (!kinds.has('conflict') && findLessonConflicts(l, lessons, students, groups, l.id).length) kinds.add('conflict');
         });
         if (!kinds.size) return null;
         return _jsx("div", {
           className: "week-dot-legend",
-          children: ['homework', 'note', 'conflict', 'debt', 'series'].filter(k => kinds.has(k)).map(kind => _jsxs("span", {
+          children: ['homework', 'note', 'conflict', 'debt'].filter(k => kinds.has(k)).map(kind => _jsxs("span", {
             children: [_jsx("i", {
               className: `week-dot ${kind}`
             }), legendLabels[kind]]
@@ -9800,7 +9836,9 @@ function App() {
                     }
                   });
                 },
-                children: [s.balance > 0 ? '+' : '', money(s.balance)]
+                children: [_jsx(IcoEdit, {
+                  size: 11
+                }), " ", money(s.balance)]
               }) : _jsxs("span", {
                 className: `badge ${s.balance < 0 ? 'badge-red' : s.balance > 0 ? 'badge-green' : ''}`,
                 title: s.balance > 0 ? 'Предоплата' : 'Баланс',
@@ -10003,6 +10041,7 @@ function App() {
   const PageFinance = () => {
     const [finTab, setFinTab] = useState('control'); // 'control' | 'history' | 'analytics' | 'trust'
     const [analyticsPeriod, setAnalyticsPeriod] = useState('current_month');
+    const [goalEdit, setGoalEdit] = useState(false);
     const [txStudentFilter, setTxStudentFilter] = useState('all');
     const [txTypeFilter, setTxTypeFilter] = useState('all');
     const [historyExpanded, setHistoryExpanded] = useState(false);
@@ -10020,11 +10059,6 @@ function App() {
       student: s,
       finance: getStudentFinanceSummary(s, txs, lessons, groups)
     }));
-    const recentMoneyEvents = txs.slice().sort((a, b) => txSortKey(b).localeCompare(txSortKey(a))).slice(0, 5);
-    const trustExplainedCount = balanceSummaries.filter(x => x.finance.hasHistory || x.finance.balance !== 0).length;
-    const trustDebtCount = balanceSummaries.filter(x => x.finance.balance < 0).length;
-    const trustNoHistoryCount = balanceSummaries.filter(x => !x.finance.hasHistory && x.finance.balance === 0).length;
-    const trustMismatchCount = balanceSummaries.filter(x => Math.abs(x.finance.mismatch || 0) > 0.5).length;
     const upcomingCharges = activeStudents.map(s => ({
       student: s,
       finance: getStudentFinanceSummary(s, txs, lessons, groups)
@@ -10251,149 +10285,19 @@ function App() {
     const plannedSeats = periodPlanned.reduce((sum, lesson) => sum + lessonFinanceRows(lesson).length, 0);
     const rateSamples = periodLessons.flatMap(lesson => lessonFinanceRows(lesson).map(row => row.rate));
     const averageSeatRate = rateSamples.length ? Math.round(rateSamples.reduce((sum, rate) => sum + rate, 0) / rateSamples.length) : 0;
-    const periodGoal = totalRealistic <= 100000 ? 100000 : Math.ceil(totalRealistic / 50000) * 50000;
+    const periodGoal = Math.max(0, Math.round(Number(settings.monthlyGoal) || 0));
     const goalGap = Math.max(0, Math.round(periodGoal - totalRealistic));
     const lessonsToGoal = averageSeatRate ? Math.ceil(goalGap / averageSeatRate) : 0;
     const priceStep = 200;
     const priceStepEffect = plannedSeats * priceStep;
     const oldDebt = balanceSummaries.filter(x => x.finance.balance < 0 && x.finance.lastCharge && daysBetween(x.finance.lastCharge.date) >= 14).reduce((sum, x) => sum + Math.abs(x.finance.balance), 0);
-    const debtAgeRows = balanceSummaries.filter(x => x.finance.balance < 0).map(x => {
-      const age = x.finance.lastCharge ? daysBetween(x.finance.lastCharge.date) : 0;
-      return {
-        student: x.student,
-        debt: Math.abs(x.finance.balance),
-        age,
-        bucket: age >= 15 ? '15+ дней' : age >= 8 ? '8-14 дней' : '1-7 дней'
-      };
-    }).sort((a, b) => b.age - a.age || b.debt - a.debt);
-    const debtBuckets = ['1-7 дней', '8-14 дней', '15+ дней'].map(label => ({
-      label,
-      amount: debtAgeRows.filter(row => row.bucket === label).reduce((sum, row) => sum + row.debt, 0),
-      count: debtAgeRows.filter(row => row.bucket === label).length
-    }));
-    const channelStats = {
-      group: {
-        earned: 0,
-        seats: 0,
-        lessons: 0
-      },
-      individual: {
-        earned: 0,
-        seats: 0,
-        lessons: 0
-      }
-    };
-    periodCompleted.forEach(lesson => {
-      const type = lesson.type === 'group' ? 'group' : 'individual';
-      channelStats[type].lessons += 1;
-      lessonFinanceRows(lesson).forEach(row => {
-        if (row.present) {
-          channelStats[type].earned += row.rate;
-          channelStats[type].seats += 1;
-        }
-      });
-    });
-    const channelRows = [{
-      key: 'group',
-      label: 'Группы',
-      ...channelStats.group
-    }, {
-      key: 'individual',
-      label: 'Индивидуальные',
-      ...channelStats.individual
-    }].map(row => ({
-      ...row,
-      avgSeat: row.seats ? Math.round(row.earned / row.seats) : 0,
-      avgLesson: row.lessons ? Math.round(row.earned / row.lessons) : 0
-    }));
-    const dayEconomics = dayLabels.map((label, idx) => ({
-      label,
-      earned: 0,
-      planned: 0,
-      lessons: 0
-    }));
-    periodLessons.forEach(lesson => {
-      const idx = (new Date(lesson.date + 'T00:00:00').getDay() + 6) % 7;
-      const row = dayEconomics[idx];
-      row.lessons += 1;
-      lessonFinanceRows(lesson).forEach(fin => {
-        if (lesson.status === 'planned') row.planned += fin.rate;
-        if (isFinalLesson(lesson) && fin.present) row.earned += fin.rate;
-      });
-    });
-    const maxDayMoney = Math.max(...dayEconomics.map(row => row.earned + row.planned), 1);
-    const riskRows = activeStudents.map(s => {
-      const stat = studentStats[s.id] || {
-        scheduled: 0,
-        skipped: 0
-      };
-      const skipRate = stat.scheduled > 0 ? stat.skipped / stat.scheduled : 0;
-      const reasons = [];
-      let score = 0;
-      if (s.balance < 0) {
-        reasons.push(`долг ${money(Math.abs(s.balance))}`);
-        score += 3;
-      }
-      if (skipRate >= 0.2) {
-        reasons.push(`пропуски ${Math.round(skipRate * 100)}%`);
-        score += 2;
-      } else if (skipRate >= 0.1) {
-        reasons.push(`пропуски ${Math.round(skipRate * 100)}%`);
-        score += 1;
-      }
-      if ((s.packageLessons || 0) > 0 && (s.packageLessons || 0) <= 1) {
-        reasons.push('абонемент на исходе');
-        score += 1;
-      }
-      return {
-        student: s,
-        score,
-        reasons
-      };
-    }).filter(row => row.score > 0).sort((a, b) => b.score - a.score || Math.abs(b.student.balance) - Math.abs(a.student.balance)).slice(0, 5);
     const cashGap = Math.max(0, periodEarned - actualPayments);
-    const paymentCoverage = periodEarned > 0 ? Math.min(1, actualPayments / periodEarned) : 1;
-    const paymentCoverageLabel = `${Math.round(paymentCoverage * 100)}%`;
     const revenueRows = studentRows.filter(s => s.earned > 0).sort((a, b) => b.earned - a.earned);
     const topRevenueRows = revenueRows.slice(0, 3);
     const topRevenue = topRevenueRows.reduce((sum, row) => sum + row.earned, 0);
     const topRevenueShare = periodEarned > 0 ? topRevenue / periodEarned : 0;
     const topRevenueLabel = `${Math.round(topRevenueShare * 100)}%`;
-    const dependencyTone = topRevenueShare >= 0.55 ? 'hot' : topRevenueShare >= 0.38 ? 'warn' : 'good';
-    const dependencyText = periodEarned === 0 ? 'данных за период пока нет' : topRevenueShare >= 0.55 ? 'выручка слишком зависит от нескольких учеников' : topRevenueShare >= 0.38 ? 'зависимость умеренная, стоит растить длинный хвост' : 'выручка распределена достаточно ровно';
-    const cashText = periodEarned === 0 ? 'нет заработка за период' : cashGap > 0 ? `в кассу не дошло ${money(cashGap)}` : 'оплаты закрывают заработанное';
-    const periodLessonTimes = periodLessons.map(lesson => new Date(lesson.date + 'T00:00:00').getTime());
-    const periodStartMs = analyticsPeriod === 'all_time' && periodLessonTimes.length ? Math.min(...periodLessonTimes) : bounds.start.getTime();
-    const periodEndMs = analyticsPeriod === 'all_time' && periodLessonTimes.length ? Math.max(...periodLessonTimes) : bounds.end.getTime();
-    const periodTodayMs = Math.min(Math.max(todayMs, periodStartMs), periodEndMs);
-    const elapsedPeriodDays = Math.max(1, Math.floor((periodTodayMs - periodStartMs) / 86400000) + 1);
-    const totalPeriodDays = Math.max(elapsedPeriodDays, Math.floor((periodEndMs - periodStartMs) / 86400000) + 1);
-    const paceForecast = Math.round(periodEarned / elapsedPeriodDays * totalPeriodDays);
-    const cautiousFuture = Math.round(projIdeal * Math.max(0, 1 - Math.min(avgSkipRate + 0.12, 0.45)));
-    const cautiousForecast = periodEarned + cautiousFuture;
     const realisticForecast = Math.round(totalRealistic);
-    const idealForecast = Math.round(totalIdeal);
-    const forecastMax = Math.max(periodGoal, cautiousForecast, realisticForecast, idealForecast, paceForecast, 1);
-    const forecastRows = [{
-      label: 'Осторожно',
-      value: cautiousForecast,
-      hint: 'с запасом на пропуски',
-      tone: 'warn'
-    }, {
-      label: 'Реально',
-      value: realisticForecast,
-      hint: `пропуски ${Math.round(avgSkipRate * 100)}%`,
-      tone: 'good'
-    }, {
-      label: 'Максимум',
-      value: idealForecast,
-      hint: 'если все придут',
-      tone: 'info'
-    }];
-    const collectionRate = periodEarned > 0 ? Math.min(1, Math.max(0.35, actualPayments / periodEarned)) : 0.75;
-    const expectedCash = Math.round(actualPayments + Math.max(0, periodEarned - actualPayments) * 0.65 + projRealistic * collectionRate);
-    const expectedCashWithDebt = expectedCash + Math.round(debt * 0.7);
-    const cashForecastText = debt > 0 ? `с возвратом 70% долгов: ${money(expectedCashWithDebt)}` : 'долгов почти нет, прогноз зависит от посещаемости';
     const weekKey = ds => {
       const d = new Date(ds + 'T00:00:00');
       const day = (d.getDay() + 6) % 7;
@@ -10418,51 +10322,6 @@ function App() {
     });
     const weekForecastRows = Object.values(weekForecastMap).sort((a, b) => a.key.localeCompare(b.key)).slice(-8);
     const maxWeekForecast = Math.max(...weekForecastRows.map(row => row.fact + row.plan), 1);
-    const recoverableLost = Math.round(periodLost * 0.5);
-    const financeLevers = [{
-      label: 'Собрать долги',
-      value: debt,
-      text: oldDebt > 0 ? `${money(oldDebt)} старше 14 дней` : `${debtors.length} должников`,
-      tone: debt > 0 ? 'hot' : 'quiet'
-    }, {
-      label: '+200 ₽ к ставке',
-      value: priceStepEffect,
-      text: `${plannedSeats} будущих списаний`,
-      tone: priceStepEffect > 0 ? 'info' : 'quiet'
-    }, {
-      label: 'Вернуть пропуски',
-      value: recoverableLost,
-      text: 'если отработать половину потерь',
-      tone: recoverableLost > 0 ? 'warn' : 'quiet'
-    }, {
-      label: 'Добрать цель',
-      value: goalGap,
-      text: goalGap > 0 ? `${lessonsToGoal} ученико-уроков` : 'цель уже закрыта',
-      tone: goalGap > 0 ? 'good' : 'quiet'
-    }].sort((a, b) => b.value - a.value).slice(0, 3);
-    const maxLeverValue = Math.max(...financeLevers.map(row => row.value), 1);
-    const forecastMood = realisticForecast >= periodGoal ? 'План выглядит здоровым' : goalGap > 0 ? `до цели не хватает ${money(goalGap)}` : 'прогноз устойчивый';
-    const insightCards = [{
-      tone: debt > 0 ? 'hot' : 'good',
-      label: 'Долги',
-      value: money(debt),
-      text: debt > 0 ? `${debtors.length} чел.; ${money(oldDebt)} старше 14 дней` : 'долгов нет, касса чистая'
-    }, {
-      tone: goalGap > 0 ? 'warn' : 'good',
-      label: 'До цели',
-      value: money(goalGap),
-      text: goalGap > 0 ? `примерно ${lessonsToGoal} ученико-уроков по средней ставке` : 'период уже выше целевого уровня'
-    }, {
-      tone: priceStepEffect > 0 ? 'info' : 'quiet',
-      label: '+200 ₽ к ставке',
-      value: money(priceStepEffect),
-      text: `${plannedSeats} будущих списаний в выбранном периоде`
-    }, {
-      tone: periodLost > 0 ? 'hot' : 'good',
-      label: 'Пропуски',
-      value: money(periodLost),
-      text: periodLost > 0 ? `потеряно в выбранном периоде` : 'потерь за период нет'
-    }];
     const Stat = ({
       label,
       value,
@@ -10489,29 +10348,29 @@ function App() {
         className: "crm-dashboard",
         children: [_jsx(Stat, {
           label: "\u0414\u043E\u043B\u0433\u0438",
-          value: `${debt.toLocaleString()} ₽`,
+          value: `${debt.toLocaleString()} ₽`,
           color: "#dc4c4c",
           sub: `${debtors.length} чел.`
         }), _jsx(Stat, {
           label: "\u041F\u0440\u0435\u0434\u043E\u043F\u043B\u0430\u0442\u044B",
-          value: `${prepaid.toLocaleString()} ₽`,
+          value: `${prepaid.toLocaleString()} ₽`,
           color: "#2f9e68"
         }), _jsx(Stat, {
           label: "\u0424\u0430\u043A\u0442 \u043E\u043F\u043B\u0430\u0442",
-          value: `${actualPayments.toLocaleString()} ₽`,
+          value: `${actualPayments.toLocaleString()} ₽`,
           sub: "\u0437\u0430 \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0439 \u043F\u0435\u0440\u0438\u043E\u0434"
         }), _jsx(Stat, {
           label: "\u0421\u043F\u0438\u0441\u0430\u043D\u043E \u0443\u0440\u043E\u043A\u043E\u0432",
-          value: `${actualCharges.toLocaleString()} ₽`,
+          value: `${actualCharges.toLocaleString()} ₽`,
           sub: "\u043D\u0430\u0447\u0438\u0441\u043B\u0435\u043D\u0438\u044F"
         }), _jsx(Stat, {
           label: "\u041F\u0440\u043E\u0433\u043D\u043E\u0437",
-          value: `≈ ${(Math.round(totalRealistic / 1000) * 1000).toLocaleString()} ₽`,
+          value: `≈ ${(Math.round(totalRealistic / 1000) * 1000).toLocaleString()} ₽`,
           color: "#2f6fed",
           sub: "\u0440\u0435\u0430\u043B\u0438\u0441\u0442\u0438\u0447\u043D\u043E"
         }), _jsx(Stat, {
           label: "\u041F\u043E\u0442\u0435\u0440\u0438",
-          value: `${periodLost.toLocaleString()} ₽`,
+          value: `${periodLost.toLocaleString()} ₽`,
           color: "#8a5a44",
           sub: "\u043F\u0440\u043E\u043F\u0443\u0441\u043A\u0438"
         })]
@@ -10681,8 +10540,12 @@ function App() {
               },
               children: ["\u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C ", pluralClasses(s.packageLessons)]
             })]
-          }), _jsx("button", {
+          }), _jsxs("button", {
             className: "btn btn-sm btn-white",
+            style: {
+              gap: 4
+            },
+            title: "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435",
             onClick: () => setModal({
               type: 'message',
               payload: {
@@ -10690,7 +10553,9 @@ function App() {
                 mode: 'package'
               }
             }),
-            children: "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C"
+            children: [_jsx(IcoEdit, {
+              size: 13
+            }), " \u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C"]
           }), _jsx("button", {
             className: "btn btn-sm btn-blue",
             onClick: () => setModal({
@@ -10922,178 +10787,214 @@ function App() {
         })]
       })]
     });
-    const TrustTab = () => _jsxs("div", {
-      className: "finance-trust-page",
-      children: [_jsx("div", {
-        className: "finance-section-title",
-        children: "\u0414\u041E\u0412\u0415\u0420\u0418\u0415 \u041A \u0411\u0410\u041B\u0410\u041D\u0421\u0410\u041C"
-      }), _jsxs("div", {
-        className: "finance-split-grid finance-trust-overview",
+    const AnalyticsTab = () => {
+      const monthPeriod = analyticsPeriod === 'current_month' || analyticsPeriod === 'last_month' || analyticsPeriod === 'next_month';
+      const attendancePct = totalScheduled > 0 ? Math.round((1 - avgSkipRate) * 100) : null;
+      const factPct = periodGoal > 0 ? Math.min(100, Math.round(periodEarned / periodGoal * 100)) : 0;
+      const goalPct = periodGoal > 0 ? Math.min(100, Math.round(totalRealistic / periodGoal * 100)) : 0;
+      const topStudents = revenueRows.slice(0, 5);
+      const maxTopEarned = Math.max(...topStudents.map(r => r.earned), 1);
+      const saveGoal = e => {
+        e.preventDefault();
+        const v = Math.max(0, Math.round(Number(new FormData(e.target).get('goal')) || 0));
+        setSettings({
+          ...settings,
+          monthlyGoal: v
+        });
+        setGoalEdit(false);
+      };
+      const advice = [];
+      const monthIdx = new Date().getMonth();
+      const taxCushion = Math.round(actualPayments * 0.06);
+      if (debt > 0) advice.push({
+        tone: 'hot',
+        title: `Собрать долги: ${money(debt)}`,
+        text: oldDebt > 0 ? `${money(oldDebt)} висит дольше 14 дней. Чем старше долг, тем труднее его вернуть — напомните сегодня.` : `${debtors.length} ${plural(debtors.length, 'должник', 'должника', 'должников')}. Готовый текст напоминания — в карточке ученика.`
+      });
+      if (cashGap > 0 && debt <= 0) advice.push({
+        tone: 'warn',
+        title: `Заработано, но не получено: ${money(cashGap)}`,
+        text: 'Уроки проведены, а деньги ещё не пришли. Договоритесь об оплате вперёд — хотя бы на неделю.'
+      });
+      if (periodLost > 0 && periodLost >= periodEarned * 0.05) advice.push({
+        tone: 'warn',
+        title: `Пропуски съели ${money(periodLost)}`,
+        text: 'Помогает правило: отмена позже, чем за 24 часа — урок оплачивается. Предупредите учеников заранее.'
+      });
+      if (lowPackages.length > 0) advice.push({
+        tone: 'warn',
+        title: 'Абонементы заканчиваются',
+        text: `${lowPackages.map(s => s.name).join(', ')} — предложите продление заранее, чтобы занятия не прервались.`
+      });
+      if (prepaid <= 0 && periodEarned > 0 && activeStudents.length >= 3) advice.push({
+        tone: 'info',
+        title: 'Переведите оплату на предоплату',
+        text: 'Сейчас никто не платит вперёд. Абонемент на 4-8 занятий снижает отмены и убирает разговор о деньгах после каждого урока.'
+      });
+      if (revenueRows.length >= 4 && topRevenueShare >= 0.5) advice.push({
+        tone: 'info',
+        title: `${topRevenueLabel} дохода дают 3 ученика`,
+        text: 'Если один уйдёт, доход заметно просядет. Подстраховка — один-два новых ученика или мини-группа.'
+      });
+      if (priceStepEffect > 0 && avgSkipRate <= 0.1 && totalScheduled >= 10) advice.push({
+        tone: 'good',
+        title: `+200 ₽ к ставке = ещё ${money(priceStepEffect)}`,
+        text: `Посещаемость ${attendancePct}% — вас ценят. Поднимать цену раз в год — нормальная практика.`
+      });
+      if (taxCushion > 0) advice.push({
+        tone: 'info',
+        title: `Отложите ${money(taxCushion)} на налог`,
+        text: 'Откладывайте 4-6% с каждой оплаты на отдельный счёт — НПД в конце месяца не ударит по бюджету. Точный расчёт — кнопка «Налог».'
+      });
+      if (monthIdx >= 2 && monthIdx <= 4 && periodEarned > 0) advice.push({
+        tone: 'warn',
+        title: 'Скоро лето — доход просядет',
+        text: 'Летом у репетиторов в 2-3 раза меньше уроков. Откладывайте 15-20% дохода уже сейчас и предложите ученикам летний интенсив.'
+      });
+      if (monthIdx >= 5 && monthIdx <= 7) advice.push({
+        tone: 'info',
+        title: 'Лето — время собирать осень',
+        text: 'Запишите учеников на сентябрь заранее — скидка за раннюю предоплату заполнит осеннее расписание ещё до его начала.'
+      });
+      if (groups.length === 0 && activeStudents.length >= 6) advice.push({
+        tone: 'good',
+        title: 'Попробуйте мини-группу',
+        text: 'Группа из 3-4 учеников по сниженной цене даёт в 1.5-2 раза больше дохода за час, чем индивидуальный урок.'
+      });
+      const everTips = [{
+        tone: 'good',
+        title: 'Правило 10%',
+        text: 'Сразу после каждой оплаты переводите 10% на отдельный накопительный счёт. Незаметно для бюджета — заметно через год.'
+      }, {
+        tone: 'good',
+        title: 'Подушка на 3 месяца',
+        text: 'Цель-минимум — резерв на 3 месяца расходов на вкладе с процентом. С ним спокойно переживаются и лето, и уход ученика.'
+      }, {
+        tone: 'good',
+        title: 'Свободные деньги должны работать',
+        text: 'Резерв сверх подушки держите на накопительном счёте или вкладе — процент на остаток при регулярном доходе ощутим.'
+      }, {
+        tone: 'good',
+        title: 'Индексируйте ставку',
+        text: 'Для новых учеников поднимайте цену каждый сентябрь, для старых — раз в год с предупреждением за месяц. Цены растут — ставка тоже должна.'
+      }, {
+        tone: 'good',
+        title: 'Деньги вперёд — это норма',
+        text: 'Оплата до урока или абонементом — стандарт рынка. Кто платит «потом», тот чаще пропускает и дольше тянет с оплатой.'
+      }];
+      const weekIdx = Math.floor(Date.now() / 604800000);
+      for (let i = 0; advice.length < 4 && i < everTips.length; i++) {
+        advice.push(everTips[(weekIdx + i) % everTips.length]);
+      }
+      return _jsxs("div", {
         children: [_jsxs("div", {
-          className: "finance-panel finance-trust-panel",
+          className: "fin-hero",
           children: [_jsx("div", {
             className: "metric-label",
-            children: "\u0420\u0430\u0441\u0448\u0438\u0444\u0440\u043E\u0432\u0430\u043D\u043E"
+            children: "Заработано за период"
           }), _jsx("div", {
-            className: "finance-trust-score",
-            children: trustExplainedCount
-          }), _jsx("div", {
-            className: "metric-sub",
-            children: "\u0443\u0447\u0435\u043D\u0438\u043A\u043E\u0432, \u0433\u0434\u0435 \u0431\u0430\u043B\u0430\u043D\u0441 \u043C\u043E\u0436\u043D\u043E \u043E\u0431\u044A\u044F\u0441\u043D\u0438\u0442\u044C \u043F\u043E \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u044F\u043C"
-          })]
-        }), _jsxs("div", {
-          className: "finance-panel",
-          children: [_jsx("div", {
-            className: "metric-label",
-            children: "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 \u0434\u0435\u043D\u0435\u0436\u043D\u044B\u0435 \u0441\u043E\u0431\u044B\u0442\u0438\u044F"
-          }), recentMoneyEvents.length ? recentMoneyEvents.map(tx => {
-            const s = students.find(st => sameId(st.id, tx.studentId));
-            const meta = getTxMeta(tx);
-            return _jsxs("div", {
-              className: "finance-mini-row static",
-              children: [_jsxs("span", {
-                children: [s?.name || "\u0423\u0434\u0430\u043B\u0451\u043D", " \xB7 ", meta.title]
-              }), _jsx("strong", {
-                style: {
-                  color: tx.type === 'payment' ? 'var(--green)' : 'var(--red)'
-                },
-                children: `${tx.type === 'payment' ? '+' : '-'}${money(tx.amount)}`
-              })]
-            }, tx.id);
-          }) : _jsx("div", {
-            className: "metric-sub",
-            children: "\u041E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442"
-          })]
-        })]
-      }), _jsxs("div", {
-        className: "finance-trust-metrics",
-        children: [_jsxs("div", {
-          className: "finance-trust-metric",
-          children: [_jsx("span", {
-            children: "\u0414\u043E\u043B\u0433\u0438"
-          }), _jsx("strong", {
-            children: trustDebtCount
-          })]
-        }), _jsxs("div", {
-          className: "finance-trust-metric",
-          children: [_jsx("span", {
-            children: "\u0411\u0435\u0437 \u0438\u0441\u0442\u043E\u0440\u0438\u0438"
-          }), _jsx("strong", {
-            children: trustNoHistoryCount
-          })]
-        }), _jsxs("div", {
-          className: `finance-trust-metric ${trustMismatchCount ? 'danger' : 'ok'}`,
-          children: [_jsx("span", {
-            children: "\u0420\u0430\u0441\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u044F"
-          }), _jsx("strong", {
-            children: trustMismatchCount
-          })]
-        })]
-      }), _jsx("div", {
-        className: "finance-section-title",
-        children: "\u0411\u0410\u041B\u0410\u041D\u0421\u042B \u0423\u0427\u0415\u041D\u0418\u041A\u041E\u0412"
-      }), _jsx("div", {
-        className: "finance-panel finance-balance-trust-list",
-        children: balanceSummaries.length ? balanceSummaries.map(({
-          student: s,
-          finance
-        }) => _jsxs("button", {
-          className: "finance-mini-row",
-          onClick: () => setModal({
-            type: 'studentDetail',
-            payload: s
-          }),
-          children: [_jsxs("span", {
-            children: [s.name, " \xB7 ", finance.events.length, " \u043E\u043F.", finance.hasHistory ? "" : " \xB7 \u043D\u0435\u0442 \u0438\u0441\u0442\u043E\u0440\u0438\u0438"]
-          }), _jsx("strong", {
-            style: {
-              color: balanceColor(finance.balance)
-            },
-            children: balanceLabel(finance.balance)
-          })]
-        }, s.id)) : _jsx("div", {
-          className: "metric-sub",
-          children: "\u0423\u0447\u0435\u043D\u0438\u043A\u043E\u0432 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442"
-        })
-      })]
-    });
-    const AnalyticsTab = () => _jsxs("div", {
-      children: [_jsx("div", {
-        className: "finance-section-title",
-        children: "ДЕНЕЖНЫЕ ИНСАЙТЫ"
-      }), _jsx("div", {
-        className: "finance-insight-grid",
-        children: insightCards.map(card => _jsxs("div", {
-          className: `finance-insight-card ${card.tone}`,
-          children: [_jsx("div", {
-            className: "finance-insight-label",
-            children: card.label
-          }), _jsx("div", {
-            className: "finance-insight-value",
-            children: card.value
-          }), _jsx("div", {
-            className: "finance-insight-text",
-            children: card.text
-          })]
-        }, card.label))
-      }), _jsx("div", {
-        className: "finance-section-title",
-        children: "ПРОГНОЗ И РЫЧАГИ"
-      }), _jsxs("div", {
-        className: "finance-forecast-lab",
-        children: [_jsxs("div", {
-          className: "finance-panel finance-forecast-hero",
-          children: [_jsx("div", {
-            className: "finance-section-title compact",
-            children: "СЦЕНАРИИ ДОХОДА"
+            className: "fin-hero-value",
+            children: money(periodEarned)
           }), _jsxs("div", {
-            className: "finance-forecast-main",
-            children: [_jsx("span", {
-              children: "ожидаемый итог"
-            }), _jsx("strong", {
-              children: money(realisticForecast)
-            }), _jsx("em", {
-              children: forecastMood
+            className: "fin-hero-subrow",
+            children: [_jsxs("span", {
+              children: ["оплатами пришло ", _jsx("b", {
+                children: money(actualPayments)
+              })]
+            }), periodPlanned.length > 0 && _jsxs("span", {
+              children: ["прогноз к концу ≈ ", _jsx("b", {
+                children: money(realisticForecast)
+              })]
             })]
-          }), _jsx("div", {
-            className: "finance-forecast-bars",
-            children: forecastRows.map(row => _jsxs("div", {
-              className: `finance-forecast-row ${row.tone}`,
+          })]
+        }), monthPeriod && _jsxs("div", {
+          className: "finance-panel fin-goal-panel",
+          children: [_jsxs("div", {
+            className: "fin-goal-head",
+            children: [_jsx("div", {
+              className: "finance-section-title compact",
+              style: {
+                margin: 0
+              },
+              children: "МОЯ ЦЕЛЬ НА МЕСЯЦ"
+            }), periodGoal > 0 && !goalEdit && _jsx("button", {
+              type: "button",
+              className: "btn btn-sm btn-white",
+              onClick: () => setGoalEdit(true),
+              children: "Изменить"
+            })]
+          }), periodGoal > 0 && !goalEdit ? _jsxs(_Fragment, {
+            children: [_jsxs("div", {
+              className: "finance-goal-head",
               children: [_jsxs("div", {
                 children: [_jsx("span", {
-                  children: row.label
+                  children: "Факт"
                 }), _jsx("strong", {
-                  children: money(row.value)
+                  children: money(periodEarned)
                 })]
-              }), _jsx("div", {
-                className: "finance-forecast-track",
-                children: _jsx("i", {
-                  style: {
-                    width: `${Math.max(5, row.value / forecastMax * 100)}%`
-                  }
-                })
-              }), _jsx("small", {
-                children: row.hint
+              }), _jsxs("div", {
+                children: [_jsx("span", {
+                  children: "Цель"
+                }), _jsx("strong", {
+                  children: money(periodGoal)
+                })]
               })]
-            }, row.label))
+            }), _jsx("div", {
+              className: "finance-goal-meter",
+              children: _jsx("div", {
+                style: {
+                  width: `${factPct}%`
+                }
+              })
+            }), _jsx("div", {
+              className: "finance-goal-note",
+              children: goalGap > 0 ? `Прогноз ≈ ${money(realisticForecast)} — это ${goalPct}% цели. Не хватает ${money(goalGap)}, примерно ${pluralLessons(lessonsToGoal)}.` : 'Прогноз уже выше цели. Можно поднять планку — кнопка «Изменить».'
+            })]
+          }) : _jsxs("form", {
+            className: "fin-goal-form",
+            onSubmit: saveGoal,
+            children: [_jsx("input", {
+              className: "input",
+              name: "goal",
+              type: "number",
+              min: 0,
+              step: 1000,
+              defaultValue: periodGoal || '',
+              placeholder: "например, 80000"
+            }), _jsx("button", {
+              className: "btn btn-black",
+              type: "submit",
+              children: "Сохранить"
+            }), _jsx("div", {
+              className: "metric-sub",
+              style: {
+                gridColumn: '1 / -1',
+                margin: 0
+              },
+              children: "Сколько хотите зарабатывать в месяц. Цель видите только вы."
+            })]
           })]
-        }), _jsxs("div", {
-          className: "finance-panel finance-cash-projection",
+        }), _jsx("div", {
+          className: "finance-section-title",
+          children: "СОВЕТЫ ПО ДЕНЬГАМ"
+        }), _jsx("div", {
+          className: "fin-advice-list",
+          children: advice.slice(0, 5).map(a => _jsxs("div", {
+            className: `fin-advice ${a.tone}`,
+            children: [_jsx("strong", {
+              children: a.title
+            }), _jsx("span", {
+              children: a.text
+            })]
+          }, a.title))
+        }), weekForecastRows.length > 1 && _jsxs("div", {
+          className: "finance-panel",
           children: [_jsx("div", {
             className: "finance-section-title compact",
-            children: "ПРОГНОЗ КАССЫ"
-          }), _jsxs("div", {
-            className: "finance-cash-big",
-            children: [_jsx("span", {
-              children: "вероятно придет деньгами"
-            }), _jsx("strong", {
-              children: money(expectedCash)
-            }), _jsx("em", {
-              children: cashForecastText
-            })]
+            children: "ДОХОД ПО НЕДЕЛЯМ"
           }), _jsx("div", {
             className: "finance-week-bars",
-            children: weekForecastRows.length ? weekForecastRows.map(row => _jsxs("div", {
+            children: weekForecastRows.map(row => _jsxs("div", {
               className: "finance-week-row",
               children: [_jsx("span", {
                 children: row.label
@@ -11110,612 +11011,132 @@ function App() {
               }), _jsx("strong", {
                 children: money(Math.round(row.fact + row.plan))
               })]
-            }, row.key)) : _jsx("div", {
-              className: "metric-sub",
-              children: "Нет уроков для недельного прогноза"
-            })
-          })]
-        }), _jsxs("div", {
-          className: "finance-panel finance-lever-panel",
-          children: [_jsx("div", {
-            className: "finance-section-title compact",
-            children: "ЧТО БЫСТРЕЕ ДАСТ ДЕНЬГИ"
-          }), _jsx("div", {
-            className: "finance-lever-list",
-            children: financeLevers.map(row => _jsxs("div", {
-              className: `finance-lever-row ${row.tone}`,
-              children: [_jsxs("div", {
-                children: [_jsx("span", {
-                  children: row.label
-                }), _jsx("strong", {
-                  children: money(row.value)
-                }), _jsx("small", {
-                  children: row.text
-                })]
-              }), _jsx("i", {
-                style: {
-                  width: `${row.value > 0 ? Math.max(5, row.value / maxLeverValue * 100) : 0}%`
-                }
-              })]
-            }, row.label))
-          })]
-        })]
-      }), _jsxs("div", {
-        className: "finance-split-grid",
-        children: [_jsxs("div", {
-          className: "finance-panel finance-goal-panel",
-          children: [_jsx("div", {
-            className: "finance-section-title compact",
-            children: "ЦЕЛЬ ПЕРИОДА"
+            }, row.key))
           }), _jsxs("div", {
-            className: "finance-goal-head",
-            children: [_jsxs("div", {
-              children: [_jsx("span", {
-                children: "Реалистичный итог"
-              }), _jsx("strong", {
-                children: money(Math.round(totalRealistic))
-              })]
-            }), _jsxs("div", {
-              children: [_jsx("span", {
-                children: "Цель"
-              }), _jsx("strong", {
-                children: money(periodGoal)
-              })]
-            })]
-          }), _jsx("div", {
-            className: "finance-goal-meter",
-            children: _jsx("div", {
-              style: {
-                width: `${Math.min(100, periodGoal ? totalRealistic / periodGoal * 100 : 0)}%`
-              }
-            })
-          }), _jsxs("div", {
-            className: "finance-goal-note",
-            children: goalGap > 0 ? ["Не хватает ", money(goalGap), ". Это примерно ", lessonsToGoal, " ученико-уроков или повышение цены на части занятий."] : ["Цель закрыта. Следующий полезный шаг - удержание посещаемости и долгов."]
-          })]
-        }), _jsxs("div", {
-          className: "finance-panel finance-day-panel",
-          children: [_jsx("div", {
-            className: "finance-section-title compact",
-            children: "ЭКОНОМИКА ПО ДНЯМ"
-          }), _jsx("div", {
-            className: "finance-day-list",
-            children: dayEconomics.map(row => _jsxs("div", {
-              className: "finance-day-row",
-              children: [_jsx("span", {
-                children: row.label
-              }), _jsx("div", {
-                className: "finance-day-track",
-                children: _jsx("div", {
-                  style: {
-                    width: `${Math.max(4, (row.earned + row.planned) / maxDayMoney * 100)}%`
-                  }
-                })
-              }), _jsx("strong", {
-                children: row.lessons ? money(row.earned + row.planned) : "пусто"
-              })]
-            }, row.label))
-          })]
-        })]
-      }), _jsx("div", {
-        className: "finance-section-title",
-        children: "УСТОЙЧИВОСТЬ ДОХОДА"
-      }), _jsxs("div", {
-        className: "finance-stability-grid",
-        children: [_jsxs("div", {
-          className: "finance-panel finance-cash-panel",
-          children: [_jsx("div", {
-            className: "finance-section-title compact",
-            children: "КАССА VS ЗАРАБОТАНО"
-          }), _jsxs("div", {
-            className: "finance-cash-head",
-            children: [_jsxs("div", {
-              children: [_jsx("span", {
-                children: "Заработано"
-              }), _jsx("strong", {
-                children: money(periodEarned)
-              })]
-            }), _jsxs("div", {
-              children: [_jsx("span", {
-                children: "Оплачено"
-              }), _jsx("strong", {
-                children: money(actualPayments)
-              })]
-            }), _jsxs("div", {
-              children: [_jsx("span", {
-                children: "Разрыв"
-              }), _jsx("strong", {
-                children: money(cashGap)
-              })]
-            })]
-          }), _jsx("div", {
-            className: "finance-cash-meter",
-            children: _jsx("div", {
-              style: {
-                width: paymentCoverageLabel
-              }
-            })
-          }), _jsxs("div", {
-            className: "finance-cash-note",
-            children: [_jsx("strong", {
-              children: paymentCoverageLabel
-            }), " покрытия оплатами. ", cashText]
-          })]
-        }), _jsxs("div", {
-          className: `finance-panel finance-dependency-panel ${dependencyTone}`,
-          children: [_jsx("div", {
-            className: "finance-section-title compact",
-            children: "ЗАВИСИМОСТЬ ОТ ТОП-3"
-          }), _jsxs("div", {
-            className: "finance-dependency-head",
-            children: [_jsx("strong", {
-              children: topRevenueLabel
-            }), _jsx("span", {
-              children: dependencyText
-            })]
-          }), _jsx("div", {
-            className: "finance-dependency-list",
-            children: topRevenueRows.length ? topRevenueRows.map(row => _jsxs("div", {
-              className: "finance-dependency-row",
-              children: [_jsx("span", {
-                children: row.name
-              }), _jsx("div", {
-                children: _jsx("i", {
-                  style: {
-                    width: `${Math.max(5, row.earned / Math.max(topRevenueRows[0]?.earned || 1, 1) * 100)}%`
-                  }
-                })
-              }), _jsx("strong", {
-                children: money(row.earned)
-              })]
-            }, row.id)) : _jsx("div", {
-              className: "metric-sub",
-              children: "Нет завершенных уроков за период"
-            })
-          })]
-        })]
-      }), _jsx("div", {
-        className: "finance-section-title",
-        children: "\u0418\u0422\u041E\u0413 \u041F\u0415\u0420\u0418\u041E\u0414\u0410"
-      }), _jsxs("div", {
-        style: {
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 10,
-          marginBottom: 10
-        },
-        children: [_jsx(Stat, {
-          label: "\u0417\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u043E",
-          value: `${periodEarned.toLocaleString()} ₽`,
-          color: "var(--green)"
-        }), _jsx(Stat, {
-          label: "\u041F\u043E\u0442\u0435\u0440\u044F\u043D\u043E \u043D\u0430 \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u0430\u0445",
-          value: `${periodLost.toLocaleString()} ₽`,
-          color: "var(--red)"
-        })]
-      }), _jsxs("div", {
-        style: {
-          fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-          fontSize: 11,
-          fontWeight: 900,
-          marginBottom: 10,
-          marginTop: 16
-        },
-        children: ["\u041F\u0420\u041E\u0413\u041D\u041E\u0417 (\u043E\u0441\u0442\u0430\u0432\u0448\u0438\u0435\u0441\u044F ", periodPlanned.length, " \u0443\u0440\u043E\u043A\u043E\u0432)"]
-      }), _jsxs("div", {
-        className: "forecast-grid",
-        children: [_jsxs("div", {
-          className: "forecast-card good",
-          children: [_jsx("div", {
-            className: "metric-label",
-            children: "\u0418\u0434\u0435\u0430\u043B\u044C\u043D\u044B\u0439 \u043F\u0440\u043E\u0433\u043D\u043E\u0437"
-          }), _jsxs("div", {
-            className: "metric-value",
-            children: [projIdeal.toLocaleString(), " \u20BD"]
-          }), _jsxs("div", {
-            className: "metric-sub",
-            children: ["\u0415\u0441\u043B\u0438 \u0432\u0441\u0435 \u043F\u0440\u0438\u0434\u0443\u0442. \u0418\u0442\u043E\u0433\u043E: ", totalIdeal.toLocaleString(), " \u20BD"]
-          })]
-        }), _jsxs("div", {
-          className: "forecast-card warn",
-          children: [_jsx("div", {
-            className: "metric-label",
-            children: "\u0420\u0435\u0430\u043B\u0438\u0441\u0442\u0438\u0447\u043D\u044B\u0439 \u043F\u0440\u043E\u0433\u043D\u043E\u0437"
-          }), _jsxs("div", {
-            className: "metric-value",
-            children: [Math.round(projRealistic).toLocaleString(), " \u20BD"]
-          }), _jsxs("div", {
-            className: "metric-sub",
-            children: ["\u0421 \u0443\u0447\u0435\u0442\u043E\u043C \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u043E\u0432 ", Math.round(avgSkipRate * 100), "%. \u0418\u0442\u043E\u0433\u043E: ", Math.round(totalRealistic).toLocaleString(), " \u20BD"]
-          })]
-        })]
-      }), _jsx("div", {
-        className: "finance-section-title",
-        children: "ГДЕ ДЕНЬГИ ЗАСТРЕВАЮТ"
-      }), _jsxs("div", {
-        className: "finance-split-grid",
-        children: [_jsxs("div", {
-          className: "finance-panel",
-          children: [_jsx("div", {
-            className: "finance-section-title compact",
-            children: "ДОЛГИ ПО ДАВНОСТИ"
-          }), debtBuckets.map(row => _jsxs("div", {
-            className: "finance-kpi-row",
-            children: [_jsx("span", {
-              children: row.label
-            }), _jsx("strong", {
-              children: money(row.amount)
-            }), _jsxs("em", {
-              children: [row.count, " чел."]
-            })]
-          }, row.label))]
-        }), _jsxs("div", {
-          className: "finance-panel",
-          children: [_jsx("div", {
-            className: "finance-section-title compact",
-            children: "ФОРМАТЫ ЗАНЯТИЙ"
-          }), channelRows.map(row => _jsxs("div", {
-            className: "finance-kpi-row",
-            children: [_jsx("span", {
-              children: row.label
-            }), _jsxs("strong", {
-              children: [money(row.avgLesson), " / урок"]
-            }), _jsxs("em", {
-              children: [row.lessons, " ур."]
-            })]
-          }, row.key))]
-        })]
-      }), _jsxs("div", {
-        className: "finance-panel finance-risk-panel",
-        children: [_jsx("div", {
-          className: "finance-section-title compact",
-          children: "УЧЕНИКИ С Р РСКОМ ПО ДЕНЬГАМ"
-        }), riskRows.length ? _jsx("div", {
-          className: "finance-risk-list",
-          children: riskRows.map(row => _jsxs("button", {
-            className: "finance-risk-row",
-            onClick: () => setModal({
-              type: 'studentDetail',
-              payload: row.student
-            }),
+            className: "fin-week-legend",
             children: [_jsxs("span", {
-              children: [_jsx("strong", {
-                children: row.student.name
-              }), _jsx("small", {
-                children: row.reasons.join(' · ')
-              })]
-            }), _jsxs("em", {
-              children: ["риск ", row.score]
+              children: [_jsx("i", {}), "проведено"]
+            }), _jsxs("span", {
+              children: [_jsx("b", {}), "запланировано"]
             })]
-          }, row.student.id))
-        }) : _jsx("div", {
-          className: "metric-sub",
-          children: "Нет явных финансовых красных зон"
-        })]
-      }), _jsxs("div", {
-        className: "finance-panel",
-        children: [_jsx("div", {
-          style: {
-            fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-            fontSize: 10,
-            fontWeight: 900,
-            marginBottom: 6
-          },
-          children: "\u0421\u0422\u0410\u0422\u0418\u0421\u0422\u0418\u041A\u0410 \u041F\u0420\u041E\u041F\u0423\u0421\u041A\u041E\u0412 (\u0432\u0441\u0435 \u0432\u0440\u0435\u043C\u044F)"
+          })]
         }), _jsxs("div", {
-          style: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          },
-          children: [_jsxs("div", {
-            children: [_jsxs("div", {
+          className: "finance-split-grid",
+          children: [(() => {
+            const subjectMap = {};
+            periodCompleted.forEach(lesson => {
+              const subject = getLessonSubject(lesson, groups);
+              if (!subjectMap[subject]) subjectMap[subject] = {
+                subject,
+                lessons: 0,
+                earned: 0
+              };
+              const row = subjectMap[subject];
+              row.lessons += 1;
+              getLessonStudents(lesson, students, groups, {
+                includeArchived: true
+              }).forEach(s => {
+                const rate = getLessonRate(lesson, s, groups);
+                const present = lesson.status !== 'no_show' && lesson.attendance?.[s.id] !== false;
+                if (present) row.earned += rate;
+              });
+            });
+            const rows = Object.values(subjectMap).sort((a, b) => b.earned - a.earned || b.lessons - a.lessons).slice(0, 6);
+            const maxEarned = Math.max(...rows.map(r => r.earned), 1);
+            return _jsxs("div", {
+              className: "finance-panel finance-subject-panel",
+              children: [_jsx("div", {
+                className: "finance-section-title compact",
+                children: "ПО ПРЕДМЕТАМ"
+              }), rows.length ? _jsx("div", {
+                className: "finance-subject-list",
+                children: rows.map(r => _jsxs("div", {
+                  className: "finance-subject-row",
+                  children: [_jsxs("div", {
+                    className: "finance-subject-head",
+                    children: [_jsx("strong", {
+                      children: r.subject
+                    }), _jsx("span", {
+                      children: pluralLessons(r.lessons)
+                    })]
+                  }), _jsx("div", {
+                    className: "finance-subject-money",
+                    children: _jsxs("b", {
+                      children: [r.earned.toLocaleString(), " ₽"]
+                    })
+                  }), _jsx("div", {
+                    className: "finance-subject-track",
+                    children: _jsx("div", {
+                      style: {
+                        width: `${Math.max(6, r.earned / maxEarned * 100)}%`
+                      }
+                    })
+                  })]
+                }, r.subject))
+              }) : _jsx("div", {
+                className: "metric-sub",
+                children: "Нет проведённых уроков за период"
+              })]
+            });
+          })(), _jsxs("div", {
+            className: "finance-panel",
+            children: [_jsx("div", {
+              className: "finance-section-title compact",
+              children: "ТОП УЧЕНИКОВ"
+            }), topStudents.length ? _jsx("div", {
+              className: "finance-dependency-list",
+              children: topStudents.map(row => _jsxs("div", {
+                className: "finance-dependency-row",
+                children: [_jsx("span", {
+                  children: row.name
+                }), _jsx("div", {
+                  children: _jsx("i", {
+                    style: {
+                      width: `${Math.max(5, row.earned / maxTopEarned * 100)}%`
+                    }
+                  })
+                }), _jsx("strong", {
+                  children: money(row.earned)
+                })]
+              }, row.id))
+            }) : _jsx("div", {
+              className: "metric-sub",
+              children: "Нет проведённых уроков за период"
+            }), revenueRows.length >= 4 && topRevenueShare >= 0.5 && _jsxs("div", {
+              className: "metric-sub",
               style: {
-                fontSize: 11,
-                color: 'var(--text-sec)'
+                marginTop: 8
               },
-              children: [totalScheduled, " \u0437\u0430\u043D\u044F\u0442\u0438\u0439 \u0437\u0430\u043F\u043B\u0430\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u043E"]
-            }), _jsxs("div", {
-              style: {
-                fontSize: 11,
-                color: 'var(--text-sec)'
-              },
-              children: [totalSkipped, " \u043F\u0440\u043E\u043F\u0443\u0449\u0435\u043D\u043E"]
+              children: ["Топ-3 дают ", topRevenueLabel, " всего дохода"]
             })]
-          }), _jsxs("div", {
-            style: {
-              fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-              fontSize: 28,
-              fontWeight: 900,
-              color: avgSkipRate > 0.2 ? 'var(--red)' : avgSkipRate > 0.1 ? '#b9892f' : 'var(--green)'
-            },
-            children: [Math.round(avgSkipRate * 100), "%"]
           })]
         }), _jsx("div", {
-          style: {
-            marginTop: 10,
-            height: 10,
-            background: 'var(--border-light)',
-            borderRadius: 999,
-            overflow: 'hidden'
-          },
-          children: _jsx("div", {
-            style: {
-              height: '100%',
-              width: `${Math.min(avgSkipRate * 100, 100)}%`,
-              background: avgSkipRate > 0.2 ? 'var(--red)' : avgSkipRate > 0.1 ? '#b9892f' : 'var(--green)',
-              transition: 'width .3s'
-            }
-          })
+          className: "finance-section-title",
+          children: "КЛЮЧЕВЫЕ ЦИФРЫ"
+        }), _jsxs("div", {
+          className: "crm-dashboard",
+          children: [_jsx(Stat, {
+            label: "Проведено уроков",
+            value: String(periodCompleted.length),
+            sub: "за выбранный период"
+          }), _jsx(Stat, {
+            label: "Средний чек",
+            value: `${averageSeatRate.toLocaleString()} ₽`,
+            sub: "за занятие одного ученика"
+          }), _jsx(Stat, {
+            label: "Посещаемость",
+            value: attendancePct === null ? '—' : `${attendancePct}%`,
+            color: attendancePct !== null && attendancePct >= 90 ? '#2f9e68' : undefined,
+            sub: "за всё время"
+          }), _jsx(Stat, {
+            label: "Потери на пропусках",
+            value: `${periodLost.toLocaleString()} ₽`,
+            color: periodLost > 0 ? '#dc4c4c' : undefined,
+            sub: "за выбранный период"
+          })]
         })]
-      }), _jsx("div", {
-        style: {
-          fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-          fontSize: 11,
-          fontWeight: 900,
-          marginBottom: 10
-        },
-        children: "АНАЛИТИКА ПЕРИОДА"
-      }), analyticsPeriod !== 'all_time' && (() => {
-        const weekMap = {};
-        periodCompleted.forEach(lesson => {
-          const d = new Date(lesson.date + 'T00:00:00');
-          const dow = d.getDay() || 7;
-          const mon = new Date(d);
-          mon.setDate(d.getDate() - dow + 1);
-          const key = mon.toISOString().slice(0, 10);
-          const ls = getLessonStudents(lesson, students, groups, {
-            includeArchived: true
-          });
-          ls.forEach(s => {
-            const rate = getLessonRate(lesson, s, groups);
-            const present = lesson.status !== 'no_show' && lesson.attendance?.[s.id] !== false;
-            if (present) weekMap[key] = (weekMap[key] || 0) + rate;
-          });
-        });
-        const weeks = Object.keys(weekMap).sort();
-        if (weeks.length < 2) return null;
-        const maxVal = Math.max(...weeks.map(w => weekMap[w]), 1);
-        const barW = Math.max(18, Math.min(34, Math.floor(220 / weeks.length) - 6));
-        const gap = 8;
-        const h = 58;
-        const svgW = Math.max(360, weeks.length * (barW + gap));
-        return _jsxs("div", {
-          className: "finance-panel finance-chart-panel",
-          children: [_jsx("div", {
-            style: {
-              fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-              fontSize: 10,
-              fontWeight: 900,
-              marginBottom: 10
-            },
-            children: "\u0414\u041E\u0425\u041E\u0414 \u041F\u041E \u041D\u0415\u0414\u0415\u041B\u042F\u041C"
-          }), _jsx("div", {
-            className: "finance-chart-scroll",
-            children: _jsx("svg", {
-              width: "100%",
-              viewBox: `0 0 ${Math.max(svgW, 200)} ${h + 32}`,
-              className: "finance-chart-svg weekly",
-              style: {
-                minWidth: `${svgW}px`
-              },
-              children: weeks.map((w, i) => {
-                const val = weekMap[w] || 0;
-                const barH = val / maxVal * h;
-                const x = i * (barW + gap);
-                const weekNum = new Date(w + 'T00:00:00');
-                const label = weekNum.toLocaleDateString('ru-RU', {
-                  day: 'numeric',
-                  month: 'numeric'
-                });
-                return _jsxs("g", {
-                  children: [_jsx("rect", {
-                    x: x,
-                    y: h - barH,
-                    width: barW,
-                    height: barH,
-                    rx: 3,
-                    fill: "var(--blue)",
-                    opacity: 0.85
-                  }), val > 0 && _jsxs("text", {
-                    x: x + barW / 2,
-                    y: h - barH - 4,
-                    textAnchor: "middle",
-                    fontSize: "8",
-                    fontFamily: "Unbounded, Arial Black, Segoe UI, sans-serif",
-                    fontWeight: "700",
-                    fill: "var(--black)",
-                    children: [Math.round(val / 1000), "\u043A"]
-                  }), _jsx("text", {
-                    x: x + barW / 2,
-                    y: h + 14,
-                    textAnchor: "middle",
-                    fontSize: "8",
-                    fontFamily: "Martian Mono,monospace",
-                    fill: "var(--text-sec)",
-                    children: label
-                  })]
-                }, w);
-              })
-            })
-          })]
-        });
-      })(), (() => {
-        const subjectMap = {};
-        periodCompleted.forEach(lesson => {
-          const subject = getLessonSubject(lesson, groups);
-          if (!subjectMap[subject]) subjectMap[subject] = {
-            subject,
-            lessons: 0,
-            earned: 0,
-            lost: 0
-          };
-          const row = subjectMap[subject];
-          row.lessons += 1;
-          const ls = getLessonStudents(lesson, students, groups, {
-            includeArchived: true
-          });
-          ls.forEach(s => {
-            const rate = getLessonRate(lesson, s, groups);
-            const present = lesson.status !== 'no_show' && lesson.attendance?.[s.id] !== false;
-            if (present && isFinalLesson(lesson)) row.earned += rate;
-            if (!present && lesson.status === 'no_show') row.lost += rate;
-          });
-        });
-        const rows = Object.values(subjectMap).sort((a, b) => b.earned - a.earned || b.lessons - a.lessons).slice(0, 6);
-        const maxEarned = Math.max(...rows.map(r => r.earned), 1);
-        if (!rows.length) return null;
-        return _jsxs("div", {
-          className: "finance-panel finance-subject-panel",
-          children: [_jsx("div", {
-            style: {
-              fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-              fontSize: 10,
-              fontWeight: 900,
-              marginBottom: 10
-            },
-            children: "ДОХОД ПО ПРЕДМЕТАМ"
-          }), _jsx("div", {
-            className: "finance-subject-list",
-            children: rows.map(r => _jsxs("div", {
-              className: "finance-subject-row",
-              children: [_jsxs("div", {
-                className: "finance-subject-head",
-                children: [_jsx("strong", {
-                  children: r.subject
-                }), _jsxs("span", {
-                  children: [pluralLessons(r.lessons)]
-                })]
-              }), _jsxs("div", {
-                className: "finance-subject-money",
-                children: [_jsxs("b", {
-                  children: [r.earned.toLocaleString(), " ₽"]
-                }), r.lost > 0 && _jsxs("span", {
-                  children: ["-", r.lost.toLocaleString(), " ₽"]
-                })]
-              }), _jsx("div", {
-                className: "finance-subject-track",
-                children: _jsx("div", {
-                  style: {
-                    width: `${Math.max(6, r.earned / maxEarned * 100)}%`
-                  }
-                })
-              })]
-            }, r.subject))
-          })]
-        });
-      })(), _jsx("div", {
-        style: {
-          fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-          fontSize: 11,
-          fontWeight: 900,
-          marginBottom: 10
-        },
-        children: "\u041F\u041E \u0423\u0427\u0415\u041D\u0418\u041A\u0410\u041C (\u043F\u0435\u0440\u0438\u043E\u0434)"
-      }), studentRows.length === 0 ? _jsx("div", {
-        style: {
-          textAlign: 'center',
-          padding: 20,
-          color: 'var(--text-muted)',
-          fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-          fontSize: 11
-        },
-        children: "\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434"
-      }) : studentRows.map(s => {
-        const skipRate = s.scheduled > 0 ? s.skipped / s.scheduled : 0;
-        const ownSkip = studentStats[s.id];
-        const allTimeSkip = ownSkip.scheduled > 0 ? ownSkip.skipped / ownSkip.scheduled : 0;
-        return _jsxs("div", {
-          className: "finance-panel",
-          style: {
-            padding: '10px 12px'
-          },
-          children: [_jsxs("div", {
-            style: {
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: 8
-            },
-            children: [_jsx("div", {
-              style: {
-                fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-                fontWeight: 900,
-                fontSize: 12
-              },
-              children: s.name
-            }), _jsxs("div", {
-              style: {
-                display: 'flex',
-                gap: 6
-              },
-              children: [_jsxs("span", {
-                style: {
-                  fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-                  fontSize: 11,
-                  fontWeight: 900,
-                  color: 'var(--green)'
-                },
-                children: [s.earned.toLocaleString(), " \u20BD"]
-              }), s.lost > 0 && _jsxs("span", {
-                style: {
-                  fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-                  fontSize: 11,
-                  fontWeight: 900,
-                  color: 'var(--red)'
-                },
-                children: ["-", s.lost.toLocaleString(), " \u20BD"]
-              })]
-            })]
-          }), _jsxs("div", {
-            style: {
-              display: 'flex',
-              gap: 6,
-              fontSize: 10,
-              color: 'var(--text-sec)',
-              marginBottom: 6
-            },
-            children: [_jsxs("span", {
-              children: [s.attended, "/", s.scheduled, " \u0443\u0440\u043E\u043A\u043E\u0432"]
-            }), _jsx("span", {
-              children: "\xB7"
-            }), _jsxs("span", {
-              style: {
-                color: allTimeSkip > 0.2 ? 'var(--red)' : allTimeSkip > 0.1 ? '#FF8C00' : 'var(--green)',
-                fontWeight: 700
-              },
-              children: ["\u043F\u0440\u043E\u043F\u0443\u0441\u043A ", Math.round(allTimeSkip * 100), "% (\u0432\u0441\u0451 \u0432\u0440\u0435\u043C\u044F)"]
-            })]
-          }), _jsx("div", {
-            style: {
-              height: 6,
-              background: 'var(--border-light)',
-              borderRadius: 3,
-              border: '1px solid var(--border-dashed)',
-              overflow: 'hidden'
-            },
-            children: _jsxs("div", {
-              style: {
-                height: '100%',
-                display: 'flex'
-              },
-              children: [_jsx("div", {
-                style: {
-                  width: `${s.scheduled > 0 ? s.attended / s.scheduled * 100 : 0}%`,
-                  background: 'var(--green)',
-                  transition: 'width .3s'
-                }
-              }), _jsx("div", {
-                style: {
-                  flex: 1,
-                  background: 'var(--red)'
-                }
-              })]
-            })
-          })]
-        }, s.id);
-      })]
-    });
+      });
+    };
     return _jsxs("div", {
       className: "finance-page",
       children: [_jsxs("div", {
@@ -11781,12 +11202,8 @@ function App() {
           className: `toggle-opt ${finTab === 'analytics' ? 'active' : ''}`,
           onClick: () => setFinTab('analytics'),
           children: "\u0410\u043D\u0430\u043B\u0438\u0442\u0438\u043A\u0430"
-        }), _jsx("button", {
-          className: `toggle-opt ${finTab === 'trust' ? 'active' : ''}`,
-          onClick: () => setFinTab('trust'),
-          children: "\u0411\u0430\u043B\u0430\u043D\u0441\u044B"
         })]
-      }), finTab === 'control' ? _jsx(ControlTab, {}) : finTab === 'history' ? _jsx(HistoryTab, {}) : finTab === 'analytics' ? _jsx(AnalyticsTab, {}) : _jsx(TrustTab, {})]
+      }), finTab === 'history' ? _jsx(HistoryTab, {}) : finTab === 'analytics' ? _jsx(AnalyticsTab, {}) : _jsx(ControlTab, {})]
     });
   };
   const dataStats = {
@@ -11885,6 +11302,78 @@ function App() {
           children: [_jsx(IcoWallet, {
             size: 16
           }), " \u041D\u043E\u0432\u0430\u044F \u043E\u043F\u043B\u0430\u0442\u0430"]
+        })]
+      }), _jsx("div", {
+        className: "fab",
+        onClick: () => setFabOpen(!fabOpen),
+        style: {
+          transform: fabOpen ? 'rotate(45deg)' : 'none',
+          transition: 'transform .2s'
+        },
+        children: _jsx(IcoPlus, {
+          size: 28
+        })
+      })]
+    }), tab === 'finance' && _jsxs(_Fragment, {
+      children: [fabOpen && _jsx("div", {
+        className: "fab-overlay",
+        onClick: () => setFabOpen(false)
+      }), fabOpen && _jsxs("div", {
+        className: "fab-menu",
+        children: [_jsxs("div", {
+          className: "fab-item",
+          style: {
+            background: 'var(--green)',
+            color: 'var(--black)'
+          },
+          onClick: () => {
+            setFabOpen(false);
+            setModal({
+              type: 'transaction',
+              payload: {
+                type: 'payment',
+                date: getTodayDate()
+              }
+            });
+          },
+          children: [_jsx(IcoWallet, {
+            size: 16
+          }), " Оплата"]
+        }), _jsxs("div", {
+          className: "fab-item",
+          style: {
+            background: 'var(--surface)',
+            color: 'var(--black)'
+          },
+          onClick: () => {
+            setFabOpen(false);
+            setModal({
+              type: 'transaction',
+              payload: {
+                type: 'charge',
+                date: getTodayDate()
+              }
+            });
+          },
+          children: [_jsx(IcoWallet, {
+            size: 16
+          }), " Списание"]
+        }), _jsxs("div", {
+          className: "fab-item",
+          style: {
+            background: 'var(--yellow)',
+            color: 'var(--black)'
+          },
+          onClick: () => {
+            setFabOpen(false);
+            setModal({
+              type: 'package',
+              payload: {}
+            });
+          },
+          children: [_jsx(IcoUsers, {
+            size: 16
+          }), " Абонемент"]
         })]
       }), _jsx("div", {
         className: "fab",
@@ -12106,6 +11595,15 @@ function App() {
         }
       }),
       onArchive: archiveStudent,
+      onAdjust: student => setModal({
+        type: 'transaction',
+        payload: {
+          studentId: student.id,
+          type: 'payment',
+          date: getTodayDate(),
+          comment: 'Корректировка баланса'
+        }
+      }),
       onSaveParentPortal: saveParentPortal,
       onAcceptPaymentNotice: acceptParentPaymentNotice,
       onDismissPaymentNotice: dismissParentPaymentNotice
@@ -12155,6 +11653,7 @@ function App() {
       onDeleteFuture: delFutureSeriesLessons
     }), modal?.type === 'package' && _jsx(PackageModal, {
       student: modal.payload.student,
+      students: students,
       onClose: () => setModal(null),
       onSave: savePackage
     }), modal?.type === 'reschedule' && _jsx(RescheduleModal, {
@@ -12211,6 +11710,11 @@ function App() {
       onClose: () => setModal(null)
     }), modal?.type === 'freeSlots' && _jsx(FreeSlotsModal, {
       lessons: lessons,
+      settings: settings,
+      onSaveSettings: next => setSettings({
+        ...settings,
+        ...next
+      }),
       onClose: () => setModal(null)
     })]
   });
@@ -12322,7 +11826,7 @@ function TaxReportModal({
           className: "stat-label",
           children: "Получено оплат"
         }), _jsx("div", {
-          className: "stat-value",
+          className: "stat-value stat-value-money",
           children: money(total)
         })]
       }), _jsxs("div", {
@@ -12331,7 +11835,7 @@ function TaxReportModal({
           className: "stat-label",
           children: "НПД 4%"
         }), _jsx("div", {
-          className: "stat-value",
+          className: "stat-value stat-value-money",
           children: money(Math.round(total * 0.04))
         })]
       }), _jsxs("div", {
@@ -12340,7 +11844,7 @@ function TaxReportModal({
           className: "stat-label",
           children: "НПД 6%"
         }), _jsx("div", {
-          className: "stat-value",
+          className: "stat-value stat-value-money",
           children: money(Math.round(total * 0.06))
         })]
       })]
@@ -12462,7 +11966,10 @@ function MonthRecapModal({
           children: "Проведено"
         }), _jsx("div", {
           className: "stat-value",
-          children: pluralLessons(cur.completedCount)
+          children: cur.completedCount
+        }), _jsx("div", {
+          className: "stat-unit",
+          children: plural(cur.completedCount, 'урок', 'урока', 'уроков')
         })]
       }), _jsxs("div", {
         className: "stat-card",
@@ -12472,6 +11979,9 @@ function MonthRecapModal({
         }), _jsx("div", {
           className: "stat-value",
           children: Math.round(cur.hours)
+        }), _jsx("div", {
+          className: "stat-unit",
+          children: plural(Math.round(cur.hours), 'час', 'часа', 'часов')
         })]
       }), _jsxs("div", {
         className: "stat-card",
@@ -12488,7 +11998,7 @@ function MonthRecapModal({
           className: "stat-label",
           children: "Получено оплат"
         }), _jsx("div", {
-          className: "stat-value",
+          className: "stat-value stat-value-money",
           children: money(cur.received)
         })]
       })]
@@ -12519,9 +12029,25 @@ function MonthRecapModal({
 }
 function FreeSlotsModal({
   lessons,
+  settings = {},
+  onSaveSettings,
   onClose
 }) {
   const [copied, setCopied] = useState(false);
+  const clampHour = (v, fallback) => {
+    const n = Math.round(Number(v));
+    return Number.isFinite(n) && n >= 0 && n <= 24 ? n : fallback;
+  };
+  const workStart = clampHour(settings.workStart, 9);
+  const workEndRaw = clampHour(settings.workEnd, 21);
+  const workEnd = workEndRaw > workStart ? workEndRaw : Math.min(workStart + 1, 24);
+  const setHours = (start, end) => onSaveSettings && onSaveSettings({
+    workStart: start,
+    workEnd: end
+  });
+  const hourOptions = Array.from({
+    length: 25
+  }, (_, h) => h);
   const busyStatuses = ['planned', 'completed', 'no_show'];
   const days = Array.from({
     length: 7
@@ -12529,14 +12055,17 @@ function FreeSlotsModal({
   const rows = days.map(date => {
     const ranges = lessons.filter(l => l.date === date && busyStatuses.includes(l.status)).map(lessonRange).sort((a, b) => a.start - b.start);
     const slots = [];
-    let cursor = 9 * 60;
-    const dayEnd = 21 * 60;
+    const dayStart = workStart * 60;
+    const dayEnd = workEnd * 60;
+    let cursor = dayStart;
     ranges.forEach(r => {
-      if (r.start - cursor >= 60) slots.push({
+      const rs = Math.min(Math.max(r.start, dayStart), dayEnd);
+      const re = Math.min(Math.max(r.end, dayStart), dayEnd);
+      if (rs - cursor >= 60) slots.push({
         start: cursor,
-        end: r.start
+        end: rs
       });
-      cursor = Math.max(cursor, r.end);
+      cursor = Math.max(cursor, re);
     });
     if (dayEnd - cursor >= 60) slots.push({
       start: cursor,
@@ -12565,9 +12094,43 @@ function FreeSlotsModal({
   return _jsxs(Modal, {
     title: "Свободные окна",
     onClose: onClose,
-    children: [_jsx("p", {
+    children: [_jsxs("div", {
+      className: "work-hours-row",
+      children: [_jsx("span", {
+        className: "work-hours-label",
+        children: "Рабочее время"
+      }), _jsxs("div", {
+        className: "work-hours-controls",
+        children: [_jsx("select", {
+          className: "input",
+          value: workStart,
+          onChange: e => {
+            const s = clampHour(e.target.value, 9);
+            setHours(s, s >= workEnd ? Math.min(s + 1, 24) : workEnd);
+          },
+          children: hourOptions.slice(0, 24).map(h => _jsx("option", {
+            value: h,
+            children: `${String(h).padStart(2, '0')}:00`
+          }, h))
+        }), _jsx("span", {
+          className: "work-hours-dash",
+          children: "—"
+        }), _jsx("select", {
+          className: "input",
+          value: workEnd,
+          onChange: e => {
+            const en = clampHour(e.target.value, 21);
+            setHours(en <= workStart ? Math.max(en - 1, 0) : workStart, en);
+          },
+          children: hourOptions.filter(h => h > workStart).map(h => _jsx("option", {
+            value: h,
+            children: `${String(h).padStart(2, '0')}:00`
+          }, h))
+        })]
+      })]
+    }), _jsx("p", {
       className: "money-tool-hint",
-      children: "Окна от часа в рабочее время 09:00–21:00 на ближайшие 7 дней. Отправьте список родителям — пустые слоты заполняются быстрее."
+      children: `Окна от часа в выбранное рабочее время ${String(workStart).padStart(2, '0')}:00–${String(workEnd).padStart(2, '0')}:00 на ближайшие 7 дней. Отправьте список родителям — пустые слоты заполняются быстрее.`
     }), _jsx("div", {
       className: "money-tool-list",
       children: rows.map(r => _jsxs("div", {
