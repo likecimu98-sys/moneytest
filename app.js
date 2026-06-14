@@ -81,8 +81,10 @@ const normalizeMoneyInput = (value, fallback = DEFAULT_RATE) => {
   const n = Number(value);
   return Number.isFinite(n) && n >= 0 ? n : fallback;
 };
-const GROUP_EMOJIS = ['рџ“љ', '✏пёЏ', 'рџЋЇ', 'рџ§ ', '⚡', 'рџЏ›пёЏ', 'рџљЂ', '⭐', 'рџЊї', 'рџ”Ґ'];
+const GROUP_EMOJIS = ['\u{1F4DA}', '\u{1F4DD}', '\u{1F3AF}', '\u{1F4A1}', '\u26A1', '\u{1F4D6}', '\u{1F680}', '\u2B50', '\u{1F31F}', '\u{1F525}'];
 const randomGroupEmoji = () => GROUP_EMOJIS[Math.floor(Math.random() * GROUP_EMOJIS.length)];
+const isCorruptEmoji = e => { if (!e) return false; for (const ch of String(e)) { const c = ch.codePointAt(0); if ((c >= 0x80 && c <= 0x24F) || (c >= 0x400 && c <= 0x4FF)) return true; } return false; };
+const sanitizeGroupEmoji = e => isCorruptEmoji(e) ? randomGroupEmoji() : (e || '');
 const firstNameLetter = name => String(name || '').trim().charAt(0).toUpperCase();
 const buildGroupAutoName = (ids = [], students = [], subject = 'Группа') => {
   const initials = ids.map(id => students.find(s => sameId(s.id, id))).filter(Boolean).map(s => firstNameLetter(s.name)).filter(Boolean).join('');
@@ -710,7 +712,8 @@ const loadSavedState = () => {
         subject,
         rateOverrides: {},
         ...g,
-        subject
+        subject,
+        emoji: sanitizeGroupEmoji(g.emoji)
       };
     });
     const lessons = (data.lessons || []).map(l => {
@@ -784,7 +787,7 @@ const loadSavedState = () => {
         } : s);
       }
     }
-    return withRichIrinaDemoState({
+    return ({
       students,
       groups,
       lessons,
