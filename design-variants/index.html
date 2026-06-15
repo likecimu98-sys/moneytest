@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TutorApp · Демо новых дизайнов</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,'Segoe UI',Roboto,system-ui,sans-serif;background:#0f1115;color:#eef1f6;padding:40px 20px 60px;min-height:100vh}
+  .wrap{max-width:920px;margin:0 auto}
+  h1{font-size:30px;font-weight:800;letter-spacing:-.02em}
+  .sub{color:#9aa1ad;margin-top:8px;font-size:15px;line-height:1.6;max-width:640px}
+  .note{margin-top:14px;font-size:13px;color:#7c828d;background:#171a21;border:1px solid #252a33;border-radius:12px;padding:12px 14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:28px}
+  a.card{display:block;text-decoration:none;color:inherit;background:#171a21;border:1px solid #252a33;border-radius:18px;padding:20px;transition:transform .15s,border-color .15s}
+  a.card:hover{transform:translateY(-3px);border-color:#3a4150}
+  .sw{display:flex;gap:6px;margin-bottom:14px}
+  .sw i{width:26px;height:26px;border-radius:8px;display:block;border:1px solid rgba(255,255,255,.08)}
+  .num{font-size:12px;font-weight:700;color:#6b7180;letter-spacing:.1em}
+  .nm{font-size:19px;font-weight:700;margin-top:4px}
+  .ds{font-size:13.5px;color:#9aa1ad;margin-top:8px;line-height:1.55}
+  .open{margin-top:14px;font-size:13px;font-weight:700;color:#5b8cff}
+  .back{display:inline-block;margin-top:30px;color:#9aa1ad;font-size:14px;text-decoration:none;border-bottom:1px solid #333}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Пять демо нового дизайна</h1>
+  <p class="sub">Один и тот же экран «Сегодня» с реальным контентом — в пяти разных дизайн-языках. Откройте каждый, сравните и скажите, какое направление развивать. Основное приложение не затронуто.</p>
+  <div class="note">Открывать на телефоне: <b>http://127.0.0.1:5173/design-variants/</b> (тот же сервер, что и приложение). Лучше смотреть с мобильного — все макеты под ширину телефона.</div>
+
+  <div class="grid">
+    <a class="card" href="1-soft.html">
+      <div class="sw"><i style="background:#f6f4ef"></i><i style="background:#2f9e68"></i><i style="background:#e8a33d"></i><i style="background:#fff"></i></div>
+      <div class="num">ВАРИАНТ 1</div>
+      <div class="nm">Тёплый минимализм</div>
+      <div class="ds">Кремовый фон, мягкие тени, скруглённые карточки. Спокойно, дорого, по-человечески. Антипод текущей «брутальности».</div>
+      <div class="open">Открыть статичный макет →</div>
+      <div class="open" onclick="event.preventDefault();location.href='1-soft-app.html'" style="margin-top:6px;color:#3ddc91">▶ Рабочий прототип (кликается) →</div>
+    </a>
+    <a class="card" href="2-material.html">
+      <div class="sw"><i style="background:#f3f4fb"></i><i style="background:#4659d6"></i><i style="background:#00696e"></i><i style="background:#ffe08a"></i></div>
+      <div class="num">ВАРИАНТ 2</div>
+      <div class="nm">Material / Android</div>
+      <div class="ds">Чистый Material 3: цветные плитки, скруглённый FAB, привычная Android-логика. Родное для большинства телефонов.</div>
+      <div class="open">Открыть →</div>
+    </a>
+    <a class="card" href="3-editorial.html">
+      <div class="sw"><i style="background:#fcfbf8"></i><i style="background:#7a1f2b"></i><i style="background:#9a7b3f"></i><i style="background:#1a1a17"></i></div>
+      <div class="num">ВАРИАНТ 3</div>
+      <div class="nm">Editorial / Премиум</div>
+      <div class="ds">Журнальная типографика с засечками, много воздуха, тонкие линии. Ощущение дорогого частного репетитора.</div>
+      <div class="open">Открыть →</div>
+    </a>
+    <a class="card" href="4-dark-focus.html">
+      <div class="sw"><i style="background:#0e1014"></i><i style="background:#5b8cff"></i><i style="background:#9d7bff"></i><i style="background:#3ddc91"></i></div>
+      <div class="num">ВАРИАНТ 4</div>
+      <div class="nm">Тёмный фокус</div>
+      <div class="ds">Тёмная тема по умолчанию, мягкие градиентные акценты, доход крупно. Для вечерней работы — глаза не устают.</div>
+      <div class="open">Открыть →</div>
+    </a>
+    <a class="card" href="5-minimal.html">
+      <div class="sw"><i style="background:#fff"></i><i style="background:#5b5bf0"></i><i style="background:#16a36a"></i><i style="background:#ececef"></i></div>
+      <div class="num">ВАРИАНТ 5</div>
+      <div class="nm">Минимал / Linear</div>
+      <div class="ds">Почти монохром + один акцент, плотные списки с тонкими разделителями. Вид productivity-инструмента, ничего лишнего.</div>
+      <div class="open">Открыть →</div>
+    </a>
+  </div>
+
+  <a class="back" href="/index.html">← Вернуться в приложение</a>
+</div>
+</body>
+</html>

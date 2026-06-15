@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TutorApp · Тёмный фокус</title>
+<style>
+  :root{
+    --bg:#0e1014; --surface:#171a21; --surface2:#1d2129; --ink:#eef1f6; --sec:#8b93a3;
+    --line:#252a33; --accent:#5b8cff; --accent2:#9d7bff; --green:#3ddc91; --warm:#ffcf6b; --red:#ff6b7d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:#05060a;font-family:-apple-system,'Segoe UI',Roboto,system-ui,sans-serif;color:var(--ink);display:flex;justify-content:center;padding:24px;min-height:100vh}
+  .phone{width:390px;background:var(--bg);border-radius:38px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);position:relative;min-height:780px;padding-bottom:96px}
+  .scr{padding:28px 20px 20px}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px}
+  .date-sm{font-size:13px;color:var(--sec);font-weight:600}
+  .date-lg{font-size:29px;font-weight:800;letter-spacing:-.02em;margin-top:3px}
+  .ava{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700}
+  .hero{position:relative;border-radius:22px;padding:20px;margin-bottom:16px;overflow:hidden;background:linear-gradient(135deg,#1a2336,#191b2b);border:1px solid #2a3550}
+  .hero:before{content:'';position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(91,140,255,.35),transparent 70%)}
+  .hero .t1{font-size:12px;color:var(--sec);font-weight:600;position:relative}
+  .hero .t2{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:4px;position:relative}
+  .hero .t2 b{background:linear-gradient(90deg,var(--green),#8fffd0);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .row{display:flex;gap:16px;margin-top:12px;font-size:13px;color:var(--sec);position:relative}
+  .hero .row b{color:var(--ink);font-weight:700}
+  .alert{display:flex;align-items:center;gap:12px;background:rgba(255,107,125,.1);border:1px solid rgba(255,107,125,.3);border-radius:16px;padding:13px 15px;margin-bottom:18px}
+  .alert .ic{font-size:18px}
+  .alert .t{font-size:14px;font-weight:600}
+  .alert .t span{color:var(--red);font-weight:800}
+  .alert button{margin-left:auto;background:var(--red);color:#1a0306;border:none;border-radius:10px;padding:8px 13px;font-weight:700;font-family:inherit;font-size:13px}
+  .h{font-size:12px;font-weight:700;color:var(--sec);text-transform:uppercase;letter-spacing:.08em;margin:18px 4px 12px}
+  .lesson{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 15px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+  .time{font-size:15px;font-weight:800;width:46px;flex-shrink:0;color:var(--accent)}
+  .lesson .nm{font-size:15px;font-weight:700}
+  .lesson .mt{font-size:12.5px;color:var(--sec);margin-top:3px}
+  .dot{margin-left:auto;display:flex;gap:6px}
+  .dot i{width:8px;height:8px;border-radius:50%;display:block}
+  .dot .g{background:var(--green)} .dot .w{background:var(--warm)} .dot .r{background:var(--red)}
+  .fab{position:absolute;right:22px;bottom:108px;width:58px;height:58px;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;font-size:28px;box-shadow:0 12px 28px rgba(91,140,255,.45);display:flex;align-items:center;justify-content:center}
+  .nav{position:absolute;left:0;right:0;bottom:0;height:80px;background:rgba(14,16,20,.9);backdrop-filter:blur(18px);border-top:1px solid var(--line);display:flex;padding:12px 6px 22px}
+  .nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:var(--sec);font-weight:600;text-decoration:none}
+  .nav a.on{color:var(--accent)}
+  .nav .ic{width:26px;height:26px;border-radius:9px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px}
+  .nav a.on .ic{background:linear-gradient(135deg,rgba(91,140,255,.3),rgba(157,123,255,.3))}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="scr">
+    <div class="top">
+      <div>
+        <div class="date-sm">Суббота</div>
+        <div class="date-lg">13 июня</div>
+      </div>
+      <div class="ava">АР</div>
+    </div>
+
+    <div class="hero">
+      <div class="t1">Заработано сегодня</div>
+      <div class="t2"><b>4 500&nbsp;₽</b></div>
+      <div class="row"><span>3 урока</span><span><b>12</b> учеников</span><span>прогноз <b>58 200&nbsp;₽</b></span></div>
+    </div>
+
+    <div class="alert">
+      <span class="ic">●</span>
+      <div class="t">Долги: <span>1 100&nbsp;₽</span> · 1 ученик</div>
+      <button>Открыть</button>
+    </div>
+
+    <div class="h">Уроки сегодня</div>
+    <div class="lesson">
+      <div class="time">15:00</div>
+      <div><div class="nm">Общество 10</div><div class="mt">Марк, Анатолий, Ирина</div></div>
+      <div class="dot"><i class="w"></i></div>
+    </div>
+    <div class="lesson">
+      <div class="time">16:30</div>
+      <div><div class="nm">История</div><div class="mt">Полина, Ярослав</div></div>
+      <div class="dot"><i class="w"></i><i class="r"></i></div>
+    </div>
+    <div class="lesson">
+      <div class="time">18:00</div>
+      <div><div class="nm">Алиса · индивидуально</div><div class="mt">1 300&nbsp;₽</div></div>
+      <div class="dot"><i class="g"></i></div>
+    </div>
+  </div>
+
+  <button class="fab">+</button>
+  <nav class="nav">
+    <a class="on"><span class="ic">📅</span>Сегодня</a>
+    <a><span class="ic">🗓️</span>Расписание</a>
+    <a><span class="ic">👥</span>Ученики</a>
+    <a><span class="ic">💰</span>Финансы</a>
+  </nav>
+</div>
+</body>
+</html>

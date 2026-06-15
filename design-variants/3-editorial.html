@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TutorApp · Editorial</title>
+<style>
+  :root{
+    --bg:#fcfbf8; --ink:#1a1a17; --sec:#6f6c64; --line:#e6e3da;
+    --accent:#7a1f2b; --accent-soft:#f3e8e9; --gold:#9a7b3f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:#e4e1d8;font-family:'Georgia','Times New Roman',serif;color:var(--ink);display:flex;justify-content:center;padding:24px;min-height:100vh}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
+  .phone{width:390px;background:var(--bg);border-radius:32px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.28);position:relative;min-height:780px;padding-bottom:92px}
+  .scr{padding:30px 26px 20px}
+  .kicker{font-family:-apple-system,'Segoe UI',sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+  .head{font-size:38px;font-weight:400;line-height:1.05;letter-spacing:-.01em;margin-top:8px}
+  .head em{font-style:italic;color:var(--accent)}
+  .rule{height:1px;background:var(--ink);margin:22px 0 0;opacity:.85}
+  .lead-line{font-family:-apple-system,'Segoe UI',sans-serif;font-size:13px;color:var(--sec);margin-top:14px;display:flex;justify-content:space-between}
+  .focus{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:4px;padding:16px 18px;margin-top:20px;display:flex;align-items:center;gap:8px}
+  .focus .t1{font-family:-apple-system,sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sec)}
+  .focus .t2{font-size:23px;margin-top:2px}
+  .focus a{margin-left:auto;font-family:-apple-system,sans-serif;font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:1px}
+  .sect{font-family:-apple-system,'Segoe UI',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sec);margin:28px 0 4px}
+  .lesson{padding:18px 0;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:16px}
+  .lesson:last-of-type{border-bottom:none}
+  .num{font-size:15px;color:var(--gold);font-weight:400;width:46px;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .lesson .nm{font-size:21px;font-weight:400}
+  .lesson .mt{font-family:-apple-system,sans-serif;font-size:13px;color:var(--sec);margin-top:3px}
+  .lesson .st{margin-left:auto;font-family:-apple-system,sans-serif;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);align-self:center}
+  .figures{display:flex;justify-content:space-between;margin-top:26px;padding-top:20px;border-top:2px solid var(--ink)}
+  .fig .v{font-size:30px;letter-spacing:-.02em}
+  .fig .l{font-family:-apple-system,sans-serif;font-size:11px;color:var(--sec);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+  .fig.acc .v{color:var(--accent)}
+  .fab{position:absolute;right:24px;bottom:104px;width:56px;height:56px;border-radius:50%;background:var(--ink);color:var(--bg);border:none;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+  .nav{position:absolute;left:0;right:0;bottom:0;height:76px;background:var(--bg);border-top:1px solid var(--ink);display:flex;padding:14px 10px 20px;font-family:-apple-system,'Segoe UI',sans-serif}
+  .nav a{flex:1;text-align:center;font-size:12px;color:var(--sec);font-weight:600;text-decoration:none;letter-spacing:.02em}
+  .nav a.on{color:var(--accent)}
+  .nav a.on:after{content:'';display:block;width:18px;height:2px;background:var(--accent);margin:6px auto 0}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="scr">
+    <div class="kicker">Суббота · 13 июня</div>
+    <div class="head">Добрый день,<br><em>Александр</em></div>
+    <div class="rule"></div>
+    <div class="lead-line"><span>3 урока сегодня</span><span>Первый в 15:00</span></div>
+
+    <div class="focus">
+      <div>
+        <div class="t1">Требует внимания</div>
+        <div class="t2">Долги — 1 100&nbsp;₽</div>
+      </div>
+      <a href="#">Открыть →</a>
+    </div>
+
+    <div class="sect">Расписание дня</div>
+    <div class="lesson">
+      <div class="num">15:00</div>
+      <div><div class="nm">Общество 10</div><div class="mt">Марк, Анатолий, Ирина · группа</div></div>
+      <div class="st">Скоро</div>
+    </div>
+    <div class="lesson">
+      <div class="num">16:30</div>
+      <div><div class="nm">История</div><div class="mt">Полина, Ярослав · группа</div></div>
+      <div class="st">ДЗ</div>
+    </div>
+    <div class="lesson">
+      <div class="num">18:00</div>
+      <div><div class="nm">Алиса</div><div class="mt">Индивидуально · 1 300&nbsp;₽</div></div>
+      <div class="st">Соло</div>
+    </div>
+
+    <div class="figures">
+      <div class="fig"><div class="v">3</div><div class="l">Уроков</div></div>
+      <div class="fig"><div class="v">12</div><div class="l">Учеников</div></div>
+      <div class="fig acc"><div class="v">4 500&nbsp;₽</div><div class="l">Сегодня</div></div>
+    </div>
+  </div>
+
+  <button class="fab">+</button>
+  <nav class="nav">
+    <a class="on">Сегодня</a>
+    <a>Расписание</a>
+    <a>Ученики</a>
+    <a>Финансы</a>
+  </nav>
+</div>
+</body>
+</html>

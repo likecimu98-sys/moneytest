@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TutorApp · Тёплый минимализм</title>
+<style>
+  :root{
+    --bg:#f6f4ef; --surface:#ffffff; --ink:#23201b; --sec:#8a8478;
+    --line:#ece8df; --accent:#2f9e68; --accent-soft:#e7f4ec;
+    --warm:#e8a33d; --warm-soft:#fbf0dd; --red:#d9534f; --red-soft:#fbe9e8;
+    --shadow:0 10px 30px rgba(40,34,20,.06), 0 2px 6px rgba(40,34,20,.04);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:#e9e6df;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--ink);display:flex;justify-content:center;padding:24px;min-height:100vh}
+  .phone{width:390px;background:var(--bg);border-radius:40px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.28);position:relative;min-height:780px;padding-bottom:96px}
+  .scr{padding:26px 20px 20px}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px}
+  .date-sm{font-size:13px;color:var(--sec);font-weight:600;letter-spacing:.02em}
+  .date-lg{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+  .ava{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#2f9e68,#7bd0a0);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px}
+  .focus{background:var(--surface);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px;display:flex;align-items:center;gap:14px}
+  .focus .ic{width:46px;height:46px;border-radius:14px;background:var(--red-soft);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .focus .t1{font-size:12px;color:var(--sec);font-weight:600}
+  .focus .t2{font-size:18px;font-weight:800;margin-top:1px}
+  .focus .go{margin-left:auto;background:var(--ink);color:#fff;border:none;border-radius:14px;padding:11px 16px;font-size:14px;font-weight:700;font-family:inherit}
+  .section-h{font-size:13px;font-weight:700;color:var(--sec);text-transform:uppercase;letter-spacing:.06em;margin:22px 4px 12px}
+  .lesson{background:var(--surface);border-radius:18px;padding:15px 16px;box-shadow:var(--shadow);margin-bottom:10px;display:flex;align-items:center;gap:14px}
+  .time{font-size:15px;font-weight:800;width:48px;flex-shrink:0}
+  .lesson .nm{font-size:15px;font-weight:700;line-height:1.25}
+  .lesson .mt{font-size:12.5px;color:var(--sec);margin-top:3px}
+  .pill{margin-left:auto;font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+  .pill.warm{background:var(--warm-soft);color:#b9792a}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+  .stat{background:var(--surface);border-radius:18px;padding:15px 14px;box-shadow:var(--shadow)}
+  .stat .v{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .stat .l{font-size:11.5px;color:var(--sec);font-weight:600;margin-top:2px}
+  .stat.acc .v{color:var(--accent)}
+  .fab{position:absolute;right:22px;bottom:108px;width:58px;height:58px;border-radius:20px;background:var(--accent);color:#fff;border:none;font-size:30px;box-shadow:0 12px 24px rgba(47,158,104,.4);display:flex;align-items:center;justify-content:center}
+  .nav{position:absolute;left:0;right:0;bottom:0;height:80px;background:rgba(255,255,255,.85);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;padding:10px 8px 22px}
+  .nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:var(--sec);font-weight:600;text-decoration:none}
+  .nav a.on{color:var(--accent)}
+  .nav .dot{width:24px;height:24px;border-radius:9px;background:var(--line)}
+  .nav a.on .dot{background:var(--accent-soft);position:relative}
+  .nav a.on .dot:after{content:'';position:absolute;inset:7px;border-radius:4px;background:var(--accent)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;background:#eef0ff;color:#5a63c9;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="scr">
+    <div class="top">
+      <div>
+        <div class="date-sm">Суббота</div>
+        <div class="date-lg">13 июня</div>
+      </div>
+      <div class="ava">АР</div>
+    </div>
+
+    <div class="focus">
+      <div class="ic">💸</div>
+      <div>
+        <div class="t1">Требует внимания</div>
+        <div class="t2">Долги · 1 100&nbsp;₽</div>
+      </div>
+      <button class="go">1 ученик</button>
+    </div>
+
+    <div class="section-h">Уроки сегодня · 3</div>
+
+    <div class="lesson">
+      <div class="time">15<sup style="font-size:9px;opacity:.6">:00</sup></div>
+      <div>
+        <div class="nm">Общество 10</div>
+        <div class="mt">Марк, Анатолий, Ирина · группа</div>
+      </div>
+      <div class="pill">Скоро</div>
+    </div>
+    <div class="lesson">
+      <div class="time">16<sup style="font-size:9px;opacity:.6">:30</sup></div>
+      <div>
+        <div class="nm">История</div>
+        <div class="mt">Полина, Ярослав · группа</div>
+      </div>
+      <div class="pill warm">ДЗ</div>
+    </div>
+    <div class="lesson">
+      <div class="time">18<sup style="font-size:9px;opacity:.6">:00</sup></div>
+      <div>
+        <div class="nm">Алиса</div>
+        <div class="mt">Индивидуально · 1 300&nbsp;₽</div>
+      </div>
+      <div class="pill">Скоро</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v">3</div><div class="l">уроков</div></div>
+      <div class="stat"><div class="v">12</div><div class="l">учеников</div></div>
+      <div class="stat acc"><div class="v">4 500</div><div class="l">₽ сегодня</div></div>
+    </div>
+  </div>
+
+  <button class="fab">+</button>
+  <nav class="nav">
+    <a class="on"><span class="dot"></span>Сегодня</a>
+    <a><span class="dot"></span>Расписание</a>
+    <a><span class="dot"></span>Ученики</a>
+    <a><span class="dot"></span>Финансы</a>
+  </nav>
+</div>
+</body>
+</html>

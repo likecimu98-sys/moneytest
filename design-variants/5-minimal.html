@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TutorApp · Минимал</title>
+<style>
+  :root{
+    --bg:#ffffff; --ink:#15171a; --sec:#71757c; --faint:#a4a8af;
+    --line:#ececef; --line2:#f5f5f7; --accent:#5b5bf0; --accent-soft:#eeeefe;
+    --green:#16a36a; --warm:#c98a16; --red:#d64545;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:#ececed;font-family:'Inter',-apple-system,'Segoe UI',Roboto,system-ui,sans-serif;color:var(--ink);display:flex;justify-content:center;padding:24px;min-height:100vh}
+  .phone{width:390px;background:var(--bg);border-radius:30px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.22);position:relative;min-height:780px;padding-bottom:88px}
+  .scr{padding:26px 22px 16px}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+  .top .h{font-size:21px;font-weight:700;letter-spacing:-.02em}
+  .top .d{font-size:13px;color:var(--sec);margin-top:1px}
+  .ava{width:36px;height:36px;border-radius:10px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+  .focus{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;margin-bottom:22px}
+  .focus .led{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0}
+  .focus .t{font-size:14px;font-weight:600}
+  .focus .t b{color:var(--red)}
+  .focus .s{font-size:12.5px;color:var(--sec);margin-top:1px}
+  .focus a{margin-left:auto;font-size:13px;color:var(--accent);font-weight:600;text-decoration:none}
+  .lbl{font-size:12px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin:0 2px 6px}
+  .list{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .row{display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:1px solid var(--line2)}
+  .row:last-child{border-bottom:none}
+  .row .tm{font-size:13px;font-weight:600;color:var(--sec);width:42px;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .row .nm{font-size:14.5px;font-weight:600}
+  .row .mt{font-size:12.5px;color:var(--sec);margin-top:1px}
+  .row .tag{margin-left:auto;font-size:11px;font-weight:600;color:var(--sec);display:flex;align-items:center;gap:6px}
+  .row .tag i{width:7px;height:7px;border-radius:50%;background:var(--warm);display:block}
+  .row .tag.g i{background:var(--green)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:22px}
+  .cell{background:var(--bg);padding:15px 14px}
+  .cell .v{font-size:21px;font-weight:700;letter-spacing:-.02em}
+  .cell .l{font-size:12px;color:var(--sec);margin-top:2px}
+  .cell.acc .v{color:var(--accent)}
+  .fab{position:absolute;right:22px;bottom:100px;width:50px;height:50px;border-radius:14px;background:var(--accent);color:#fff;border:none;font-size:24px;box-shadow:0 8px 20px rgba(91,91,240,.35);display:flex;align-items:center;justify-content:center}
+  .nav{position:absolute;left:0;right:0;bottom:0;height:72px;background:var(--bg);border-top:1px solid var(--line);display:flex;padding:10px 8px 18px}
+  .nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:var(--faint);font-weight:600;text-decoration:none}
+  .nav a.on{color:var(--ink)}
+  .nav .bar{width:20px;height:3px;border-radius:3px;background:transparent}
+  .nav a.on .bar{background:var(--accent)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="scr">
+    <div class="top">
+      <div>
+        <div class="h">Сегодня</div>
+        <div class="d">Суббота, 13 июня</div>
+      </div>
+      <div class="ava">АР</div>
+    </div>
+
+    <div class="focus">
+      <span class="led"></span>
+      <div>
+        <div class="t">Долги <b>1 100&nbsp;₽</b></div>
+        <div class="s">1 ученик ждёт напоминания</div>
+      </div>
+      <a href="#">Открыть</a>
+    </div>
+
+    <div class="lbl">Уроки сегодня — 3</div>
+    <div class="list">
+      <div class="row"><span class="tm">15:00</span><div><div class="nm">Общество 10</div><div class="mt">Марк, Анатолий, Ирина</div></div><span class="tag">группа</span></div>
+      <div class="row"><span class="tm">16:30</span><div><div class="nm">История</div><div class="mt">Полина, Ярослав</div></div><span class="tag"><i></i>ДЗ</span></div>
+      <div class="row"><span class="tm">18:00</span><div><div class="nm">Алиса</div><div class="mt">индивидуально · 1 300 ₽</div></div><span class="tag g"><i></i>готов</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="cell"><div class="v">3</div><div class="l">уроков</div></div>
+      <div class="cell"><div class="v">12</div><div class="l">учеников</div></div>
+      <div class="cell acc"><div class="v">4 500</div><div class="l">₽ сегодня</div></div>
+    </div>
+  </div>
+
+  <button class="fab">+</button>
+  <nav class="nav">
+    <a class="on"><span class="bar"></span>Сегодня</a>
+    <a><span class="bar"></span>Расписание</a>
+    <a><span class="bar"></span>Ученики</a>
+    <a><span class="bar"></span>Финансы</a>
+  </nav>
+</div>
+</body>
+</html>

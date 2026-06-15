@@ -2058,8 +2058,6 @@ function Modal({
         }), _jsx("button", {
           className: "modal-close",
           onClick: onClose,
-          type: "button",
-          "aria-label": "Закрыть окно",
           children: _jsx(IcoX, {
             size: 20
           })
@@ -4359,51 +4357,6 @@ function ParentPortalPage({
           })]
         })]
       }), _jsxs("section", {
-        className: "parent-results",
-        children: [_jsx("div", {
-          className: "parent-results-label",
-          children: "Работа над результатом"
-        }), _jsxs("div", {
-          className: "parent-results-grid",
-          children: [_jsxs("div", {
-            className: "parent-result-cell",
-            children: [_jsx("strong", {
-              children: attendanceStats.total || 0
-            }), _jsx("span", {
-              children: plural(attendanceStats.total || 0, 'занятие проведено', 'занятия проведено', 'занятий проведено')
-            })]
-          }), _jsxs("div", {
-            className: "parent-result-cell",
-            children: [_jsx("strong", {
-              children: studyProgress.totalTopics ? `${studyProgress.completedTopics}/${studyProgress.totalTopics}` : studyProgress.completedTopics || 0
-            }), _jsx("span", {
-              children: "тем пройдено"
-            })]
-          }), _jsxs("div", {
-            className: "parent-result-cell",
-            children: [_jsx("strong", {
-              children: homeworkStats.rate == null ? '—' : `${homeworkStats.rate}%`
-            }), _jsx("span", {
-              children: "ДЗ выполнено"
-            })]
-          }), _jsxs("div", {
-            className: "parent-result-cell",
-            children: [_jsx("strong", {
-              children: attendanceStats.rate == null ? '—' : `${attendanceStats.rate}%`
-            }), _jsx("span", {
-              children: "посещаемость"
-            })]
-          })]
-        }), _jsx("p", {
-          className: "parent-results-caption",
-          children: (() => {
-            const remaining = studyProgress.totalTopics ? Math.max(0, studyProgress.totalTopics - studyProgress.completedTopics) : null;
-            if (remaining) return `${studyProgress.subject}: до конца программы осталось ${remaining} ${plural(remaining, 'тема', 'темы', 'тем')}. Идём к цели по плану.`;
-            if (attendanceStats.total) return `Системная подготовка идёт стабильно. Спасибо, что доверяете занятия.`;
-            return "Здесь будет видно, как идёт подготовка, — после первых проведённых занятий.";
-          })()
-        })]
-      }), _jsxs("section", {
         className: "parent-dashboard",
         children: [_jsxs("div", {
           className: "parent-dashboard-head",
@@ -4758,13 +4711,6 @@ function ParentPortalPage({
         }, row.subject)) : _jsx("p", {
           className: "parent-muted",
           children: "Активность появится после проведённых уроков."
-        })]
-      }), _jsxs("footer", {
-        className: "parent-public-footer",
-        children: [_jsx("strong", {
-          children: "Личный кабинет ученика"
-        }), _jsx("span", {
-          children: "Информацию ведёт репетитор и обновляет после каждого занятия. По вопросам — напишите напрямую."
         })]
       })]
     })
@@ -7007,7 +6953,6 @@ function App() {
   const [studentsDebtOnly, setStudentsDebtOnly] = useState(false);
   const [studentsShowArchived, setStudentsShowArchived] = useState(false);
   const [studentsSubjectFilter, setStudentsSubjectFilter] = useState('all');
-  const [studentsLimit, setStudentsLimit] = useState(40);
   const [schedView, setSchedView] = useState('week');
   const [weekOffset, setWeekOffset] = useState(0);
   const [calMonth, setCalMonth] = useState(new Date());
@@ -8155,8 +8100,6 @@ function App() {
           }), _jsx("button", {
             className: "btn btn-sm btn-white theme-toggle",
             onClick: toggleTheme,
-            type: "button",
-            "aria-label": settings.theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему',
             title: settings.theme === 'dark' ? 'Светлая тема' : 'Тёмная тема',
             children: settings.theme === 'dark' ? _jsx(IcoSun, {
               size: 16
@@ -9156,8 +9099,6 @@ function App() {
           children: [_jsx("button", {
             className: "btn btn-sm btn-white",
             onClick: () => setWeekOffset(w => w - 1),
-            type: "button",
-            "aria-label": "Предыдущая неделя",
             children: _jsx(IcoChevL, {
               size: 16
             })
@@ -9173,8 +9114,6 @@ function App() {
           }), _jsx("button", {
             className: "btn btn-sm btn-white",
             onClick: () => setWeekOffset(w => w + 1),
-            type: "button",
-            "aria-label": "Следующая неделя",
             children: _jsx(IcoChevR, {
               size: 16
             })
@@ -9740,8 +9679,6 @@ function App() {
           children: [_jsx("button", {
             className: "btn btn-sm btn-white",
             onClick: () => changeMonth(-1),
-            type: "button",
-            "aria-label": "Предыдущий месяц",
             children: _jsx(IcoChevL, {
               size: 16
             })
@@ -9751,8 +9688,6 @@ function App() {
           }), _jsx("button", {
             className: "btn btn-sm btn-white",
             onClick: () => changeMonth(1),
-            type: "button",
-            "aria-label": "Следующий месяц",
             children: _jsx(IcoChevR, {
               size: 16
             })
@@ -9956,8 +9891,6 @@ function App() {
           }), _jsx("button", {
             className: "btn btn-sm btn-white schedule-print-btn",
             title: "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 PDF",
-            type: "button",
-            "aria-label": "\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u044F \u0432 PDF",
             onClick: () => setModal({
               type: 'schedExport'
             }),
@@ -10078,7 +10011,7 @@ function App() {
           })
         }, subject))]
       }), view === 'students' ? _jsxs(_Fragment, {
-        children: [filtered.slice(0, studentsLimit).map(s => {
+        children: [filtered.map(s => {
           const nextLesson = getStudentNextLesson(s);
           return _jsxs("div", {
           className: "student-item",
@@ -10169,7 +10102,6 @@ function App() {
             onClick: e => e.stopPropagation(),
             children: [_jsx("summary", {
               title: "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044F",
-              "aria-label": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044F \u0441 \u0443\u0447\u0435\u043D\u0438\u043A\u043E\u043C",
               children: "\u22EF"
             }), _jsxs("div", {
               className: "student-actions-popover",
@@ -10235,11 +10167,6 @@ function App() {
         }),
         secondary: students.length ? null : "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0435\u043C\u043E-\u0433\u0440\u0443\u043F\u043F\u0443",
         onSecondary: students.length ? null : () => loadDemoData(groups.length || lessons.length || txs.length ? true : false)
-      }), filtered.length > studentsLimit && _jsxs("button", {
-        type: "button",
-        className: "btn btn-white btn-full show-more-btn",
-        onClick: () => setStudentsLimit(n => n + 40),
-        children: ["Показать ещё (", filtered.length - studentsLimit, ")"]
       })]
       }) : _jsxs(_Fragment, {
         children: [filteredGroups.map(g => {
@@ -10298,7 +10225,6 @@ function App() {
               onClick: e => e.stopPropagation(),
               children: [_jsx("summary", {
                 title: "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044F",
-                "aria-label": "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u044F \u0441 \u0443\u0447\u0435\u043D\u0438\u043A\u043E\u043C",
                 children: "\u22EF"
               }), _jsxs("div", {
                 className: "student-actions-popover",
@@ -11616,16 +11542,6 @@ function App() {
       }), _jsx("div", {
         className: "fab",
         onClick: () => setFabOpen(!fabOpen),
-        role: "button",
-        tabIndex: 0,
-        "aria-label": fabOpen ? "Закрыть меню создания" : "Создать",
-        "aria-expanded": fabOpen,
-        onKeyDown: e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setFabOpen(!fabOpen);
-          }
-        },
         style: {
           transform: fabOpen ? 'rotate(45deg)' : 'none',
           transition: 'transform .2s'
@@ -11676,16 +11592,6 @@ function App() {
       }), _jsx("div", {
         className: "fab",
         onClick: () => setFabOpen(!fabOpen),
-        role: "button",
-        tabIndex: 0,
-        "aria-label": fabOpen ? "Закрыть меню создания" : "Создать",
-        "aria-expanded": fabOpen,
-        onKeyDown: e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setFabOpen(!fabOpen);
-          }
-        },
         style: {
           transform: fabOpen ? 'rotate(45deg)' : 'none',
           transition: 'transform .2s'
@@ -11758,16 +11664,6 @@ function App() {
       }), _jsx("div", {
         className: "fab",
         onClick: () => setFabOpen(!fabOpen),
-        role: "button",
-        tabIndex: 0,
-        "aria-label": fabOpen ? "Закрыть меню создания" : "Создать",
-        "aria-expanded": fabOpen,
-        onKeyDown: e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setFabOpen(!fabOpen);
-          }
-        },
         style: {
           transform: fabOpen ? 'rotate(45deg)' : 'none',
           transition: 'transform .2s'
