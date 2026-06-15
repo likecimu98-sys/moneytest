@@ -3252,6 +3252,15 @@ function LessonModal({
             children: d < 60 ? `${d}м` : d === 60 ? '1ч' : d === 90 ? '1.5ч' : '2ч'
           }, d))
         })
+      }), lessonToEdit && _jsx(LessonWeekdays, {
+        lessonToEdit: lessonToEdit,
+        students: students,
+        groups: groups,
+        lessons: lessons,
+        time: time,
+        subject: subject,
+        duration: duration,
+        onToggleWeekday: onToggleWeekday
       }), _jsx(FormField, {
         label: "\u0422\u0435\u043C\u0430 \u0443\u0440\u043E\u043A\u0430",
         children: _jsx("input", {
@@ -3375,15 +3384,6 @@ function LessonModal({
             children: "\u0432\u043A\u043B."
           })]
         })]
-      }), lessonToEdit && _jsx(LessonWeekdays, {
-        lessonToEdit: lessonToEdit,
-        students: students,
-        groups: groups,
-        lessons: lessons,
-        time: time,
-        subject: subject,
-        duration: duration,
-        onToggleWeekday: onToggleWeekday
       }), canApplyFuture && _jsxs("div", {
         className: "series-scope-panel",
         children: [_jsx("div", {
