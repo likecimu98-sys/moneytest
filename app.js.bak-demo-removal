@@ -156,6 +156,434 @@ const runAutoCompletion = (cls, cst, cg, ctx) => {
   } : null;
 };
 
+// ── MOCK DATA ──────────────────────────────────────────────────────────────────
+const mockStudents = [{
+  id: 1,
+  name: 'Вика',
+  rate: 1300,
+  phone: '+7 900 001',
+  balance: 0
+}, {
+  id: 2,
+  name: 'Алиса',
+  rate: 1300,
+  phone: '+7 900 002',
+  balance: 0
+}, {
+  id: 3,
+  name: 'Султан',
+  rate: 1500,
+  phone: '+7 900 003',
+  balance: 0
+}, {
+  id: 4,
+  name: 'Али',
+  rate: 1500,
+  phone: '+7 900 004',
+  balance: 0
+}, {
+  id: 5,
+  name: 'Андрей',
+  rate: 1100,
+  phone: '+7 900 005',
+  balance: 0
+}, {
+  id: 6,
+  name: 'Илья',
+  rate: 1100,
+  phone: '+7 900 006',
+  balance: 0
+}, {
+  id: 7,
+  name: 'Кирилл',
+  rate: 1500,
+  phone: '+7 900 007',
+  balance: 0
+}, {
+  id: 8,
+  name: 'Ярослав',
+  rate: 1500,
+  phone: '+7 900 008',
+  balance: 0
+}, {
+  id: 9,
+  name: 'Миша',
+  rate: 1500,
+  phone: '+7 900 009',
+  balance: 0
+}, {
+  id: 10,
+  name: 'Полина',
+  rate: 1300,
+  phone: '+7 900 010',
+  balance: 0
+}, {
+  id: 11,
+  name: 'Яна',
+  rate: 1300,
+  phone: '+7 900 011',
+  balance: 0
+}, {
+  id: 12,
+  name: 'Ирина',
+  rate: 1100,
+  phone: '+7 900 012',
+  balance: 0
+}, {
+  id: 13,
+  name: 'София',
+  rate: 1000,
+  phone: '+7 900 013',
+  balance: 0
+}, {
+  id: 14,
+  name: 'Временной',
+  rate: 1000,
+  phone: '+7 900 014',
+  balance: 0
+}, {
+  id: 15,
+  name: 'Марк',
+  rate: 1300,
+  phone: '+7 900 015',
+  balance: 0
+}, {
+  id: 16,
+  name: 'Анатолий',
+  rate: 1300,
+  phone: '+7 900 016',
+  balance: 0
+}];
+const mockGroups = [{
+  id: 1,
+  name: 'История 10 (Вика, Алиса)',
+  subject: 'История',
+  studentIds: [1, 2]
+}, {
+  id: 2,
+  name: 'История 10 (Султан, Али)',
+  subject: 'История',
+  studentIds: [3, 4]
+}, {
+  id: 3,
+  name: 'Общество 10 (Султан, Андрей, Илья)',
+  subject: 'Общество',
+  studentIds: [3, 5, 6],
+  rateOverrides: {
+    3: 1100
+  }
+}, {
+  id: 4,
+  name: 'Общество 11 (Кирилл, Ярослав, Миша)',
+  subject: 'Общество',
+  studentIds: [7, 8, 9]
+}, {
+  id: 5,
+  name: 'Общество 11 (Полина, Яна)',
+  subject: 'Общество',
+  studentIds: [10, 11]
+}, {
+  id: 6,
+  name: 'История 10 (Андрей, Ирина, Илья)',
+  subject: 'История',
+  studentIds: [5, 12, 6]
+}, {
+  id: 7,
+  name: 'Общество 9 (София, Временной)',
+  subject: 'Общество',
+  studentIds: [13, 14]
+}, {
+  id: 8,
+  name: 'Общество 10 (Марк, Анатолий, Ирина)',
+  subject: 'Общество',
+  studentIds: [15, 16, 12]
+}, {
+  id: 9,
+  name: 'История (Полина, Ярослав, Кирилл)',
+  subject: 'История',
+  studentIds: [10, 8, 7],
+  rateOverrides: {
+    10: 600,
+    8: 1300,
+    7: 1300
+  }
+}];
+const mockLessons = [];
+let lId = 1;
+for (let w = 0; w < 12; w++) {
+  const off = w * 7;
+  [[1 + off, 4 + off], [2 + off, 5 + off], [3 + off, 6 + off]].forEach(([a, b], i) => {
+    const configs = [[1, '15:00'], [2, '18:00'], [3, '16:30'], [4, '18:00'], [5, '15:00'], [6, '16:30'], [7, '16:30'], [8, '15:00'], [9, '18:00']];
+    [[a, b]].flat().forEach(day => {
+      const date = getDayDate(day);
+      const isPast = date < getTodayDate();
+      configs.slice(i * 3, i * 3 + 3).forEach(([tid, time]) => {
+        const group = mockGroups.find(g => g.id === tid);
+        mockLessons.push({
+          id: lId++,
+          type: 'group',
+          targetId: tid,
+          subject: group?.subject || inferSubject(group?.name),
+          date,
+          time,
+          status: isPast ? 'completed' : 'planned'
+        });
+      });
+    });
+  });
+}
+const IRINA_PARENT_DEMO_SEED = 'irina-parent-rich-v1';
+const IRINA_PARENT_DEMO_TOKEN = 'p_mpy6nf9a_9wy0oxmp';
+const demoDateFromToday = offset => {
+  const d = new Date(`${getTodayDate()}T00:00:00`);
+  d.setDate(d.getDate() + offset);
+  return localDateString(d);
+};
+const seededTxDelta = tx => tx?.type === 'payment' ? Number(tx.amount || 0) : -Number(tx?.amount || 0);
+const withRichIrinaDemoState = state => {
+  if (!state?.students?.length) return state;
+  if (state.settings?.irinaParentDemoSeed === IRINA_PARENT_DEMO_SEED) return state;
+  const irina = state.students.find(s => sameId(s.id, 12) || String(s.name || '').trim() === 'Ирина');
+  if (!irina) return state;
+  const irinaId = irina.id;
+  const seedLessonBase = 900000;
+  const seedTxBase = 910000;
+  const history = [{
+    offset: -42,
+    groupId: 6,
+    time: '16:30',
+    status: 'completed',
+    homeworkStatus: 'done',
+    topicsDelta: 2,
+    assimilation: 76,
+    topic: 'Российская империя после реформ Александра II',
+    homework: 'Параграф 12, таблица по реформам, 8 заданий формата ЕГЭ.',
+    comment: 'Ирина уверенно объяснила причины реформ, но в датах пока нужна тренировка.'
+  }, {
+    offset: -35,
+    groupId: 8,
+    time: '15:00',
+    status: 'completed',
+    homeworkStatus: 'partial',
+    topicsDelta: 1,
+    assimilation: 70,
+    topic: 'Политическая система РФ',
+    homework: 'Конспект по ветвям власти и задания 13-16.',
+    comment: 'Теорию понимает, часть домашней работы была сделана не полностью.'
+  }, {
+    offset: -28,
+    groupId: 6,
+    time: '16:30',
+    status: 'completed',
+    homeworkStatus: 'done',
+    topicsDelta: 2,
+    assimilation: 82,
+    topic: 'Первая русская революция',
+    homework: 'Хронология событий 1905-1907, тест на 20 вопросов.',
+    comment: 'Хороший урок: Ирина сама выстроила причинно-следственную цепочку.'
+  }, {
+    offset: -21,
+    groupId: 8,
+    time: '15:00',
+    status: 'no_show',
+    homeworkStatus: 'missed',
+    topicsDelta: 0,
+    assimilation: null,
+    topic: 'Социальная стратификация',
+    homework: 'Повторить термины и подготовить примеры.',
+    comment: 'Урок пропущен, тему нужно закрыть на следующей встрече.'
+  }, {
+    offset: -14,
+    groupId: 6,
+    time: '16:30',
+    status: 'completed',
+    homeworkStatus: 'done',
+    topicsDelta: 2,
+    assimilation: 86,
+    topic: 'Россия в Первой мировой войне',
+    homework: 'Карта событий, задания по источнику, повторить даты.',
+    comment: 'Сильный прогресс: ответы стали точнее, меньше потери баллов на формулировках.'
+  }, {
+    offset: -10,
+    groupId: 8,
+    time: '15:00',
+    status: 'completed',
+    homeworkStatus: 'partial',
+    topicsDelta: 1,
+    assimilation: 78,
+    topic: 'Экономика: рынок и конкуренция',
+    homework: 'Задания 1-8, термины по рынку, два мини-эссе.',
+    comment: 'Основу усвоила, но примеры в заданиях второй части пока слабые.'
+  }, {
+    offset: -6,
+    groupId: 6,
+    time: '16:30',
+    status: 'completed',
+    homeworkStatus: 'done',
+    topicsDelta: 2,
+    assimilation: 88,
+    topic: 'Февральская и Октябрьская революции',
+    homework: 'Сравнить позиции партий, прорешать задания 17-19.',
+    comment: 'Очень хороший разбор: Ирина стала увереннее в сравнении событий.'
+  }, {
+    offset: -2,
+    groupId: 8,
+    time: '15:00',
+    status: 'completed',
+    homeworkStatus: 'done',
+    topicsDelta: 1,
+    assimilation: 84,
+    topic: 'Право: основы конституционного строя',
+    homework: 'Повторить статьи Конституции, задания 14-16.',
+    comment: 'Домашняя работа сделана аккуратно, ошибки в основном в терминологии.'
+  }];
+  const upcoming = [{
+    offset: 2,
+    groupId: 6,
+    time: '16:30',
+    topic: 'Гражданская война',
+    homework: 'Подготовить хронологию и повторить причины победы большевиков.'
+  }, {
+    offset: 5,
+    groupId: 8,
+    time: '15:00',
+    topic: 'Гражданское право',
+    homework: 'Задания по договорам и правоспособности.'
+  }, {
+    offset: 9,
+    groupId: 6,
+    time: '16:30',
+    topic: 'СССР в 1920-1930-е годы',
+    homework: 'Таблица НЭП/индустриализация/коллективизация.'
+  }, {
+    offset: 12,
+    groupId: 8,
+    time: '15:00',
+    topic: 'Семейное право',
+    homework: 'Повторить права и обязанности супругов/родителей.'
+  }];
+  const makeLesson = (item, index, future = false) => {
+    const group = state.groups.find(g => sameId(g.id, item.groupId));
+    const peerIds = group?.studentIds || [];
+    const attendance = peerIds.reduce((acc, id) => {
+      acc[id] = item.status !== 'no_show' || !sameId(id, irinaId);
+      return acc;
+    }, {});
+    return {
+      id: seedLessonBase + index,
+      demoSeed: IRINA_PARENT_DEMO_SEED,
+      type: 'group',
+      targetId: item.groupId,
+      subject: group?.subject || inferSubject(group?.name),
+      date: demoDateFromToday(item.offset),
+      time: item.time,
+      duration: 60,
+      status: future ? 'planned' : item.status,
+      topic: item.topic,
+      homework: item.homework,
+      lessonNote: future ? '' : item.comment,
+      attendance: future ? {} : attendance,
+      packageUse: {},
+      homeworkStatusByStudent: future ? {} : {
+        [irinaId]: item.homeworkStatus
+      },
+      parentLessonCommentByStudent: future ? {} : {
+        [irinaId]: item.comment
+      },
+      progressByStudent: future ? {} : {
+        [irinaId]: {
+          topicsDelta: item.topicsDelta,
+          assimilationPercent: item.assimilation
+        }
+      }
+    };
+  };
+  const seededLessons = [...history.map((item, i) => makeLesson(item, i)), ...upcoming.map((item, i) => makeLesson(item, history.length + i, true))];
+  const charges = history.map((item, index) => ({
+    id: seedTxBase + index,
+    demoSeed: IRINA_PARENT_DEMO_SEED,
+    studentId: irinaId,
+    type: 'charge',
+    amount: 1100,
+    date: demoDateFromToday(item.offset),
+    comment: `${item.status === 'no_show' ? 'Пропуск' : 'Урок'}: ${item.topic}`,
+    lessonId: seedLessonBase + index,
+    kind: item.status === 'no_show' ? 'no_show' : 'attendance'
+  }));
+  const payments = [{
+    id: seedTxBase + 100,
+    demoSeed: IRINA_PARENT_DEMO_SEED,
+    studentId: irinaId,
+    type: 'payment',
+    amount: 4400,
+    date: demoDateFromToday(-37),
+    comment: 'Оплата за 4 занятия'
+  }, {
+    id: seedTxBase + 101,
+    demoSeed: IRINA_PARENT_DEMO_SEED,
+    studentId: irinaId,
+    type: 'payment',
+    amount: 3300,
+    date: demoDateFromToday(-11),
+    comment: 'Оплата за 3 занятия'
+  }];
+  const nextLessons = [...(state.lessons || []).filter(l => l.demoSeed !== IRINA_PARENT_DEMO_SEED), ...seededLessons];
+  const nextTxs = [...(state.txs || []).filter(tx => tx.demoSeed !== IRINA_PARENT_DEMO_SEED), ...charges, ...payments];
+  const irinaBalance = nextTxs.filter(tx => sameId(tx.studentId, irinaId)).reduce((sum, tx) => sum + seededTxDelta(tx), 0);
+  return {
+    ...state,
+    students: state.students.map(student => sameId(student.id, irinaId) ? {
+      ...student,
+      balance: irinaBalance,
+      packageLessons: 0,
+      subjects: ['История', 'Обществознание'],
+      goal: student.goal || 'ЕГЭ: уверенно закрыть вторую часть и выйти на 80+ баллов.',
+      notes: student.notes || 'Демо-профиль для проверки родительского кабинета.',
+      parentPortal: {
+        ...DEFAULT_PARENT_PORTAL,
+        ...(student.parentPortal || {}),
+        enabled: true,
+        token: student.parentPortal?.token || IRINA_PARENT_DEMO_TOKEN,
+        teacherComment: student.parentPortal?.teacherComment || 'Ирина стабильно занимается, прогресс заметен. Главный фокус сейчас: аккуратность формулировок и регулярное выполнение ДЗ.'
+      },
+      studyProgress: {
+        subject: 'История и обществознание',
+        totalTopics: 82,
+        completedTopics: 51,
+        assimilationPercent: 84,
+        focus: 'Закрепляем право и экономику, параллельно добираем сложные темы по истории XX века.',
+        mockTests: [{
+          id: 'irina-mock-1',
+          date: demoDateFromToday(-32),
+          title: 'Пробник по истории',
+          score: 54,
+          maxScore: 100,
+          comment: 'Слабее всего вторая часть и даты.'
+        }, {
+          id: 'irina-mock-2',
+          date: demoDateFromToday(-18),
+          title: 'Пробник по обществознанию',
+          score: 68,
+          maxScore: 100,
+          comment: 'Хороший рост по теории, ошибки в примерах.'
+        }, {
+          id: 'irina-mock-3',
+          date: demoDateFromToday(-4),
+          title: 'Мини-пробник по праву',
+          score: 78,
+          maxScore: 100,
+          comment: 'Тема стала заметно увереннее.'
+        }]
+      }
+    } : student),
+    lessons: nextLessons,
+    txs: nextTxs,
+    settings: {
+      ...(state.settings || {}),
+      irinaParentDemoSeed: IRINA_PARENT_DEMO_SEED
+    }
+  };
+};
 const STORAGE_KEY = 'tutor-app-state-v2';
 const STORAGE_VERSION = 4;
 const LESSON_STATUS = {
@@ -226,6 +654,41 @@ const HOMEWORK_STATUS = {
 const FINAL_STATUSES = ['completed', 'cancelled_by_student', 'cancelled_by_tutor', 'rescheduled', 'no_show'];
 const isFinalLesson = lesson => FINAL_STATUSES.includes(lesson?.status);
 const money = n => `${Number(n || 0).toLocaleString('ru-RU')}\u00A0₽`;
+const cloneDemoState = () => withRichIrinaDemoState({
+  students: mockStudents.map(s => ({
+    ...s,
+    subjects: ['История', 'Общество'],
+    archived: false,
+    packageLessons: 0,
+    goal: '',
+    notes: '',
+    availabilityNotes: '',
+    lessonRates: {},
+    tgId: ''
+  })),
+  groups: mockGroups.map(g => ({
+    ...g,
+    subject: g.subject || 'История',
+    studentIds: [...g.studentIds],
+    rateOverrides: {
+      ...(g.rateOverrides || {})
+    },
+    archived: false
+  })),
+  lessons: mockLessons.map(l => ({
+    ...l,
+    subject: l.subject || 'История',
+    topic: '',
+    homework: '',
+    lessonNote: '',
+    duration: 60,
+    packageUse: {}
+  })),
+  txs: [],
+  settings: {
+    theme: 'light'
+  }
+});
 const cloneEmptyState = () => ({
   students: [],
   groups: [],
@@ -3854,14 +4317,21 @@ function ParentPortalPage({
     });
     setNoticeSent(true);
   };
+  const financeEvents = payload.finance.events.slice(0, 6).reverse();
+  const maxFinanceDelta = Math.max(1, ...financeEvents.map(ev => Math.abs(ev.delta)));
+  const debtAmount = Math.abs(Math.min(0, Number(payload.finance.balance || 0)));
+  const nextLesson = payload.nextLessons[0];
   const homeworkStats = payload.homeworkStats || {};
   const attendanceStats = payload.attendanceStats || {};
+  const homeworkRate = homeworkStats.rate == null ? '—' : `${homeworkStats.rate}%`;
+  const attendanceRate = attendanceStats.rate == null ? '—' : `${attendanceStats.rate}%`;
   const studyProgress = payload.studyProgress || getStudyProgress(student);
   const theoryRate = payload.theoryPercent == null ? '—' : `${payload.theoryPercent}%`;
   const assimilationRate = payload.assimilationPercent == null ? '—' : `${payload.assimilationPercent}%`;
   const latestMock = payload.latestMock;
   const latestMockRate = latestMock ? `${mockTestPercent(latestMock)}%` : '—';
   const mockAverageRate = payload.mockAveragePercent == null ? '—' : `${payload.mockAveragePercent}%`;
+  const parentPrimaryAction = debtAmount ? `К оплате ${money(debtAmount)}` : payload.finance.balance > 0 ? `Предоплата ${money(payload.finance.balance)}` : 'Оплачено';
   return _jsx("div", {
     className: "parent-public-page",
     children: _jsxs("main", {
@@ -3932,6 +4402,143 @@ function ParentPortalPage({
             if (attendanceStats.total) return `Системная подготовка идёт стабильно. Спасибо, что доверяете занятия.`;
             return "Здесь будет видно, как идёт подготовка, — после первых проведённых занятий.";
           })()
+        })]
+      }), _jsxs("section", {
+        className: "parent-dashboard",
+        children: [_jsxs("div", {
+          className: "parent-dashboard-head",
+          children: [_jsxs("div", {
+            children: [_jsx("h2", {
+              children: "\u0421\u0432\u043E\u0434\u043A\u0430 \u0434\u043B\u044F \u0440\u043E\u0434\u0438\u0442\u0435\u043B\u044F"
+            }), _jsx("p", {
+              children: "\u0413\u043B\u0430\u0432\u043D\u043E\u0435 \u043F\u043E \u0437\u0430\u043D\u044F\u0442\u0438\u044F\u043C, \u043E\u043F\u043B\u0430\u0442\u0430\u043C \u0438 \u0434\u043E\u043C\u0430\u0448\u043A\u0435 \u043D\u0430 \u043E\u0434\u043D\u043E\u043C \u044D\u043A\u0440\u0430\u043D\u0435."
+            })]
+          }), _jsx("strong", {
+            className: debtAmount ? 'parent-action-badge debt' : 'parent-action-badge ok',
+            children: parentPrimaryAction
+          })]
+        }), _jsxs("div", {
+          className: "parent-kpi-grid",
+          children: [_jsxs("div", {
+            className: "parent-kpi-card",
+            children: [_jsx("span", {
+              children: "\u0421\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0443\u0440\u043E\u043A"
+            }), _jsx("strong", {
+              children: nextLesson ? `${fmtDate(nextLesson.date)} ${nextLesson.time}` : '\u043D\u0435\u0442 \u0432 \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0438'
+            }), _jsx("small", {
+              children: nextLesson ? getLessonSubject(nextLesson, groups) : '\u0440\u0435\u043F\u0435\u0442\u0438\u0442\u043E\u0440 \u0434\u043E\u0431\u0430\u0432\u0438\u0442 \u0434\u0430\u0442\u0443 \u043F\u043E\u0437\u0436\u0435'
+            })]
+          }), _jsxs("div", {
+            className: "parent-kpi-card",
+            children: [_jsx("span", {
+              children: "\u0414\u043E\u043C\u0430\u0448\u043A\u0430"
+            }), _jsx("strong", {
+              children: homeworkRate
+            }), _jsx("small", {
+              children: homeworkStats.total ? `${homeworkStats.done || 0} \u0441\u0434\u0435\u043B\u0430\u043D\u043E \u00B7 ${homeworkStats.partial || 0} \u0447\u0430\u0441\u0442\u0438\u0447\u043D\u043E \u00B7 ${homeworkStats.missed || 0} \u043D\u0435 \u0441\u0434\u0435\u043B\u0430\u043D\u043E` : "\u043F\u043E\u044F\u0432\u0438\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435 \u043F\u0435\u0440\u0432\u044B\u0445 \u043F\u0440\u043E\u0432\u0435\u0440\u043E\u043A \u0414\u0417"
+            })]
+          }), _jsxs("div", {
+            className: "parent-kpi-card",
+            children: [_jsx("span", {
+              children: "\u041F\u043E\u0441\u0435\u0449\u0430\u0435\u043C\u043E\u0441\u0442\u044C"
+            }), _jsx("strong", {
+              children: attendanceRate
+            }), _jsx("small", {
+              children: attendanceStats.rate == null ? "\u043F\u043E\u044F\u0432\u0438\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435 \u043F\u0435\u0440\u0432\u044B\u0445 \u0437\u0430\u043D\u044F\u0442\u0438\u0439" : `${attendanceStats.done || 0} \u043F\u0440\u043E\u0432\u0435\u0434\u0435\u043D\u043E \u00B7 ${attendanceStats.noShow || 0} \u043F\u0440\u043E\u043F\u0443\u0441\u043A\u043E\u0432`
+            })]
+          }), _jsxs("div", {
+            className: "parent-kpi-card",
+            children: [_jsx("span", {
+              children: "Теория"
+            }), _jsx("strong", {
+              children: theoryRate
+            }), _jsx("small", {
+              children: studyProgress.totalTopics ? `${studyProgress.completedTopics} из ${studyProgress.totalTopics} тем` : "репетитор пока не отметил темы"
+            })]
+          }), _jsxs("div", {
+            className: "parent-kpi-card",
+            children: [_jsx("span", {
+              children: "Усвоение"
+            }), _jsx("strong", {
+              children: assimilationRate
+            }), _jsx("small", {
+              children: studyProgress.focus || "по оценке репетитора"
+            })]
+          }), _jsxs("div", {
+            className: "parent-kpi-card",
+            children: [_jsx("span", {
+              children: "Пробники"
+            }), _jsx("strong", {
+              children: latestMockRate
+            }), _jsx("small", {
+              children: latestMock ? `${fmtDate(latestMock.date)} · среднее ${mockAverageRate}` : "результатов пока нет"
+            })]
+          })]
+        }), _jsxs("div", {
+          className: "parent-chart-grid",
+          children: [_jsxs("div", {
+            className: "parent-chart-card",
+            children: [_jsxs("div", {
+              className: "parent-chart-title",
+              children: [_jsx("strong", {
+                children: "\u0424\u0438\u043D\u0430\u043D\u0441\u044B"
+              }), _jsx("span", {
+                children: payload.finance.events.length ? "\u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438" : "\u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442"
+              })]
+            }), financeEvents.length ? financeEvents.map(ev => _jsxs("div", {
+              className: "parent-money-bar",
+              children: [_jsx("span", {
+                children: fmtDate(ev.tx.date)
+              }), _jsx("i", {
+                className: ev.delta > 0 ? 'plus' : 'minus',
+                style: {
+                  width: `${Math.max(10, Math.round(Math.abs(ev.delta) / maxFinanceDelta * 100))}%`
+                }
+              }), _jsx("b", {
+                children: `${ev.delta > 0 ? '+' : '-'}${money(Math.abs(ev.delta))}`
+              })]
+            }, ev.tx.id)) : _jsx("p", {
+              className: "parent-muted",
+              children: "\u041A\u043E\u0433\u0434\u0430 \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F \u043E\u043F\u043B\u0430\u0442\u044B \u0438 \u0441\u043F\u0438\u0441\u0430\u043D\u0438\u044F, \u0437\u0434\u0435\u0441\u044C \u0431\u0443\u0434\u0435\u0442 \u0432\u0438\u0434\u043D\u0430 \u0434\u0438\u043D\u0430\u043C\u0438\u043A\u0430."
+            })]
+          }), _jsxs("div", {
+            className: "parent-chart-card",
+            children: [_jsxs("div", {
+              className: "parent-chart-title",
+              children: [_jsx("strong", {
+                children: "\u0414\u043E\u043C\u0430\u0448\u043A\u0430"
+              }), _jsx("span", {
+                children: homeworkStats.total ? `${homeworkStats.total} \u043F\u0440\u043E\u0432\u0435\u0440\u043E\u043A` : "\u043D\u0435\u0442 \u043F\u0440\u043E\u0432\u0435\u0440\u043E\u043A"
+              })]
+            }), _jsxs("div", {
+              className: "parent-stack-chart",
+              children: [_jsx("i", {
+                className: "good",
+                style: {
+                  flexGrow: homeworkStats.done || 0
+                }
+              }), _jsx("i", {
+                className: "warn",
+                style: {
+                  flexGrow: homeworkStats.partial || 0
+                }
+              }), _jsx("i", {
+                className: "bad",
+                style: {
+                  flexGrow: homeworkStats.missed || 0
+                }
+              })]
+            }), _jsxs("div", {
+              className: "parent-chart-legend",
+              children: [_jsx("span", {
+                children: "\u0441\u0434\u0435\u043B\u0430\u043D\u043E"
+              }), _jsx("span", {
+                children: "\u0447\u0430\u0441\u0442\u0438\u0447\u043D\u043E"
+              }), _jsx("span", {
+                children: "\u043D\u0435 \u0441\u0434\u0435\u043B\u0430\u043D\u043E"
+              })]
+            })]
+          })]
         })]
       }), portal.showProgress && _jsxs("section", {
         className: "parent-public-section parent-study-public-section",
@@ -4182,10 +4789,9 @@ function StudentDetailModal({
   onAdjust,
   onSaveParentPortal,
   onAcceptPaymentNotice,
-  onDismissPaymentNotice,
-  initialTab
+  onDismissPaymentNotice
 }) {
-  const [detailTab, setDetailTab] = useState(initialTab || 'overview');
+  const [detailTab, setDetailTab] = useState('overview');
   const ownLessons = lessons.filter(l => l.type === 'individual' ? sameId(l.targetId, student.id) : groups.find(g => sameId(g.id, l.targetId))?.studentIds?.some(id => sameId(id, student.id))).map(l => withStudentLessonMeta(l, student.id)).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
   const completed = ownLessons.filter(l => l.status === 'completed' || l.status === 'no_show');
   const skipped = completed.filter(l => l.attendance?.[student.id] === false || l.status === 'no_show').length;
@@ -7114,6 +7720,44 @@ function App() {
       } catch {}
     });
   };
+  const loadDemoData = (ask = true) => {
+    if (ask !== false && !confirm('Загрузить демо-набор? Текущие данные будут заменены.')) return;
+    const demo = cloneDemoState();
+    localStorage.removeItem(STORAGE_KEY);
+    setStudents(demo.students);
+    setGroups(demo.groups);
+    setLessons(demo.lessons);
+    setTxs(demo.txs);
+    setSettings(demo.settings || {
+      theme: 'light'
+    });
+    setCustomTemplates([]);
+    setSelDate(getTodayDate());
+    setWeekOffset(0);
+    setTab('today');
+    setModal(null);
+  };
+  const clearDemoData = (ask = true) => {
+    if (ask !== false && !confirm('Очистить демо-данные и начать с пустого приложения?')) return;
+    const empty = cloneEmptyState();
+    clearStorageCopies();
+    setStudents(empty.students);
+    setGroups(empty.groups);
+    setLessons(empty.lessons);
+    setTxs(empty.txs);
+    setSettings({
+      ...empty.settings,
+      theme: settings.theme || 'light'
+    });
+    setCustomTemplates([]);
+    setLastSavedAt(null);
+    setLastBackupAt(null);
+    setStorageWarning('');
+    setSelDate(getTodayDate());
+    setWeekOffset(0);
+    setTab('today');
+    setModal(null);
+  };
   const exportCsv = () => {
     const header = ['date', 'student', 'type', 'amount', 'comment'];
     const rows = txs.map(tx => {
@@ -7374,16 +8018,6 @@ function App() {
     const debt = activeStudents.filter(s => s.balance < 0).reduce((s, st) => s + Math.abs(st.balance), 0);
     const debtorStudents = activeStudents.filter(s => s.balance < 0).sort((a, b) => a.balance - b.balance);
     const debtors = debtorStudents.length;
-    const paymentNoticeRows = activeStudents.map(s => {
-      const pending = (getParentPortalSettings(s).paymentNotices || []).filter(n => n.status === 'new');
-      if (!pending.length) return null;
-      return {
-        student: s,
-        count: pending.length,
-        amount: pending.reduce((sum, n) => sum + Number(n.amount || 0), 0)
-      };
-    }).filter(Boolean);
-    const paymentNoticeCount = paymentNoticeRows.reduce((sum, r) => sum + r.count, 0);
     const now = new Date();
     const plannedToday = todayLessons.filter(l => l.status === 'planned');
     const dueToday = plannedToday.filter(l => new Date(`${l.date}T${l.time}`) <= now);
@@ -7514,6 +8148,11 @@ function App() {
               children: [debtors, " \u0447\u0435\u043B."]
             })]
           }), _jsx("button", {
+            className: "btn btn-sm btn-white demo-reset-top",
+            onClick: () => clearDemoData(true),
+            title: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0434\u0435\u043C\u043E-\u0434\u0430\u043D\u043D\u044B\u0435",
+            children: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u0434\u0435\u043C\u043E"
+          }), _jsx("button", {
             className: "btn btn-sm btn-white theme-toggle",
             onClick: toggleTheme,
             type: "button",
@@ -7528,12 +8167,14 @@ function App() {
         })]
       }), students.length === 0 && lessons.length === 0 && _jsx(EmptyState, {
         title: "\u041D\u0430\u0447\u043D\u0438\u0442\u0435 \u0441 \u043F\u0435\u0440\u0432\u043E\u0433\u043E \u0443\u0447\u0435\u043D\u0438\u043A\u0430",
-        text: "\u0414\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0443\u0447\u0435\u043D\u0438\u043A\u0430, \u0437\u0430\u0442\u0435\u043C \u0441\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u0437\u0430\u043D\u044F\u0442\u0438\u0435 \u0438\u043B\u0438 \u0433\u0440\u0443\u043F\u043F\u0443.",
+        text: "\u0414\u0435\u043C\u043E-\u0434\u0430\u043D\u043D\u044B\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u043C\u0435\u0448\u0430\u044E\u0442: \u0434\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0443\u0447\u0435\u043D\u0438\u043A\u0430, \u0437\u0430\u0442\u0435\u043C \u0441\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u0437\u0430\u043D\u044F\u0442\u0438\u0435 \u0438\u043B\u0438 \u0433\u0440\u0443\u043F\u043F\u0443.",
         action: "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0443\u0447\u0435\u043D\u0438\u043A\u0430",
         onAction: () => setModal({
           type: 'student',
           payload: null
-        })
+        }),
+        secondary: "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0435\u043C\u043E-\u0433\u0440\u0443\u043F\u043F\u0443",
+        onSecondary: () => loadDemoData(groups.length || txs.length ? true : false)
       }), (students.length > 0 || lessons.length > 0) && _jsxs("section", {
         className: "today-work-panel",
         children: [_jsxs("div", {
@@ -7587,34 +8228,6 @@ function App() {
             })]
           })]
         })]
-      }), paymentNoticeRows.length > 0 && _jsxs("div", {
-        className: "card today-notice-card",
-        children: [_jsxs("div", {
-          className: "today-notice-head",
-          children: [_jsx("span", {
-            children: "Родители сообщили об оплате"
-          }), _jsxs("strong", {
-            children: [paymentNoticeCount, " ", plural(paymentNoticeCount, 'заявка', 'заявки', 'заявок')]
-          })]
-        }), paymentNoticeRows.map(row => _jsxs("div", {
-          className: "today-notice-row",
-          children: [_jsxs("div", {
-            className: "today-notice-info",
-            children: [_jsx("strong", {
-              children: row.student.name
-            }), _jsxs("span", {
-              children: ["сообщил(а) об оплате · ", money(row.amount), row.count > 1 ? ` · ${row.count} заявки` : ""]
-            })]
-          }), _jsx("button", {
-            className: "btn btn-sm btn-black",
-            onClick: () => setModal({
-              type: 'studentDetail',
-              payload: row.student,
-              initialTab: 'parent'
-            }),
-            children: "Открыть"
-          })]
-        }, row.student.id))]
       }), (() => {
         const now = new Date();
         if (now.getDate() > 3) return null;
@@ -9371,7 +9984,9 @@ function App() {
         onAction: () => setModal({
           type: 'student',
           payload: null
-        })
+        }),
+        secondary: "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0435\u043C\u043E-\u0433\u0440\u0443\u043F\u043F\u0443",
+        onSecondary: () => loadDemoData(groups.length || txs.length ? true : false)
       }), schedView === 'week' ? _jsx(WeekView, {}) : _jsx(MonthView, {})]
     });
   };
@@ -9617,7 +10232,9 @@ function App() {
         onAction: () => setModal({
           type: 'student',
           payload: null
-        })
+        }),
+        secondary: students.length ? null : "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0435\u043C\u043E-\u0433\u0440\u0443\u043F\u043F\u0443",
+        onSecondary: students.length ? null : () => loadDemoData(groups.length || lessons.length || txs.length ? true : false)
       }), filtered.length > studentsLimit && _jsxs("button", {
         type: "button",
         className: "btn btn-white btn-full show-more-btn",
@@ -9719,7 +10336,9 @@ function App() {
         onAction: () => setModal({
           type: 'group',
           payload: null
-        })
+        }),
+        secondary: groups.length ? null : "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0435\u043C\u043E-\u0433\u0440\u0443\u043F\u043F\u0443",
+        onSecondary: groups.length ? null : () => loadDemoData(students.length || lessons.length || txs.length ? true : false)
       })]
       })]
     });
@@ -11307,7 +11926,6 @@ function App() {
       onSave: saveStudent
     }), modal?.type === 'studentDetail' && _jsx(StudentDetailModal, {
       student: modal.payload,
-      initialTab: modal.initialTab,
       students: students,
       lessons: lessons,
       txs: txs,

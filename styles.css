@@ -8772,6 +8772,61 @@ body[data-theme="dark"] .today-work-card.neutral {
   color: var(--text-muted);
   padding-top: 3px;
 }
+
+/* Today: parent payment notices alert */
+.today-notice-card {
+  padding: 12px;
+  margin-bottom: 16px;
+  border-color: color-mix(in srgb, var(--green) 32%, var(--border-light));
+  background: color-mix(in srgb, var(--surface) 92%, var(--green) 8%);
+}
+.today-notice-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.today-notice-head span {
+  font-family: 'Unbounded', 'Arial Black', 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+}
+.today-notice-head strong {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  white-space: nowrap;
+}
+.today-notice-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-light);
+}
+.today-notice-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.today-notice-info strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+.today-notice-info span {
+  font-size: 11px;
+  color: var(--text-sec);
+}
+.today-notice-row .btn {
+  flex-shrink: 0;
+}
+body[data-theme="dark"] .today-notice-card {
+  border-color: color-mix(in srgb, var(--green) 36%, var(--border-light));
+  background: color-mix(in srgb, var(--surface) 86%, var(--green) 14%);
+}
 .month-recap-teaser {
   display: flex;
   align-items: center;
