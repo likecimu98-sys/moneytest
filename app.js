@@ -2332,6 +2332,7 @@ function StudentProfileModal({
   const [availabilityNotes, setAvailabilityNotes] = useState(student?.availabilityNotes || '');
   const [packageLessons, setPackageLessons] = useState(student?.packageLessons || 0);
   const [lessonRates, setLessonRates] = useState(student?.lessonRates || {});
+  const [balance, setBalance] = useState(student ? String(student.balance ?? 0) : '0');
   const [archived, setArchived] = useState(!!student?.archived);
   const [portalSettings, setPortalSettings] = useState(portal);
   const [parentComment, setParentComment] = useState(portal.teacherComment || '');
@@ -2399,6 +2400,7 @@ function StudentProfileModal({
       notes,
       availabilityNotes,
       packageLessons: Math.max(0, Number(packageLessons) || 0),
+      balance: String(balance).trim() === '' ? (student?.balance ?? 0) : Math.round(Number(balance) || 0),
       archived,
       lessonRates: lr,
       parentPortal: nextPortal
@@ -2573,6 +2575,21 @@ function StudentProfileModal({
                   onChange: e => setPackageLessons(e.target.value)
                 })
               })]
+            }), _jsx(FormField, {
+              label: "Текущий баланс, ₽",
+              children: _jsxs(_Fragment, {
+                children: [_jsx("input", {
+                  className: "input",
+                  type: "number",
+                  step: "100",
+                  value: balance,
+                  onChange: e => setBalance(e.target.value),
+                  placeholder: "0"
+                }), _jsx("small", {
+                  className: "field-help",
+                  children: "Минус — ученик должен, плюс — оплатил вперёд. Здесь можно вручную поправить стартовый или текущий баланс."
+                })]
+              })
             }), subjects.length > 1 && _jsx("div", {
               className: "profile-rate-list",
               children: subjects.map(subject => _jsxs("div", {
@@ -2995,7 +3012,8 @@ function LessonModal({
   lessonToEdit,
   onClose,
   onSave,
-  onDelete
+  onDelete,
+  onToggleWeekday
 }) {
   const [type, setType] = useState(lessonToEdit?.type || initialType || (initialStudentId ? 'individual' : 'group'));
   const [targetId, setTgt] = useState(lessonToEdit ? String(lessonToEdit.targetId) : initialTargetId ? String(initialTargetId) : initialStudentId ? String(initialStudentId) : '');
@@ -3357,6 +3375,15 @@ function LessonModal({
             children: "\u0432\u043A\u043B."
           })]
         })]
+      }), lessonToEdit && _jsx(LessonWeekdays, {
+        lessonToEdit: lessonToEdit,
+        students: students,
+        groups: groups,
+        lessons: lessons,
+        time: time,
+        subject: subject,
+        duration: duration,
+        onToggleWeekday: onToggleWeekday
       }), canApplyFuture && _jsxs("div", {
         className: "series-scope-panel",
         children: [_jsx("div", {
@@ -5332,7 +5359,9 @@ function StudentReportModal({
   lessons,
   txs,
   onClose,
-  onSave
+  onSave,
+  topicPlans = [],
+  onSaveTopicPlans
 }) {
   const ownLessons = getStudentLessons(student.id, lessons, groups, {
     includeArchived: true
@@ -5380,6 +5409,18 @@ function StudentReportModal({
     setMockComment('');
   };
   const removeMock = id => setMockTests(p => p.filter(test => test.id !== id));
+  const applyPlan = p => {
+    setTotalTopics(String(p.total));
+    if (!subject.trim()) setSubject(p.label);
+  };
+  const savePlan = () => {
+    const label = (subject.trim() || student.subjects?.[0] || 'План').slice(0, 40);
+    const total = clampCount(totalTopics);
+    if (!total || !onSaveTopicPlans) return;
+    const rest = topicPlans.filter(x => String(x.label).toLowerCase() !== label.toLowerCase());
+    onSaveTopicPlans([...rest, { id: Date.now(), label, total }].sort((a, b) => String(a.label).localeCompare(String(b.label), 'ru')));
+  };
+  const removePlan = id => onSaveTopicPlans && onSaveTopicPlans(topicPlans.filter(x => x.id !== id));
   const submit = e => {
     e.preventDefault();
     onSave({
@@ -5446,6 +5487,31 @@ function StudentReportModal({
         className: "report-section",
         children: [_jsx("h3", {
           children: "Теория по кодификатору"
+        }), _jsxs("div", {
+          className: "report-plan-row",
+          children: [topicPlans.length ? topicPlans.map(p => _jsxs("span", {
+            className: "report-plan-chip",
+            children: [_jsx("button", {
+              type: "button",
+              className: "report-plan-apply",
+              onClick: () => applyPlan(p),
+              children: `${p.label} · ${p.total}`
+            }), _jsx("button", {
+              type: "button",
+              className: "report-plan-del",
+              title: "Удалить план",
+              onClick: () => removePlan(p.id),
+              children: "×"
+            })]
+          }, p.id)) : _jsx("span", {
+            className: "report-plan-hint",
+            children: "Сохраните план тем по предмету/классу — дальше применяйте в один тап"
+          }), _jsx("button", {
+            type: "button",
+            className: "btn btn-sm btn-white report-plan-save",
+            onClick: savePlan,
+            children: "+ Сохранить план"
+          })]
         }), _jsxs("div", {
           className: "profile-grid two",
           children: [_jsx(FormField, {
@@ -5780,6 +5846,68 @@ function RescheduleModal({
         })]
       })]
     })
+  });
+}
+function LessonWeekdays({
+  lessonToEdit,
+  students,
+  groups,
+  lessons = [],
+  time,
+  subject,
+  duration,
+  onToggleWeekday
+}) {
+  if (!lessonToEdit || !onToggleWeekday) return null;
+  const today = getTodayDate();
+  const isTarget = l => l.type === lessonToEdit.type && sameId(l.targetId, lessonToEdit.targetId);
+  const futurePlanned = lessons.filter(l => isTarget(l) && l.status === 'planned' && l.date >= today);
+  const activeDays = new Set(futurePlanned.map(l => localDayIndex(l.date)));
+  const timeByDay = {};
+  futurePlanned.forEach(l => {
+    const d = localDayIndex(l.date);
+    if (!timeByDay[d] || l.time < timeByDay[d]) timeByDay[d] = l.time;
+  });
+  const MON_FIRST = [1, 2, 3, 4, 5, 6, 0];
+  const DAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const labelFor = jsDay => DAY_LABELS[(jsDay + 6) % 7];
+  return _jsxs("div", {
+    className: "lesson-weekdays",
+    children: [_jsx("div", {
+      className: "label",
+      children: "Дни недели в расписании"
+    }), _jsx("div", {
+      className: "weekday-strip",
+      children: MON_FIRST.map(jsDay => {
+        const active = activeDays.has(jsDay);
+        const t = timeByDay[jsDay] || '';
+        return _jsxs("button", {
+          type: "button",
+          className: `weekday-chip ${active ? 'active' : ''}`,
+          onClick: () => onToggleWeekday({
+            type: lessonToEdit.type,
+            targetId: lessonToEdit.targetId,
+            time,
+            subject,
+            duration,
+            jsDay
+          }),
+          children: [_jsx("span", {
+            className: "wd-label",
+            children: labelFor(jsDay)
+          }), active ? _jsx("span", {
+            className: "wd-time",
+            children: t
+          }) : _jsx("span", {
+            className: "wd-plus",
+            children: "+"
+          })]
+        }, jsDay);
+      })
+    }), _jsx("div", {
+      className: "lesson-days-hint",
+      children: "Тап по дню — добавить или убрать занятия у этого ученика/группы. Добавление создаёт повторяющиеся уроки в это же время, удаление убирает только будущие. Проведённые не трогаются."
+    })]
   });
 }
 function MessageModal({
@@ -7298,6 +7426,47 @@ function App() {
       rescheduledTo: newLesson.id
     } : l).concat(newLesson));
     setModal(null);
+  };
+  const toggleLessonWeekday = ({ type, targetId, time, subject, duration, jsDay }) => {
+    const today = getTodayDate();
+    const isTarget = l => l.type === type && sameId(l.targetId, targetId);
+    const futurePlanned = lessons.filter(l => isTarget(l) && l.status === 'planned' && l.date >= today);
+    const hasDay = futurePlanned.some(l => localDayIndex(l.date) === jsDay);
+    const snapL = [...lessons],
+      snapS = [...students],
+      snapT = [...txs];
+    if (hasDay) {
+      const kept = lessons.filter(l => !(isTarget(l) && l.status === 'planned' && l.date >= today && localDayIndex(l.date) === jsDay));
+      setLessons(kept);
+      triggerUndo('День убран из расписания', snapL, snapS, snapT);
+      return;
+    }
+    const horizonStr = futurePlanned.reduce((mx, l) => l.date > mx ? l.date : mx, '') || shiftDate(today, 56);
+    const horizon = parseLocalDate(horizonStr);
+    const additions = [];
+    let idSeed = Date.now();
+    const seriesId = idSeed++;
+    const start = parseLocalDate(today);
+    start.setDate(start.getDate() + (jsDay - start.getDay() + 7) % 7);
+    for (let i = 0; i < 104; i++) {
+      const nd = new Date(start);
+      nd.setDate(start.getDate() + i * 7);
+      if (nd > horizon) break;
+      additions.push({
+        id: idSeed++,
+        type,
+        targetId,
+        subject: subject || 'История',
+        time: time || '15:00',
+        duration: Number(duration) || 60,
+        date: localDateString(nd),
+        status: 'planned',
+        seriesId
+      });
+    }
+    if (!additions.length || !confirmLessonConflicts(additions)) return;
+    setLessons([...lessons, ...additions]);
+    triggerUndo('День добавлен в расписание', snapL, snapS, snapT);
   };
   const savePackage = (studentId, lessonsCount, amount) => {
     const nextState = financeCore.buyPackageState({
@@ -8877,6 +9046,52 @@ function App() {
         });
         return [timeCell, ...dayCells];
       });
+      const desktopScheduleToggle = _jsx("div", {
+        className: "sched-desktop-modes",
+        children: [['days', 'Дни'], ['groups', 'Группы']].map(([mode, label]) => _jsx("button", {
+          type: "button",
+          className: `sched-desktop-mode ${mobileScheduleMode === mode ? 'active' : ''}`,
+          onClick: () => setMobileScheduleMode(mode),
+          children: label
+        }, mode))
+      });
+      const renderDesktopTrack = (key, name, onName, rowLessons, addMeta) => _jsxs("div", {
+        className: "dg-row",
+        children: [_jsx("button", {
+          type: "button",
+          className: "dg-name",
+          onClick: onName,
+          children: name
+        }), _jsx("div", {
+          className: "dg-week",
+          children: weekDates.map((date, i) => {
+            const dayLessons = rowLessons.filter(l => l.date === date);
+            return _jsxs("button", {
+              type: "button",
+              className: `dg-cell ${dayLessons.length ? 'busy' : ''} ${date === selDate ? 'sel' : ''}`,
+              onClick: () => dayLessons[0] ? openLessonCard(dayLessons[0]) : openAddLessonAt(date, null, addMeta),
+              children: [_jsx("b", {
+                children: DAY_LABELS[i]
+              }), dayLessons.length ? dayLessons.map(l => _jsx("span", {
+                children: `${l.time} ${getLessonName(l).replace(/\s*\(.+\)$/, '')}`
+              }, l.id)) : _jsx("em", {
+                children: "+"
+              })]
+            }, date);
+          })
+        })]
+      }, key);
+      const individualTracks = mobileIndividualRows.filter(r => r.lessons.length);
+      const desktopGroupsView = _jsxs("div", {
+        className: "sched-desktop-groups",
+        children: [_jsxs("div", {
+          className: "dg-section-title",
+          children: ["Группы ", _jsx("b", { children: mobileGroupRows.length })]
+        }), mobileGroupRows.length ? mobileGroupRows.map(({ group, lessons: rowLessons }) => renderDesktopTrack(`g${group.id}`, getGroupDisplayName(group, students), () => setModal({ type: 'groupDetail', payload: group }), rowLessons, { initialType: 'group', targetId: group.id })) : _jsx("div", { className: "dg-empty", children: "На этой неделе нет групп" }), _jsxs("div", {
+          className: "dg-section-title",
+          children: ["Индивидуальные ", _jsx("b", { children: individualTracks.length })]
+        }), individualTracks.length ? individualTracks.map(({ student, lessons: rowLessons }) => renderDesktopTrack(`i${student.id}`, student.name, () => setModal({ type: 'studentDetail', payload: student }), rowLessons, { initialType: 'individual', targetId: student.id })) : _jsx("div", { className: "dg-empty", children: "Нет индивидуальных уроков на неделе" })]
+      });
       return _jsxs("div", {
         className: "sched-swipe",
         children: [_jsxs("div", {
@@ -9180,9 +9395,9 @@ function App() {
               })]
             })]
           })]
-        }), _jsx("div", {
+        }), _jsxs("div", {
           className: "sched-desktop",
-          children: _jsx("div", {
+          children: [desktopScheduleToggle, mobileScheduleMode === 'groups' ? desktopGroupsView : _jsx("div", {
             className: "schedule-grid-wrap",
             children: _jsxs("table", {
               className: "schedule-table",
@@ -9319,7 +9534,7 @@ function App() {
                 })
               })]
             })
-          })
+          })]
         }), selDate && weekDates.includes(selDate) && (() => {
           const dl = scheduleLessons.filter(l => l.date === selDate).sort((a, b) => a.time.localeCompare(b.time));
           const obj = new Date(selDate + 'T00:00:00');
@@ -11577,6 +11792,7 @@ function App() {
       students: students,
       groups: groups,
       lessons: lessons,
+      onToggleWeekday: toggleLessonWeekday,
       initialDate: modal.payload?.date || getTodayDate(),
       initialStudentId: modal.payload?.studentId || null,
       initialType: modal.payload?.initialType || null,
@@ -11685,7 +11901,9 @@ function App() {
       lessons: lessons,
       txs: txs,
       onClose: () => setModal(null),
-      onSave: saveStudent
+      onSave: saveStudent,
+      topicPlans: settings.topicPlans || [],
+      onSaveTopicPlans: next => setSettings({ ...settings, topicPlans: next })
     }), modal?.type === 'transaction' && _jsx(TransactionModal, {
       tx: modal.payload,
       students: students,

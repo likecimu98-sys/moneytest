@@ -16,7 +16,7 @@
 }
 .mobile-lab-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
   border: var(--border);
   border-radius: 12px;
@@ -1036,6 +1036,27 @@ body[data-theme="dark"] .stat-label {
 .toggle-opt:last-child { border-right: none; }
 .toggle-opt.active { background: var(--ink); color: var(--yellow); }
 
+/* LESSON WEEKDAYS EDITOR (embedded in lesson editor) */
+.lesson-weekdays {
+  border: 1.5px solid var(--border-light); border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 90%, var(--white));
+  padding: 12px; margin: 2px 0;
+}
+.lesson-weekdays > .label { margin-bottom: 8px; }
+.weekday-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 0 0 8px; }
+.weekday-chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  min-height: 58px; padding: 8px 2px; cursor: pointer;
+  border: var(--border); border-radius: 9px; background: var(--surface);
+  transition: background .12s, color .12s, border-color .12s;
+}
+.weekday-chip .wd-label { font-family: var(--font-display); font-weight: 800; font-size: 12px; }
+.weekday-chip .wd-time { font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.weekday-chip .wd-plus { font-size: 15px; line-height: 1; color: var(--text-muted); }
+.weekday-chip.active { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.weekday-chip.active .wd-time { color: var(--yellow); }
+.lesson-days-hint { font-size: 11px; color: var(--text-muted); line-height: 1.45; margin: 0; }
+
 /* CHECKBOX */
 .check-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -1240,6 +1261,25 @@ body[data-theme="dark"] .badge-yellow {
 .forecast-card.good{background:var(--bg-success);border-color:color-mix(in srgb, var(--green) 35%, var(--border-light))}
 .forecast-card.warn{background:var(--bg-subtle);border-color:color-mix(in srgb, var(--yellow) 45%, var(--border-light))}
 .schedule-grid-wrap{overflow-x:auto;margin-left:-16px;margin-right:-16px;padding:0 16px 6px}
+/* DESKTOP SCHEDULE: Дни / Группы */
+.sched-desktop-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-width:300px;margin:0 0 14px;padding:4px;border:var(--border);border-radius:12px;background:var(--surface)}
+.sched-desktop-mode{min-height:38px;border:0;border-radius:8px;background:transparent;color:var(--black);font-family:var(--font-display);font-size:12px;font-weight:900;cursor:pointer}
+.sched-desktop-mode.active{background:var(--ink);color:var(--yellow)}
+.sched-desktop-groups{display:flex;flex-direction:column;gap:10px}
+.dg-section-title{font-family:var(--font-display);font-size:12px;font-weight:900;color:var(--text-sec);text-transform:uppercase;letter-spacing:.04em;margin:6px 2px 0;display:flex;gap:6px;align-items:center}
+.dg-section-title b{color:var(--black)}
+.dg-row{display:grid;grid-template-columns:200px minmax(0,1fr);gap:12px;align-items:stretch;border:var(--border);border-radius:12px;background:var(--surface);box-shadow:var(--shadow-soft);padding:12px}
+.dg-name{text-align:left;border:0;background:transparent;font-family:var(--font-display);font-size:14px;font-weight:900;color:var(--black);cursor:pointer;padding:4px;line-height:1.2;align-self:center}
+.dg-name:hover{color:var(--accent,var(--blue))}
+.dg-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.dg-cell{display:flex;flex-direction:column;align-items:stretch;gap:3px;min-height:64px;padding:7px 5px;border:var(--border);border-radius:8px;background:var(--bg-subtle);cursor:pointer;text-align:left;transition:background .12s,border-color .12s}
+.dg-cell b{font-family:var(--font-display);font-size:10px;font-weight:900;color:var(--text-muted);text-align:center}
+.dg-cell span{font-size:10px;font-weight:700;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dg-cell em{font-size:14px;color:var(--text-muted);text-align:center;font-style:normal}
+.dg-cell.busy{background:var(--surface);border-color:color-mix(in srgb, var(--yellow) 50%, var(--border-light))}
+.dg-cell.sel{border-color:var(--ink)}
+.dg-cell:hover{border-color:var(--ink)}
+.dg-empty{border:1.5px dashed var(--border-light);border-radius:12px;padding:16px;text-align:center;font-size:12px;color:var(--text-muted)}
 .schedule-table{border-collapse:separate;border-spacing:7px;min-width:1080px;width:100%;table-layout:fixed}
 .schedule-head-cell{height:64px;text-align:center;padding:9px 6px;cursor:pointer;border:var(--border);border-radius:5px;background:var(--surface);box-shadow:var(--shadow);font-family:var(--font-display);font-weight:900}
 .schedule-head-cell.today{background:var(--ink);color:var(--yellow);border-color:var(--ink)}
@@ -1247,7 +1287,7 @@ body[data-theme="dark"] .badge-yellow {
 .schedule-time-cell{text-align:right;font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--text-sec);vertical-align:middle;padding-right:8px;width:64px}
 .schedule-empty-cell{height:112px;border:2px dashed var(--border-dashed);border-radius:5px;cursor:pointer;background:color-mix(in srgb, var(--surface) 80%, var(--white) 20%)}
 .schedule-empty-cell:hover{background:var(--bg-subtle)}
-.schedule-lesson-cell{height:112px;min-height:112px;border:var(--border);border-radius:5px;padding:10px;font-size:13px;font-family:'Inter',sans-serif;font-weight:700;line-height:1.35;cursor:pointer;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between;gap:8px;position:relative;overflow:hidden}
+.schedule-lesson-cell{height:112px;min-height:112px;border:var(--border);border-radius:5px;padding:10px;font-size:13px;font-family:'Inter',sans-serif;font-weight:700;line-height:1.35;cursor:pointer;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between;gap:8px;position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-user-drag:element}
 .schedule-lesson-cell[draggable="true"]{cursor:grab}
 .schedule-lesson-cell[draggable="true"]:active{cursor:grabbing}
 .schedule-lesson-cell.conflict{border-color:var(--yellow);box-shadow:0 0 0 2px color-mix(in srgb, var(--yellow) 45%, transparent), var(--shadow)}
@@ -2299,6 +2339,16 @@ body[data-theme="dark"] .finance-forecast-hero {
 .modal > form + * {
   margin-left: 18px;
   margin-right: 18px;
+}
+/* Detail-style modals render bare divs (no <form>), so they miss the form's
+   bottom padding and the last block sits flush against the modal edge. */
+.modal > div:not(.modal-head):last-child,
+.modal > .empty-state:last-child,
+.modal > button:last-child {
+  margin-bottom: max(22px, env(safe-area-inset-bottom));
+}
+.modal > form:last-child {
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
 .modal > form {
   padding: 18px 0 20px;
@@ -3789,6 +3839,57 @@ body[data-theme="dark"] .finance-forecast-hero {
   flex-wrap: wrap;
   gap: 7px;
   margin: 2px 0 10px;
+}
+.report-plan-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.report-plan-chip {
+  display: inline-flex;
+  align-items: stretch;
+  border: var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.report-plan-apply {
+  border: 0;
+  background: transparent;
+  padding: 6px 9px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.report-plan-apply:hover {
+  background: var(--ink);
+  color: var(--yellow);
+}
+.report-plan-del {
+  border: 0;
+  border-left: var(--border);
+  background: transparent;
+  padding: 0 8px;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.report-plan-del:hover {
+  color: var(--red);
+}
+.report-plan-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  max-width: 70%;
+}
+.report-plan-save {
+  margin-left: auto;
 }
 .report-track-card {
   padding: 10px;
@@ -5645,7 +5746,7 @@ body[data-theme="dark"] .mobile-agenda-card.individual.status-completed {
 }
 .finance-page .toggle-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .finance-control-trust-preview {
   display: none;
@@ -6111,7 +6212,7 @@ body[data-theme="dark"] .today-upcoming {
 @media(max-width:520px) {
   .finance-page .toggle-row {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
     padding: 4px;
     border-radius: 12px;
@@ -6904,8 +7005,8 @@ body[data-theme="dark"] .today-upcoming {
   .schedule-grid-wrap {
     padding: 10px;
     overflow-x: hidden;
-    overflow-y: auto;
-    max-height: calc(100vh - 290px);
+    overflow-y: visible;
+    max-height: none;
   }
 
   .schedule-table {
@@ -6970,7 +7071,7 @@ body[data-theme="dark"] .today-upcoming {
   }
 
   .schedule-grid-wrap {
-    max-height: calc(100vh - 300px);
+    max-height: none;
   }
 
   .schedule-empty-cell,
