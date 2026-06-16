@@ -40,41 +40,54 @@ const DAY_INDEXES = [1, 2, 3, 4, 5, 6, 0];
 const SUBJECTS_MAIN = ['История', 'Общество', 'Русский', 'Математика', 'Английский', 'Физика'];
 const SUBJECTS_EXTRA = ['Химия', 'Биология', 'География', 'Информатика', 'Литература', 'Немецкий', 'Французский', 'Испанский', 'Китайский', 'Другое'];
 const SUBJECTS = [...SUBJECTS_MAIN, ...SUBJECTS_EXTRA];
-// ── SUBJECT REGISTRY ── single source of truth for subject name/short/color/inference
-const SUBJECT_META = [
-  { key: 'История', short: 'История', color: '#446fd4', match: ['истор'] },
-  { key: 'Общество', short: 'Общество', color: '#8f762f', match: ['обществ'], aliases: ['Обществознание'] },
-  { key: 'Русский', short: 'Русский', color: '#b95757', match: ['рус'] },
-  { key: 'Математика', short: 'Матем.', color: '#3f7d5b', match: ['мат'] },
-  { key: 'Английский', short: 'Англ.', color: '#6f5ca8', match: ['англ'] },
-  { key: 'Физика', short: 'Физика', color: '#2f6f8f', match: ['физ'] },
-  { key: 'Химия', short: 'Химия', color: '#9a5fb0', match: ['хим'] },
-  { key: 'Биология', short: 'Биол.', color: '#4d8f3f', match: ['биол'] },
-  { key: 'География', short: 'Геогр.', color: '#3f8f86', match: ['геогр'] },
-  { key: 'Информатика', short: 'Информ.', color: '#52609c', match: ['информ'] },
-  { key: 'Литература', short: 'Литер.', color: '#a8643f', match: ['литер'] },
-  { key: 'Немецкий', short: 'Нем.', color: '#7d7340', match: ['немец'] },
-  { key: 'Французский', short: 'Франц.', color: '#7a5db0', match: ['франц'] },
-  { key: 'Испанский', short: 'Исп.', color: '#b0723f', match: ['испан'] },
-  { key: 'Китайский', short: 'Кит.', color: '#b04f4f', match: ['кита'] },
-  { key: 'Другое', short: 'Другое', color: '#6f7378', match: [] }
-];
-const SUBJECT_BY_NAME = (() => {
-  const map = {};
-  SUBJECT_META.forEach(s => {
-    map[s.key] = s;
-    (s.aliases || []).forEach(alias => { map[alias] = s; });
-  });
-  return map;
-})();
 const inferSubject = (text = '') => {
-  const t = String(text).toLowerCase();
-  const hit = SUBJECT_META.find(s => s.match.some(frag => t.includes(frag)));
-  return hit ? hit.key : 'История';
+  const t = text.toLowerCase();
+  if (t.includes('обществ')) return 'Общество';
+  if (t.includes('истор')) return 'История';
+  if (t.includes('рус')) return 'Русский';
+  if (t.includes('мат')) return 'Математика';
+  if (t.includes('англ')) return 'Английский';
+  if (t.includes('физ')) return 'Физика';
+  if (t.includes('хим')) return 'Химия';
+  if (t.includes('биол')) return 'Биология';
+  if (t.includes('геогр')) return 'География';
+  if (t.includes('информ')) return 'Информатика';
+  if (t.includes('литер')) return 'Литература';
+  return 'История';
 };
-const subjectColor = subject => (SUBJECT_BY_NAME[subject] || {}).color || '#777';
+const subjectColor = subject => ({
+  'История': '#446fd4',
+  'Общество': '#8f762f',
+  'Русский': '#b95757',
+  'Математика': '#3f7d5b',
+  'Английский': '#6f5ca8',
+  'Физика': '#2f6f8f',
+  'Химия': '#9a5fb0',
+  'Биология': '#4d8f3f',
+  'География': '#3f8f86',
+  'Информатика': '#52609c',
+  'Литература': '#a8643f',
+  'Немецкий': '#7d7340',
+  'Французский': '#7a5db0',
+  'Испанский': '#b0723f',
+  'Китайский': '#b04f4f',
+  'Другое': '#6f7378'
+})[subject] || '#777';
 const subjectTagText = () => '#fff';
-const shortSubject = s => (SUBJECT_BY_NAME[s] || {}).short || s;
+const SUBJECT_SHORT = {
+  'Обществознание': 'Общество',
+  'Математика': 'Матем.',
+  'Английский': 'Англ.',
+  'Информатика': 'Информ.',
+  'Литература': 'Литер.',
+  'Биология': 'Биол.',
+  'География': 'Геогр.',
+  'Французский': 'Франц.',
+  'Испанский': 'Исп.',
+  'Китайский': 'Кит.',
+  'Немецкий': 'Нем.'
+};
+const shortSubject = s => SUBJECT_SHORT[s] || s;
 const DEFAULT_RATE = 1500;
 const sameId = (a, b) => a != null && b != null && String(a) === String(b);
 const normalizeMoneyInput = (value, fallback = DEFAULT_RATE) => {
@@ -3562,7 +3575,7 @@ function LessonStatusModal({
     children: [_jsxs("div", {
       style: {
         fontSize: 12,
-        color: 'var(--text-sec)',
+        color: '#666',
         marginBottom: 12
       },
       children: [fmtDate(lesson.date), " \u0432 ", lesson.time]
@@ -5447,7 +5460,7 @@ function MessageModal({
       children: [_jsxs("div", {
         style: {
           fontSize: 11,
-          color: 'var(--text-sec)',
+          color: '#666',
           marginBottom: 12
         },
         children: ["\u041F\u043B\u0435\u0439\u0441\u0445\u043E\u043B\u0434\u0435\u0440\u044B: ", _jsx("code", {
@@ -5524,7 +5537,7 @@ function MessageModal({
             fontSize: 10,
             fontWeight: 900,
             marginBottom: 8,
-            color: 'var(--text-sec)'
+            color: '#666'
           },
           children: "\u0412\u0421\u0422\u0420\u041E\u0415\u041D\u041D\u042B\u0415"
         }), DEFAULT_TEMPLATES.map(t => _jsxs("div", {
@@ -5541,7 +5554,7 @@ function MessageModal({
             children: t.name
           }), _jsx("div", {
             style: {
-              color: 'var(--text-sec)',
+              color: '#666',
               fontSize: 10
             },
             children: t.body
@@ -5552,13 +5565,13 @@ function MessageModal({
             fontSize: 10,
             fontWeight: 900,
             margin: '14px 0 8px',
-            color: 'var(--text-sec)'
+            color: '#666'
           },
           children: "\u041C\u041E\u0418 \u0428\u0410\u0411\u041B\u041E\u041D\u042B"
         }), customTemplates.length === 0 && _jsx("div", {
           style: {
             fontSize: 11,
-            color: 'var(--text-muted)',
+            color: '#888',
             marginBottom: 12
           },
           children: "\u041D\u0435\u0442 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0445 \u0448\u0430\u0431\u043B\u043E\u043D\u043E\u0432"
@@ -5581,7 +5594,7 @@ function MessageModal({
               children: t.name
             }), _jsx("div", {
               style: {
-                color: 'var(--text-sec)',
+                color: '#666',
                 fontSize: 10,
                 marginTop: 2
               },
@@ -5685,7 +5698,7 @@ function MessageModal({
         background: 'none',
         border: 'none',
         fontSize: 10,
-        color: 'var(--text-sec)',
+        color: '#666',
         cursor: 'pointer',
         marginBottom: 8,
         padding: 0
@@ -5941,7 +5954,7 @@ function ScheduleExportModal({
     }), _jsxs("div", {
       style: {
         fontSize: 11,
-        color: 'var(--text-sec)',
+        color: '#666',
         margin: '8px 0 14px',
         textAlign: 'center'
       },
@@ -9708,14 +9721,14 @@ function App() {
               }), _jsx("div", {
                 style: {
                   fontSize: 11,
-                  color: 'var(--text-sec)',
+                  color: '#666',
                   lineHeight: 1.5
                 },
                 children: memberNames.join(', ') || 'Нет учеников'
               }), _jsxs("div", {
                 style: {
                   fontSize: 10,
-                  color: 'var(--text-sec)',
+                  color: '#666',
                   marginTop: 4
                 },
                 children: ["\u0411\u0443\u0434\u0443\u0449\u0438\u0445 \u0443\u0440\u043E\u043A\u043E\u0432: ", futureCount]
@@ -10437,7 +10450,7 @@ function App() {
                   border: 'none',
                   cursor: 'pointer',
                   padding: 4,
-                  color: 'var(--text-muted)'
+                  color: '#999'
                 },
                 onClick: () => delTx(tx),
                 children: _jsx(IcoTrash, {
@@ -10482,7 +10495,7 @@ function App() {
         }), _jsx("div", {
           style: {
             fontSize: 11,
-            color: 'var(--text-sec)',
+            color: '#666',
             marginBottom: 10,
             lineHeight: 1.5
           },
@@ -12029,7 +12042,7 @@ function LessonCard({
       }), lesson.duration && lesson.duration !== 60 && _jsx("span", {
         style: {
           fontSize: 8,
-          color: 'var(--text-muted)',
+          color: '#bbb',
           marginTop: 1
         },
         children: lesson.duration < 60 ? `${lesson.duration}м` : lesson.duration === 90 ? '1.5ч' : lesson.duration === 120 ? '2ч' : `${lesson.duration}м`
