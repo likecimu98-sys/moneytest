@@ -451,12 +451,13 @@
   border: 1.5px dashed var(--border-light);
   border-radius: 10px;
   background: color-mix(in srgb, var(--surface) 78%, transparent);
-  padding: 5px;
+  padding: 5px 3px;
   display: grid;
   align-content: start;
   gap: 4px;
   text-align: left;
   color: var(--black);
+  overflow: hidden;
 }
 .mobile-lab-group-day.busy {
   border-style: solid;
@@ -476,11 +477,25 @@
 .mobile-lab-group-day span,
 .mobile-lab-group-day em {
   display: block;
+  max-width: 100%;
   color: var(--text-sec);
   font-size: 8px;
   font-style: normal;
   font-weight: 850;
-  line-height: 1.15;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mobile-lab-group-day .lab-sub {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 7px;
+  letter-spacing: -.2px;
+  font-weight: 800;
+  opacity: .85;
 }
 .mobile-lab-close-row strong {
   width: 48px;
@@ -1321,6 +1336,11 @@ body[data-theme="dark"] .badge-yellow {
 .month-lesson-time{flex:0 0 auto;font-family:'Martian Mono',monospace;font-size:8px;font-weight:900;color:var(--text-sec)}
 .month-lesson-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;font-weight:900;line-height:1.1}
 .month-lesson-title-short{display:none}
+.month-day-dots{display:none}
+.month-legend{display:none}
+.month-dot{width:8px;height:8px;border-radius:50%;background:var(--month-accent,var(--blue));box-sizing:border-box;flex:0 0 auto}
+.month-dot.group{background:transparent;border:2px solid var(--month-accent,var(--blue))}
+.month-dot.final{opacity:.5}
 .month-day-empty{margin-top:auto;font-size:9px;color:var(--text-muted);font-weight:900}
 .month-day.selected .month-day-empty{color:color-mix(in srgb, var(--yellow) 65%, #fff)}
 .month-day-more{margin-top:auto;font-family:var(--font-display);font-size:9px;font-weight:900;color:var(--blue)}
@@ -2507,9 +2527,12 @@ body[data-theme="dark"] .finance-forecast-hero {
   align-items: center;
 }
 .profile-rate-list span {
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 900;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .profile-rate-list .input {
   padding: 7px 9px;
@@ -9181,5 +9204,85 @@ summary:focus-visible,
 @media (max-width: 560px) {
   .parent-results-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ===== Month calendar — phone compact navigator (centered number + status dots) ===== */
+@media (max-width: 768px) {
+  .month-grid { gap: 5px; }
+  .month-day {
+    height: 50px;
+    min-height: 50px;
+    padding: 4px 2px;
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+    border-radius: 8px;
+    border-width: 1.5px;
+  }
+  .month-day:not(.busy):not(.today):not(.selected) {
+    background: transparent;
+    border-color: transparent;
+  }
+  .month-day.busy:not(.selected) {
+    background: var(--surface);
+    border-color: color-mix(in srgb, var(--ink) 16%, var(--border-light));
+  }
+  .month-day-head {
+    justify-content: center;
+    width: auto;
+  }
+  .month-day-head span { display: none; }
+  .month-day-head strong { font-size: 14px; min-width: 0; }
+  .month-day.today:not(.selected) .month-day-head strong {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--yellow);
+    color: var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .month-day-lessons,
+  .month-day-empty,
+  .month-day-more { display: none; }
+  .month-day-dots {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 3px;
+    margin-top: 0;
+    padding-top: 1px;
+  }
+  .month-dot { width: 6px; height: 6px; }
+  .month-day.selected .month-dot {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .45);
+  }
+  .month-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px 12px;
+    padding: 9px 8px 2px;
+  }
+  .month-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--text-sec);
+  }
+  .month-legend i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+  }
+  .month-legend i.ring {
+    background: transparent !important;
+    border: 2px solid var(--text-sec);
   }
 }

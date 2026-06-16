@@ -74,6 +74,20 @@ const subjectColor = subject => ({
   'Другое': '#6f7378'
 })[subject] || '#777';
 const subjectTagText = () => '#fff';
+const SUBJECT_SHORT = {
+  'Обществознание': 'Общество',
+  'Математика': 'Матем.',
+  'Английский': 'Англ.',
+  'Информатика': 'Информ.',
+  'Литература': 'Литер.',
+  'Биология': 'Биол.',
+  'География': 'Геогр.',
+  'Французский': 'Франц.',
+  'Испанский': 'Исп.',
+  'Китайский': 'Кит.',
+  'Немецкий': 'Нем.'
+};
+const shortSubject = s => SUBJECT_SHORT[s] || s;
 const DEFAULT_RATE = 1500;
 const sameId = (a, b) => a != null && b != null && String(a) === String(b);
 const normalizeMoneyInput = (value, fallback = DEFAULT_RATE) => {
@@ -1745,11 +1759,15 @@ function StudentModal({
             marginBottom: 6
           },
           children: [_jsx("span", {
+            title: subject,
             style: {
-              fontSize: 11,
-              minWidth: 88,
-              fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-              fontWeight: 700
+              flex: '1 1 auto',
+              minWidth: 0,
+              fontSize: 12,
+              fontWeight: 600,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
             },
             children: subject
           }), _jsx("input", {
@@ -1763,6 +1781,8 @@ function StudentModal({
               [subject]: e.target.value
             })),
             style: {
+              flex: '0 0 96px',
+              width: 96,
               padding: '6px 8px',
               fontSize: 12
             }
@@ -8313,7 +8333,10 @@ function App() {
                     children: [_jsx("b", {
                       children: DAY_LABELS[index]
                     }), dayLessons.length ? dayLessons.map(l => _jsxs("span", {
-                      children: [l.time, " ", getLessonName(l).replace(/\s*\(.+\)$/, '')]
+                      children: [l.time, _jsx("i", {
+                        className: "lab-sub",
+                        children: shortSubject(getLessonSubject(l, groups))
+                      })]
                     }, l.id)) : _jsx("em", {
                       children: "+"
                     })]
@@ -8369,7 +8392,10 @@ function App() {
                     children: [_jsx("b", {
                       children: DAY_LABELS[index]
                     }), dayLessons.length ? dayLessons.map(l => _jsxs("span", {
-                      children: [l.time, " ", getLessonSubject(l, groups)]
+                      children: [l.time, _jsx("i", {
+                        className: "lab-sub",
+                        children: shortSubject(getLessonSubject(l, groups))
+                      })]
                     }, l.id)) : _jsx("em", {
                       children: "+"
                     })]
@@ -8517,7 +8543,7 @@ function App() {
               children: [_jsx("b", {
                 children: DAY_LABELS[i]
               }), dayLessons.length ? dayLessons.map(l => _jsx("span", {
-                children: `${l.time} ${getLessonName(l).replace(/\s*\(.+\)$/, '')}`
+                children: `${l.time} ${shortSubject(getLessonSubject(l, groups))}`
               }, l.id)) : _jsx("em", {
                 children: "+"
               })]
@@ -9188,19 +9214,50 @@ function App() {
               }) : _jsx("div", {
                 className: "month-day-empty",
                 children: day.inMonth ? "свободно" : ""
+              }), day.lessons.length > 0 && _jsx("div", {
+                className: "month-day-dots",
+                children: day.lessons.slice(0, 4).map(l => _jsx("i", {
+                  className: `month-dot ${l.type === 'group' ? 'group' : 'individual'} ${isFinalLesson(l) ? 'final' : ''}`,
+                  style: {
+                    '--month-accent': lessonAccent(l)
+                  }
+                }, l.id))
               }), day.lessons.length > visibleLessons.length && _jsxs("div", {
                 className: "month-day-more",
                 children: ["+", day.lessons.length - visibleLessons.length]
               })]
             }, day.date);
           })
+        }), _jsxs("div", {
+          className: "month-legend",
+          children: [_jsxs("span", {
+            children: [_jsx("i", {
+              style: { background: 'var(--blue)' }
+            }), "план"]
+          }), _jsxs("span", {
+            children: [_jsx("i", {
+              style: { background: 'var(--green)' }
+            }), "проведён"]
+          }), _jsxs("span", {
+            children: [_jsx("i", {
+              style: { background: 'var(--red)' }
+            }), "пропуск"]
+          }), _jsxs("span", {
+            children: [_jsx("i", {
+              style: { background: 'var(--text-sec)' }
+            }), "отмена/перенос"]
+          }), _jsxs("span", {
+            children: [_jsx("i", {
+              className: "ring"
+            }), "группа"]
+          })]
         }), _jsxs("section", {
           className: "month-selected-panel",
           children: [_jsxs("div", {
             className: "month-selected-header",
             children: [_jsxs("div", {
-              children: [_jsx("span", {
-                children: "Выбранный день"
+              children: [_jsxs("span", {
+                children: ["Выбранный день", selDayLessons.length ? ` · ${pluralLessons(selDayLessons.length)}` : ""]
               }), _jsx("strong", {
                 children: selectedTitle
               })]
