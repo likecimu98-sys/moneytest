@@ -1292,11 +1292,14 @@ body[data-theme="dark"] .badge-yellow {
 .month-day-head span.final{background:color-mix(in srgb, var(--text-sec) 12%, var(--surface));color:var(--text-sec);border-color:var(--border-light)}
 .month-day.selected .month-day-head span{background:var(--yellow);color:var(--black);border-color:var(--yellow)}
 .month-day-lessons{display:grid;gap:4px;min-height:0}
-.month-lesson-chip{height:18px;min-width:0;border:1.5px solid color-mix(in srgb, var(--month-accent, var(--blue)) 52%, var(--border-light));border-left:6px solid var(--month-accent,var(--blue));border-radius:4px;background:color-mix(in srgb, var(--month-accent, var(--blue)) 10%, var(--surface));padding:2px 4px;display:flex;align-items:center;gap:5px;color:var(--black);box-shadow:1.5px 1.5px 0 var(--shadow-color);overflow:hidden}
-.month-lesson-chip.final{opacity:.72}
-.month-day.selected .month-lesson-chip{background:#fff;color:var(--black);box-shadow:none;border-color:var(--yellow)}
-.month-lesson-time{flex:0 0 auto;font-family:'Martian Mono',monospace;font-size:8px;font-weight:900;color:var(--text-sec)}
-.month-lesson-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;font-weight:900;line-height:1.1}
+.month-lesson-chip{height:21px;min-width:0;border:none;border-left:3px solid var(--month-accent,var(--blue));border-radius:5px;background:color-mix(in srgb, var(--month-accent, var(--blue)) 13%, var(--surface));padding:0 5px 0 6px;display:flex;align-items:center;gap:5px;color:var(--black);box-shadow:none;overflow:hidden;transition:background .12s ease}
+.month-lesson-chip.final{opacity:.66}
+.month-day:hover .month-lesson-chip{background:color-mix(in srgb, var(--month-accent, var(--blue)) 20%, var(--surface))}
+.month-day.selected .month-lesson-chip{background:color-mix(in srgb, var(--yellow) 16%, #fff);color:var(--black);box-shadow:none;border-left-color:var(--yellow)}
+.month-day.selected:hover .month-lesson-chip{background:color-mix(in srgb, var(--yellow) 24%, #fff)}
+.month-lesson-time{flex:0 0 auto;font-family:'Martian Mono',monospace;font-size:8px;font-weight:700;color:var(--text-sec);letter-spacing:-.04em}
+.month-day.selected .month-lesson-time{color:rgba(20,18,12,.6)}
+.month-lesson-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:800;line-height:1.1}
 .month-lesson-title-short{display:none}
 .month-day-dots{display:none}
 .month-legend{display:none}
@@ -3960,13 +3963,13 @@ h1,h2,h3,.page-title,.metric-value,.stat-value {
   gap: 8px;
 }
 .month-day {
-  height: 108px;
+  height: 118px;
 }
 .month-day-head strong {
   font-size: 17px;
 }
 .month-lesson-chip {
-  height: 20px;
+  height: 21px;
 }
 .students-page > .toggle-row {
   max-width: 520px;
@@ -4587,6 +4590,26 @@ body[data-theme="dark"] .month-day.selected .month-day-head span {
   background: var(--yellow);
   color: var(--on-yellow);
   border-color: var(--yellow);
+}
+/* Dark month chips: keep per-status accent (override the flat #20243a rule above) */
+body[data-theme="dark"] .month-lesson-chip {
+  background: color-mix(in srgb, var(--month-accent, #6f8fff) 26%, var(--surface));
+  color: #f1ecdf;
+  border-left-color: var(--month-accent, #6f8fff);
+}
+body[data-theme="dark"] .month-day:hover .month-lesson-chip {
+  background: color-mix(in srgb, var(--month-accent, #6f8fff) 36%, var(--surface));
+}
+body[data-theme="dark"] .month-lesson-time {
+  color: color-mix(in srgb, #f1ecdf 58%, transparent);
+}
+body[data-theme="dark"] .month-day.selected .month-lesson-chip {
+  background: #f7efe2;
+  color: #1a1813;
+  border-left-color: #b89438;
+}
+body[data-theme="dark"] .month-day.selected .month-lesson-time {
+  color: rgba(20,18,12,.6);
 }
 body[data-theme="dark"] .mobile-week-strip-day.selected em {
   background: var(--ink);

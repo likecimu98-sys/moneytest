@@ -1653,14 +1653,19 @@ function SubjectPicker({
 }
 function StudentModal({
   student,
+  students,
   onClose,
   onSave
 }) {
+  const prevSubjects = (() => {
+    const last = (students || []).filter(s => !s.archived).slice(-1)[0];
+    return last?.subjects?.length ? last.subjects : ['История'];
+  })();
   const [name, setName] = useState(student?.name || '');
   const [rate, setRate] = useState(student?.rate ?? DEFAULT_RATE);
   const [phone, setPhone] = useState(student?.phone || '');
   const [tgId, setTgId] = useState(student?.tgId || '');
-  const [subjects, setSubjects] = useState(student?.subjects || ['История']);
+  const [subjects, setSubjects] = useState(student?.subjects || prevSubjects);
   const [goal, setGoal] = useState(student?.goal || '');
   const [notes, setNotes] = useState(student?.notes || '');
   const [availabilityNotes, setAvailabilityNotes] = useState(student?.availabilityNotes || '');
@@ -9087,6 +9092,14 @@ function App() {
       };
       const lessonAccent = l => (LESSON_STATUS[l.status] || LESSON_STATUS.planned).color || 'var(--blue)';
       const monthCellName = l => getLessonName(l).replace(/\s*\([^)]*\)\s*$/, '');
+      const monthCellPrimary = l => {
+        const full = monthCellName(l).trim();
+        if (l.type === 'group') {
+          const trimmed = full.split(/\s+/).filter(t => t !== 'Группа' && t !== 'группа').join(' ').trim();
+          return trimmed || full;
+        }
+        return full.split(/\s+/)[0] || full;
+      };
       const monthCellShortName = l => {
         const name = monthCellName(l).trim();
         const match = name.match(/^([A-Za-z\u0400-\u04FF]+)\s*(\d+)?/);
@@ -9191,7 +9204,7 @@ function App() {
                       children: l.time
                     }), _jsx("b", {
                       className: "month-lesson-title",
-                      children: monthCellName(l)
+                      children: monthCellPrimary(l)
                     }), _jsx("b", {
                       className: "month-lesson-title-short",
                       children: monthCellShortName(l)
@@ -11339,6 +11352,7 @@ function App() {
       onSave: saveAttendance
     }), modal?.type === 'student' && _jsx(StudentModal, {
       student: modal.payload,
+      students: students,
       onClose: () => setModal(null),
       onSave: saveStudent
     }), modal?.type === 'studentProfile' && _jsx(StudentProfileModal, {
