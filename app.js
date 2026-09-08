@@ -159,6 +159,16 @@ const runAutoCompletion = (cls, cst, cg, ctx) => {
 
 const STORAGE_KEY = 'tutor-app-state-v2';
 const STORAGE_VERSION = 4;
+const APP_VERSION = (() => {
+  try {
+    const src = [...document.scripts].map(s => s.getAttribute('src') || '').find(s => s.includes('app.js'));
+    const m = src && src.match(/v=(\d+)/);
+    return m ? `сборка ${m[1]}` : 'локальная сборка';
+  } catch {
+    return '';
+  }
+})();
+const FEEDBACK_EMAIL = 'sgolovko7@gmail.com';
 const LESSON_STATUS = {
   planned: {
     label: 'План',
@@ -236,6 +246,507 @@ const cloneEmptyState = () => ({
     theme: 'light'
   }
 });
+const buildDemoData = () => {
+  const shiftDate = days => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return localDateString(d);
+  };
+  const studentDefaults = {
+    balance: 0,
+    packageLessons: 0,
+    notes: '',
+    availabilityNotes: '',
+    lessonRates: {},
+    tgId: '',
+    archived: false
+  };
+  const students = [{
+    ...studentDefaults,
+    id: 9001,
+    name: 'Анна Морозова',
+    subjects: ['История', 'Обществознание'],
+    rate: 1800,
+    goal: 'ЕГЭ по истории на 90+',
+    studyProgress: {
+      subject: 'История',
+      totalTopics: 40,
+      completedTopics: 26,
+      assimilationPercent: 78,
+      focus: 'XX век: внешняя политика',
+      mockTests: [{
+        id: 9301,
+        date: shiftDate(-56),
+        title: 'Пробник ЕГЭ №1',
+        score: 52,
+        maxScore: 100,
+        comment: ''
+      }, {
+        id: 9302,
+        date: shiftDate(-38),
+        title: 'Пробник ЕГЭ №2',
+        score: 61,
+        maxScore: 100,
+        comment: ''
+      }, {
+        id: 9303,
+        date: shiftDate(-19),
+        title: 'Пробник ЕГЭ №3',
+        score: 68,
+        maxScore: 100,
+        comment: 'Подтянули вторую часть'
+      }, {
+        id: 9304,
+        date: shiftDate(-5),
+        title: 'Пробник ЕГЭ №4',
+        score: 74,
+        maxScore: 100,
+        comment: ''
+      }]
+    },
+    parentPortal: {
+      ...DEFAULT_PARENT_PORTAL,
+      enabled: true,
+      token: 'demo',
+      teacherComment: 'Анна занимается два раза в неделю, цель — 90+ на ЕГЭ. Динамика по пробникам отличная, продолжаем в том же темпе.'
+    }
+  }, {
+    ...studentDefaults,
+    id: 9002,
+    name: 'Михаил Соколов',
+    subjects: ['Обществознание'],
+    rate: 1200,
+    goal: 'ОГЭ по обществознанию',
+    studyProgress: {
+      subject: 'Обществознание',
+      totalTopics: 25,
+      completedTopics: 9,
+      assimilationPercent: 64,
+      focus: '',
+      mockTests: []
+    }
+  }, {
+    ...studentDefaults,
+    id: 9003,
+    name: 'Дарья Ковалёва',
+    subjects: ['Обществознание'],
+    rate: 1000,
+    goal: 'ЕГЭ по обществознанию'
+  }, {
+    ...studentDefaults,
+    id: 9004,
+    name: 'Тимур Алиев',
+    subjects: ['Обществознание'],
+    rate: 1000,
+    goal: 'ЕГЭ по обществознанию'
+  }];
+  const groups = [{
+    id: 9101,
+    name: 'Общество ЕГЭ',
+    subject: 'Обществознание',
+    emoji: '🎯',
+    studentIds: [9003, 9004],
+    archived: false,
+    rateOverrides: {}
+  }];
+  const lessonDefaults = {
+    homework: '',
+    homeworkStatus: 'unset',
+    lessonNote: '',
+    parentLessonComment: '',
+    packageUse: {},
+    topic: ''
+  };
+  const lessons = [
+  // Анна — индивидуальные, история
+  {
+    ...lessonDefaults,
+    id: 9201,
+    date: shiftDate(-18),
+    time: '16:00',
+    duration: 90,
+    type: 'individual',
+    targetId: 9001,
+    subject: 'История',
+    status: 'completed',
+    attendance: {
+      9001: true
+    },
+    topic: 'Революция 1905–1907 гг.',
+    homework: 'Тест №12, параграфы 34–35',
+    homeworkStatus: 'done',
+    rating: 5
+  }, {
+    ...lessonDefaults,
+    id: 9202,
+    date: shiftDate(-14),
+    time: '16:00',
+    duration: 90,
+    type: 'individual',
+    targetId: 9001,
+    subject: 'История',
+    status: 'completed',
+    attendance: {
+      9001: true
+    },
+    topic: 'Первая мировая война',
+    homework: 'Карточки по датам, эссе-план',
+    homeworkStatus: 'done',
+    rating: 4
+  }, {
+    ...lessonDefaults,
+    id: 9203,
+    date: shiftDate(-11),
+    time: '16:00',
+    duration: 90,
+    type: 'individual',
+    targetId: 9001,
+    subject: 'История',
+    status: 'completed',
+    attendance: {
+      9001: true
+    },
+    topic: 'Февральская революция',
+    homework: 'Задания второй части: №18–20',
+    homeworkStatus: 'partial',
+    rating: 4
+  }, {
+    ...lessonDefaults,
+    id: 9204,
+    date: shiftDate(-7),
+    time: '16:00',
+    duration: 90,
+    type: 'individual',
+    targetId: 9001,
+    subject: 'История',
+    status: 'completed',
+    attendance: {
+      9001: true
+    },
+    topic: 'Октябрь 1917 и Гражданская война',
+    homework: 'Тест №13, работа с картой',
+    homeworkStatus: 'done',
+    rating: 5
+  }, {
+    ...lessonDefaults,
+    id: 9205,
+    date: shiftDate(-4),
+    time: '16:00',
+    duration: 90,
+    type: 'individual',
+    targetId: 9001,
+    subject: 'История',
+    status: 'completed',
+    attendance: {
+      9001: true
+    },
+    topic: 'НЭП и образование СССР',
+    homework: 'Повторить термины, тест №14',
+    homeworkStatus: 'done',
+    rating: 5,
+    parentLessonComment: 'Отличная работа с источниками — разобрали сложные задания второй части.'
+  },
+  // Прошлый месяц — для сравнения «месяц к месяцу» в аналитике
+  {
+    ...lessonDefaults,
+    id: 9221,
+    date: shiftDate(-44),
+    time: '16:00',
+    duration: 90,
+    type: 'individual',
+    targetId: 9001,
+    subject: 'История',
+    status: 'completed',
+    attendance: {
+      9001: true
+    },
+    topic: 'Русско-японская война',
+    homeworkStatus: 'done',
+    rating: 4
+  }, {
+    ...lessonDefaults,
+    id: 9222,
+    date: shiftDate(-41),
+    time: '16:00',
+    duration: 90,
+    type: 'individual',
+    targetId: 9001,
+    subject: 'История',
+    status: 'completed',
+    attendance: {
+      9001: true
+    },
+    topic: 'Столыпинские реформы',
+    homeworkStatus: 'done',
+    rating: 5
+  }, {
+    ...lessonDefaults,
+    id: 9223,
+    date: shiftDate(-37),
+    time: '17:30',
+    duration: 60,
+    type: 'individual',
+    targetId: 9002,
+    subject: 'Обществознание',
+    status: 'completed',
+    attendance: {
+      9002: true
+    },
+    topic: 'Право и правоотношения',
+    homeworkStatus: 'partial',
+    rating: 4
+  }, {
+    ...lessonDefaults,
+    id: 9224,
+    date: shiftDate(-34),
+    time: '15:00',
+    duration: 60,
+    type: 'individual',
+    targetId: 9004,
+    subject: 'История',
+    status: 'completed',
+    attendance: {
+      9004: true
+    },
+    topic: 'Древняя Русь',
+    homeworkStatus: 'done',
+    rating: 4
+  }, {
+    ...lessonDefaults,
+    id: 9225,
+    date: shiftDate(-32),
+    time: '18:00',
+    duration: 90,
+    type: 'individual',
+    targetId: 9003,
+    subject: 'Обществознание',
+    status: 'completed',
+    attendance: {
+      9003: true
+    },
+    topic: 'Экономика: рынок и конкуренция',
+    homeworkStatus: 'done',
+    rating: 5
+  },
+  // Миша — индивидуальные, обществознание
+  {
+    ...lessonDefaults,
+    id: 9206,
+    date: shiftDate(-13),
+    time: '17:30',
+    duration: 60,
+    type: 'individual',
+    targetId: 9002,
+    subject: 'Обществознание',
+    status: 'completed',
+    attendance: {
+      9002: true
+    },
+    topic: 'Человек и общество',
+    homework: 'Параграф 5, тест в тетради',
+    homeworkStatus: 'done',
+    rating: 4
+  }, {
+    ...lessonDefaults,
+    id: 9207,
+    date: shiftDate(-6),
+    time: '17:30',
+    duration: 60,
+    type: 'individual',
+    targetId: 9002,
+    subject: 'Обществознание',
+    status: 'no_show',
+    attendance: {
+      9002: false
+    }
+  },
+  // Группа «Общество ЕГЭ»
+  {
+    ...lessonDefaults,
+    id: 9208,
+    date: shiftDate(-15),
+    time: '18:00',
+    duration: 90,
+    type: 'group',
+    targetId: 9101,
+    subject: 'Обществознание',
+    status: 'completed',
+    attendance: {
+      9003: true,
+      9004: true
+    },
+    topic: 'Политические режимы',
+    homework: 'Таблица «Режимы», задания №21–24',
+    homeworkStatusByStudent: {
+      9003: 'done',
+      9004: 'partial'
+    },
+    rating: 4
+  }, {
+    ...lessonDefaults,
+    id: 9209,
+    date: shiftDate(-8),
+    time: '18:00',
+    duration: 90,
+    type: 'group',
+    targetId: 9101,
+    subject: 'Обществознание',
+    status: 'completed',
+    attendance: {
+      9003: true,
+      9004: false
+    },
+    topic: 'Право и правоотношения',
+    homework: 'Конспект + тест по праву',
+    homeworkStatusByStudent: {
+      9003: 'done',
+      9004: 'unset'
+    },
+    rating: 5
+  }, {
+    ...lessonDefaults,
+    id: 9210,
+    date: shiftDate(-1),
+    time: '18:00',
+    duration: 90,
+    type: 'group',
+    targetId: 9101,
+    subject: 'Обществознание',
+    status: 'completed',
+    attendance: {
+      9003: true,
+      9004: true
+    },
+    topic: 'Экономика: рынок и конкуренция',
+    homework: 'Задания №25–28, повторить графики',
+    homeworkStatusByStudent: {
+      9003: 'done',
+      9004: 'done'
+    },
+    rating: 5
+  },
+  // Запланированные
+  {
+    ...lessonDefaults,
+    id: 9211,
+    date: shiftDate(0),
+    time: '16:00',
+    duration: 90,
+    type: 'individual',
+    targetId: 9001,
+    subject: 'История',
+    status: 'planned'
+  }, {
+    ...lessonDefaults,
+    id: 9212,
+    date: shiftDate(1),
+    time: '17:30',
+    duration: 60,
+    type: 'individual',
+    targetId: 9002,
+    subject: 'Обществознание',
+    status: 'planned'
+  }, {
+    ...lessonDefaults,
+    id: 9213,
+    date: shiftDate(2),
+    time: '18:00',
+    duration: 90,
+    type: 'group',
+    targetId: 9101,
+    subject: 'Обществознание',
+    status: 'planned'
+  }, {
+    ...lessonDefaults,
+    id: 9214,
+    date: shiftDate(5),
+    time: '16:00',
+    duration: 90,
+    type: 'individual',
+    targetId: 9001,
+    subject: 'История',
+    status: 'planned'
+  }];
+  let demoTxId = 9500;
+  const txs = [];
+  [{
+    studentId: 9001,
+    amount: 14400,
+    days: -20,
+    comment: 'Оплата за 8 занятий'
+  }, {
+    studentId: 9002,
+    amount: 1200,
+    days: -13,
+    comment: 'Оплата занятия'
+  }, {
+    studentId: 9003,
+    amount: 4000,
+    days: -16,
+    comment: 'Оплата за 4 занятия'
+  }, {
+    studentId: 9004,
+    amount: 2000,
+    days: -16,
+    comment: 'Оплата за 2 занятия'
+  }].forEach(p => txs.push({
+    id: demoTxId++,
+    studentId: p.studentId,
+    type: 'payment',
+    amount: p.amount,
+    date: shiftDate(p.days),
+    comment: p.comment
+  }));
+  lessons.forEach(l => {
+    if (l.status === 'completed') {
+      Object.entries(l.attendance || {}).forEach(([sid, present]) => {
+        if (!present) return;
+        const student = students.find(s => sameId(s.id, sid));
+        if (!student) return;
+        txs.push({
+          id: demoTxId++,
+          studentId: Number(sid),
+          type: 'charge',
+          amount: student.rate,
+          date: l.date,
+          comment: `Урок: ${fmtDate(l.date)}`,
+          lessonId: l.id,
+          kind: 'attendance'
+        });
+      });
+    }
+    if (l.status === 'no_show') {
+      Object.keys(l.attendance || {}).forEach(sid => {
+        const student = students.find(s => sameId(s.id, sid));
+        if (!student) return;
+        txs.push({
+          id: demoTxId++,
+          studentId: Number(sid),
+          type: 'charge',
+          amount: student.rate,
+          date: l.date,
+          comment: `Неявка: ${fmtDate(l.date)}`,
+          lessonId: l.id,
+          kind: 'no_show'
+        });
+      });
+    }
+  });
+  // балансы всегда сходятся с историей транзакций
+  const demoBalances = {};
+  txs.forEach(tx => {
+    demoBalances[tx.studentId] = (demoBalances[tx.studentId] || 0) + (tx.type === 'payment' ? Number(tx.amount) : -Number(tx.amount));
+  });
+  return {
+    students: students.map(s => ({
+      ...s,
+      balance: demoBalances[s.id] || 0
+    })),
+    groups,
+    lessons,
+    txs: txs.slice().sort((a, b) => String(b.date).localeCompare(String(a.date)))
+  };
+};
 const loadSavedState = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -349,6 +860,133 @@ const saveState = data => {
     data
   }));
   return savedAt;
+};
+
+// ── ОНЛАЙН-СИНХРОНИЗАЦИЯ ───────────────────────────────────────────────────────
+const SYNC_KEY_STORAGE = 'tutor-sync-key';
+const getStoredSyncKey = () => {
+  try {
+    return localStorage.getItem(SYNC_KEY_STORAGE) || '';
+  } catch {
+    return '';
+  }
+};
+const storeSyncKey = key => {
+  try {
+    key ? localStorage.setItem(SYNC_KEY_STORAGE, key) : localStorage.removeItem(SYNC_KEY_STORAGE);
+  } catch {}
+};
+const createSyncKey = () => `k${Date.now().toString(36)}${Math.random().toString(36).slice(2, 11)}${Math.random().toString(36).slice(2, 11)}`;
+const SYNC_EMAIL_STORAGE = 'tutor-sync-email';
+const getStoredSyncEmail = () => {
+  try {
+    return localStorage.getItem(SYNC_EMAIL_STORAGE) || '';
+  } catch {
+    return '';
+  }
+};
+const storeSyncEmail = email => {
+  try {
+    email ? localStorage.setItem(SYNC_EMAIL_STORAGE, email) : localStorage.removeItem(SYNC_EMAIL_STORAGE);
+  } catch {}
+};
+const authRequest = async (action, payload) => {
+  const res = await fetch(`${SYNC_API_BASE}auth/${action}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !json.ok) throw new Error(json.error || `http ${res.status}`);
+  return json;
+};
+const authErrorText = err => {
+  const msg = String(err?.message || '');
+  if (msg === 'exists') return 'Эта почта уже зарегистрирована — нажмите «Войти».';
+  if (msg === 'wrong credentials') return 'Неверная почта или пароль.';
+  if (msg === 'too many attempts') return 'Слишком много попыток. Подождите 10 минут.';
+  if (msg === 'bad password') return 'Пароль должен быть от 8 символов.';
+  if (msg === 'bad email') return 'Проверьте адрес почты.';
+  return 'Не получилось связаться с сервером. Проверьте интернет и попробуйте ещё раз.';
+};
+const SYNC_SEEN_STORAGE = 'tutor-sync-seen';
+const getSyncSeen = () => {
+  try {
+    return localStorage.getItem(SYNC_SEEN_STORAGE) || '';
+  } catch {
+    return '';
+  }
+};
+const setSyncSeen = value => {
+  try {
+    value ? localStorage.setItem(SYNC_SEEN_STORAGE, value) : localStorage.removeItem(SYNC_SEEN_STORAGE);
+  } catch {}
+};
+const localBaseIsEmpty = () => {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORAGE_KEY))?.data;
+    return !d || !(d.students?.length || d.groups?.length || d.lessons?.length || d.txs?.length);
+  } catch {
+    return true;
+  }
+};
+const SYNC_API_BASE = (() => {
+  try {
+    const override = localStorage.getItem('tutor-sync-api');
+    if (override) return override.endsWith('/') ? override : `${override}/`;
+    if (location.protocol === 'file:') return '';
+    return new URL('api/', `${location.origin}${location.pathname.replace(/[^/]*$/, '')}`).toString();
+  } catch {
+    return '';
+  }
+})();
+const syncFetch = async (path, opts) => {
+  const res = await fetch(`${SYNC_API_BASE}${path}`, opts);
+  if (!res.ok) throw new Error(`sync http ${res.status}`);
+  return res.json();
+};
+const buildPortalSnapshots = (students, groups, lessons, txs, settings) => {
+  const snapshots = {};
+  students.forEach(student => {
+    const portal = getParentPortalSettings(student);
+    if (!portal.enabled || !portal.token) return;
+    const ownLessons = getStudentLessons(student.id, lessons, groups, {
+      includeArchived: true
+    });
+    const ownGroupIds = new Set(ownLessons.filter(l => l.type === 'group').map(l => String(l.targetId)));
+    snapshots[portal.token] = {
+      student,
+      groups: groups.filter(g => ownGroupIds.has(String(g.id))),
+      lessons: ownLessons,
+      txs: txs.filter(t => sameId(t.studentId, student.id)),
+      settings: {
+        tutorContact: settings?.tutorContact || '',
+        paymentDetails: settings?.paymentDetails || ''
+      },
+      updatedAt: new Date().toISOString()
+    };
+  });
+  return snapshots;
+};
+const mergeServerNotices = (students, noticeMap) => {
+  if (!noticeMap || !Object.keys(noticeMap).length) return students;
+  return students.map(s => {
+    const portal = getParentPortalSettings(s);
+    const incoming = portal.token ? noticeMap[portal.token] : null;
+    if (!incoming || !incoming.length) return s;
+    const known = new Set((portal.paymentNotices || []).map(n => String(n.id)));
+    const fresh = incoming.filter(n => !known.has(String(n.id)));
+    if (!fresh.length) return s;
+    return {
+      ...s,
+      parentPortal: {
+        ...portal,
+        paymentNotices: [...fresh, ...(portal.paymentNotices || [])].slice(0, 30)
+      }
+    };
+  });
 };
 const financeCore = window.TutorFinanceLogic;
 const txDelta = financeCore.txDelta;
@@ -538,6 +1176,15 @@ const getParentPortalSettings = student => ({
   ...(student?.parentPortal || {})
 });
 const createParentPortalToken = () => `p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+const tutorContactHref = raw => {
+  const v = String(raw || '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  if (v.startsWith('@')) return `https://t.me/${v.slice(1)}`;
+  if (/^\+?[\d\s\-()]{7,}$/.test(v)) return `tel:${v.replace(/[^\d+]/g, '')}`;
+  if (v.includes('@')) return `mailto:${v}`;
+  return `https://t.me/${v}`;
+};
 const parentPortalUrl = token => `${window.location.origin}${window.location.pathname}?parent=${encodeURIComponent(token)}`;
 const copyTextSafe = async text => {
   try {
@@ -687,6 +1334,7 @@ const buildParentPortalPayload = (student, students, groups, lessons, txs) => {
     finance: getStudentFinanceSummary(student, txs, lessons, groups),
     nextLessons: planned.slice(0, 5),
     recentLessons: completed.slice(0, 6),
+    historyLessons: completed.slice(0, 16),
     parentComments,
     homeworkLessons,
     homeworkStatusLessons,
@@ -1334,7 +1982,7 @@ function SearchModal({
           children: [_jsx("div", {
             style: {
               fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: 900,
               padding: '6px 0',
               color: 'var(--text-sec)',
@@ -1369,7 +2017,7 @@ function SearchModal({
           children: [_jsx("div", {
             style: {
               fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: 900,
               padding: '6px 0',
               color: 'var(--text-sec)',
@@ -1396,7 +2044,7 @@ function SearchModal({
           children: [_jsx("div", {
             style: {
               fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: 900,
               padding: '6px 0',
               color: 'var(--text-sec)',
@@ -1665,6 +2313,9 @@ function StudentModal({
   const [rate, setRate] = useState(student?.rate ?? DEFAULT_RATE);
   const [phone, setPhone] = useState(student?.phone || '');
   const [tgId, setTgId] = useState(student?.tgId || '');
+  const [level, setLevel] = useState(student?.level || '');
+  const [parentName, setParentName] = useState(student?.parentName || '');
+  const [parentPhone, setParentPhone] = useState(student?.parentPhone || '');
   const [subjects, setSubjects] = useState(student?.subjects || prevSubjects);
   const [goal, setGoal] = useState(student?.goal || '');
   const [notes, setNotes] = useState(student?.notes || '');
@@ -1672,10 +2323,16 @@ function StudentModal({
   const [archived, setArchived] = useState(!!student?.archived);
   const [lessonRates, setLessonRates] = useState(student?.lessonRates || {});
   const [balance, setBalance] = useState(student ? String(student.balance ?? 0) : '0');
+  const [nameError, setNameError] = useState('');
+  const nameRef = useRef(null);
   const toggleSubject = subject => setSubjects(p => p.includes(subject) ? p.filter(x => x !== subject) : [...p, subject]);
   const submit = e => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setNameError('Введите имя ученика');
+      nameRef.current?.focus();
+      return;
+    }
     const lr = {};
     Object.entries(lessonRates).forEach(([k, v]) => {
       const n = Number(v);
@@ -1687,6 +2344,9 @@ function StudentModal({
       rate: normalizeMoneyInput(rate, student?.rate ?? DEFAULT_RATE),
       phone,
       tgId,
+      level: level.trim(),
+      parentName: parentName.trim(),
+      parentPhone: parentPhone.trim(),
       subjects: subjects.length ? subjects : ['История'],
       goal,
       notes,
@@ -1703,12 +2363,20 @@ function StudentModal({
       onSubmit: submit,
       children: [_jsx(FormField, {
         label: "\u0418\u043C\u044F",
-        children: _jsx("input", {
-          className: "input",
-          required: true,
-          value: name,
-          onChange: e => setName(e.target.value),
-          placeholder: "\u0424\u0418\u041E"
+        children: _jsxs(_Fragment, {
+          children: [_jsx("input", {
+            className: `input ${nameError ? 'input-invalid' : ''}`,
+            ref: nameRef,
+            value: name,
+            onChange: e => {
+              setName(e.target.value);
+              if (nameError) setNameError('');
+            },
+            placeholder: "\u0424\u0418\u041E"
+          }), nameError && _jsx("div", {
+            className: "field-error",
+            children: nameError
+          })]
         })
       }), _jsx(FormField, {
         label: "\u041F\u0440\u0435\u0434\u043C\u0435\u0442\u044B",
@@ -1781,7 +2449,7 @@ function StudentModal({
           })]
         }, subject))
       }), _jsx(FormField, {
-        label: "\u0422\u0435\u043B\u0435\u0444\u043E\u043D",
+        label: "\u0422\u0435\u043B\u0435\u0444\u043E\u043D \u0443\u0447\u0435\u043D\u0438\u043A\u0430",
         children: _jsx("input", {
           className: "input",
           value: phone,
@@ -1797,6 +2465,30 @@ function StudentModal({
           placeholder: "@username \u0438\u043B\u0438 123456789"
         })
       }), _jsx(FormField, {
+        label: "\u0423\u0440\u043E\u0432\u0435\u043D\u044C / \u043A\u043B\u0430\u0441\u0441",
+        children: _jsx("input", {
+          className: "input",
+          value: level,
+          onChange: e => setLevel(e.target.value),
+          placeholder: "\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440, 11 \u043A\u043B\u0430\u0441\u0441"
+        })
+      }), _jsx(FormField, {
+        label: "\u0418\u043C\u044F \u0440\u043E\u0434\u0438\u0442\u0435\u043B\u044F",
+        children: _jsx("input", {
+          className: "input",
+          value: parentName,
+          onChange: e => setParentName(e.target.value),
+          placeholder: "\u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E"
+        })
+      }), _jsx(FormField, {
+        label: "\u0422\u0435\u043B\u0435\u0444\u043E\u043D \u0440\u043E\u0434\u0438\u0442\u0435\u043B\u044F",
+        children: _jsx("input", {
+          className: "input",
+          value: parentPhone,
+          onChange: e => setParentPhone(e.target.value),
+          placeholder: "+7 ..."
+        })
+      }), _jsx(FormField, {
         label: "\u0426\u0435\u043B\u044C",
         children: _jsx("input", {
           className: "input",
@@ -1805,7 +2497,7 @@ function StudentModal({
           placeholder: "\u0415\u0413\u042D \u0438\u0441\u0442\u043E\u0440\u0438\u044F, \u041E\u0413\u042D, \u0448\u043A\u043E\u043B\u044C\u043D\u0430\u044F \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430"
         })
       }), _jsx(FormField, {
-        label: "\u0414\u043E\u043F. \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0435 / \u0441\u0432\u043E\u0431\u043E\u0434\u043D\u044B\u0435 \u043E\u043A\u043D\u0430",
+        label: "\u0421\u0432\u043E\u0431\u043E\u0434\u043D\u044B\u0435 \u043E\u043A\u043D\u0430",
         children: _jsx("textarea", {
           className: "input",
           value: availabilityNotes,
@@ -1817,12 +2509,12 @@ function StudentModal({
           }
         })
       }), _jsx(FormField, {
-        label: "\u0417\u0430\u043C\u0435\u0442\u043A\u0438",
+        label: "\u0412\u043D\u0443\u0442\u0440\u0435\u043D\u043D\u0438\u0435 \u0437\u0430\u043C\u0435\u0442\u043A\u0438",
         children: _jsx("textarea", {
           className: "input",
           value: notes,
           onChange: e => setNotes(e.target.value),
-          placeholder: "\u0421\u043B\u0430\u0431\u044B\u0435 \u0442\u0435\u043C\u044B, \u0440\u043E\u0434\u0438\u0442\u0435\u043B\u044C, \u043E\u0441\u043E\u0431\u0435\u043D\u043D\u043E\u0441\u0442\u0438",
+          placeholder: "\u0421\u043B\u0430\u0431\u044B\u0435 \u0442\u0435\u043C\u044B, \u043E\u0441\u043E\u0431\u0435\u043D\u043D\u043E\u0441\u0442\u0438 \u2014 \u0432\u0438\u0434\u0438\u0442\u0435 \u0442\u043E\u043B\u044C\u043A\u043E \u0432\u044B",
           style: {
             minHeight: 74,
             resize: 'vertical'
@@ -3650,7 +4342,9 @@ function ParentPortalPanel({
   txs,
   onSave,
   onAcceptPaymentNotice,
-  onDismissPaymentNotice
+  onDismissPaymentNotice,
+  appSettings,
+  onUpdateSettings
 }) {
   const [copied, setCopied] = useState(false);
   const payload = buildParentPortalPayload(student, students, groups, lessons, txs);
@@ -3674,6 +4368,26 @@ function ParentPortalPanel({
     await copyTextSafe(parentPortalUrl(token));
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
+  };
+  const shareLink = async () => {
+    const token = portal.token || createParentPortalToken();
+    if (!portal.token || !portal.enabled) savePatch({
+      enabled: true,
+      token
+    });
+    try {
+      await navigator.share({
+        title: `Кабинет ученика — ${student.name}`,
+        url: parentPortalUrl(token)
+      });
+    } catch {}
+  };
+  const resetLink = () => {
+    if (!window.confirm('Сбросить ссылку? Старая перестанет работать — родителю нужно будет отправить новую.')) return;
+    savePatch({
+      token: createParentPortalToken()
+    });
+    setCopied(false);
   };
   const option = (key, label, text) => _jsxs("button", {
     type: "button",
@@ -3711,6 +4425,10 @@ function ParentPortalPanel({
         }) : ensureEnabled,
         children: portal.enabled ? "Выключить" : "Включить"
       })]
+    }), !portal.enabled && _jsx("button", {
+      className: "btn btn-black btn-full",
+      onClick: copyLink,
+      children: copied ? "Ссылка скопирована — отправьте родителю" : "Включить и скопировать ссылку"
     }), portal.enabled && _jsxs(_Fragment, {
       children: [_jsxs("div", {
         className: "parent-link-box",
@@ -3726,6 +4444,20 @@ function ParentPortalPanel({
           className: "btn btn-white",
           onClick: () => window.open(link, '_blank'),
           children: "Открыть"
+        })]
+      }), _jsxs("div", {
+        className: "parent-link-tools",
+        children: [typeof navigator !== 'undefined' && navigator.share ? _jsx("button", {
+          className: "btn btn-sm btn-white",
+          onClick: shareLink,
+          children: "Поделиться"
+        }) : null, _jsx("button", {
+          className: "btn btn-sm btn-white",
+          onClick: resetLink,
+          children: "Сбросить ссылку"
+        }), _jsx("span", {
+          className: "parent-link-tools-hint",
+          children: "После сброса старая ссылка перестанет открываться."
         })]
       }), _jsxs("div", {
         className: "parent-options-grid",
@@ -3744,6 +4476,41 @@ function ParentPortalPanel({
             resize: 'vertical'
           }
         })
+      }), onUpdateSettings && _jsxs("div", {
+        className: "parent-global-settings",
+        children: [_jsx("div", {
+          className: "parent-preview-head",
+          children: _jsx("span", {
+            children: "Общее для всех кабинетов"
+          })
+        }), !(appSettings?.tutorContact || '').trim() && !(appSettings?.paymentDetails || '').trim() && _jsx("p", {
+          className: "parent-settings-hint",
+          children: "Пока поля пустые, у родителей в кабинете нет кнопки «Написать репетитору» и реквизитов для оплаты. Заполните — обе появятся автоматически."
+        }), _jsx(FormField, {
+          label: "Ваш контакт для родителей (кнопка «Написать репетитору»)",
+          children: _jsx("input", {
+            className: "input",
+            value: appSettings?.tutorContact || '',
+            onChange: e => onUpdateSettings({
+              tutorContact: e.target.value
+            }),
+            placeholder: "@telegram, +7 900 000-00-00 или ссылка"
+          })
+        }), _jsx(FormField, {
+          label: "Как оплатить (реквизиты, показываются в разделе «Финансы»)",
+          children: _jsx("textarea", {
+            className: "input",
+            value: appSettings?.paymentDetails || '',
+            onChange: e => onUpdateSettings({
+              paymentDetails: e.target.value
+            }),
+            placeholder: "Например: перевод по СБП на +7 900 000-00-00 (Сбер, Иван И.)",
+            style: {
+              minHeight: 56,
+              resize: 'vertical'
+            }
+          })
+        })]
       }), notices.length > 0 && _jsxs("div", {
         className: "parent-notice-list",
         children: [_jsxs("div", {
@@ -3833,6 +4600,7 @@ function ParentPortalPage({
   groups,
   lessons,
   txs,
+  appSettings,
   onPaymentNotice
 }) {
   if (!student) return _jsxs("div", {
@@ -3850,13 +4618,23 @@ function ParentPortalPage({
   const [noticeAmount, setNoticeAmount] = useState(String(Math.max(0, Math.abs(Math.min(0, Number(payload.finance.balance || 0)))) || ''));
   const [noticeComment, setNoticeComment] = useState('');
   const [noticeSent, setNoticeSent] = useState(false);
+  const [noticeError, setNoticeError] = useState('');
+  const noticeTraceKey = `tutor-parent-notice-${portal.token || student.id}`;
+  const [lastNotice, setLastNotice] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(noticeTraceKey)) || null;
+    } catch {
+      return null;
+    }
+  });
   const payments = txs.filter(tx => sameId(tx.studentId, student.id)).sort((a, b) => txSortKey(b).localeCompare(txSortKey(a))).slice(0, 6);
   const sendNotice = () => {
     const amount = Number(noticeAmount);
     if (!Number.isFinite(amount) || amount <= 0) {
-      alert('Укажите сумму оплаты.');
+      setNoticeError('Укажите сумму оплаты — например, 3600.');
       return;
     }
+    setNoticeError('');
     onPaymentNotice(student.id, {
       id: Date.now() + Math.random(),
       amount,
@@ -3864,16 +4642,41 @@ function ParentPortalPage({
       status: 'new',
       createdAt: new Date().toISOString()
     });
+    const trace = {
+      amount,
+      at: new Date().toISOString()
+    };
+    try {
+      localStorage.setItem(noticeTraceKey, JSON.stringify(trace));
+    } catch {}
+    setLastNotice(trace);
     setNoticeSent(true);
   };
   const homeworkStats = payload.homeworkStats || {};
   const attendanceStats = payload.attendanceStats || {};
+  const monthYearLabel = d => {
+    const s = new Date(`${String(d)}T00:00:00`).toLocaleDateString('ru-RU', {
+      month: 'long',
+      year: 'numeric'
+    }).replace(' г.', '');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
   const studyProgress = payload.studyProgress || getStudyProgress(student);
   const theoryRate = payload.theoryPercent == null ? '—' : `${payload.theoryPercent}%`;
   const assimilationRate = payload.assimilationPercent == null ? '—' : `${payload.assimilationPercent}%`;
   const latestMock = payload.latestMock;
   const latestMockRate = latestMock ? `${mockTestPercent(latestMock)}%` : '—';
   const mockAverageRate = payload.mockAveragePercent == null ? '—' : `${payload.mockAveragePercent}%`;
+  const hasHistory = payload.historyLessons.length > 0;
+  const hasStudyData = (studyProgress.mockTests || []).length > 0 || studyProgress.totalTopics > 0 || payload.assimilationPercent != null;
+  const portalIsFresh = !hasHistory && !hasStudyData;
+  const lastLessonDate = payload.historyLessons[0]?.date || null;
+  const contactHref = tutorContactHref(appSettings?.tutorContact);
+  const paymentDetails = String(appSettings?.paymentDetails || '').trim();
+  const nextLesson = payload.nextLessons[0] || null;
+  const nextLessonWeekday = nextLesson ? new Date(`${nextLesson.date}T00:00:00`).toLocaleDateString('ru-RU', {
+    weekday: 'long'
+  }) : '';
   return _jsx("div", {
     className: "parent-public-page",
     children: _jsxs("main", {
@@ -3881,9 +4684,25 @@ function ParentPortalPage({
       children: [_jsxs("section", {
         className: "parent-public-hero",
         children: [_jsxs("div", {
-          children: [_jsx("div", {
-            className: "metric-label",
-            children: "Кабинет ученика"
+          children: [_jsxs("div", {
+            className: "parent-hero-topline",
+            children: [_jsx("div", {
+              className: "metric-label",
+              children: "Кабинет ученика"
+            }), _jsxs("div", {
+              className: "parent-topline-right",
+              children: [lastLessonDate && _jsxs("span", {
+                className: "parent-updated-badge",
+                children: ["обновлено ", fmtDate(lastLessonDate)]
+              }), _jsx("button", {
+                type: "button",
+                className: "parent-refresh-btn",
+                "aria-label": "Обновить данные",
+                title: "Обновить данные",
+                onClick: () => location.reload(),
+                children: "⟳"
+              })]
+            })]
           }), _jsx("h1", {
             children: student.name
           }), _jsx("p", {
@@ -3900,7 +4719,37 @@ function ParentPortalPage({
             children: balanceLabel(payload.finance.balance)
           })]
         })]
-      }), _jsxs("section", {
+      }), portal.showSchedule && nextLesson && _jsxs("section", {
+        className: "parent-next-callout",
+        children: [_jsx("span", {
+          className: "parent-next-label",
+          children: "Следующее занятие"
+        }), _jsxs("strong", {
+          children: [nextLessonWeekday, ", ", fmtDate(nextLesson.date), " · ", nextLesson.time]
+        }), _jsx("span", {
+          className: "parent-next-subject",
+          children: getLessonSubject(nextLesson, groups)
+        })]
+      }), portalIsFresh ? _jsxs("section", {
+        className: "parent-public-section parent-onboarding",
+        children: [_jsx("h2", {
+          children: "Занятия ещё впереди"
+        }), _jsx("p", {
+          className: "parent-onboarding-text",
+          children: "Кабинет наполнится после первых уроков. Здесь появятся:"
+        }), _jsxs("ul", {
+          className: "parent-onboarding-list",
+          children: [_jsx("li", {
+            children: "прогресс по темам и усвоение материала"
+          }), _jsx("li", {
+            children: "домашние задания и их статус"
+          }), _jsx("li", {
+            children: "посещаемость и история занятий"
+          }), _jsx("li", {
+            children: "результаты пробников на графике"
+          })]
+        })]
+      }) : _jsxs("section", {
         className: "parent-results",
         children: [_jsx("div", {
           className: "parent-results-label",
@@ -3910,22 +4759,25 @@ function ParentPortalPage({
           children: [_jsxs("div", {
             className: "parent-result-cell",
             children: [_jsx("strong", {
-              children: attendanceStats.total || 0
+              children: studyProgress.totalTopics ? `${studyProgress.completedTopics}/${studyProgress.totalTopics}` : studyProgress.completedTopics || 0
             }), _jsx("span", {
-              children: plural(attendanceStats.total || 0, 'занятие проведено', 'занятия проведено', 'занятий проведено')
+              title: "Сколько тем программы уже разобрано на занятиях",
+              children: "тем пройдено"
             })]
           }), _jsxs("div", {
             className: "parent-result-cell",
             children: [_jsx("strong", {
-              children: studyProgress.totalTopics ? `${studyProgress.completedTopics}/${studyProgress.totalTopics}` : studyProgress.completedTopics || 0
+              children: payload.assimilationPercent == null ? '—' : `${payload.assimilationPercent}%`
             }), _jsx("span", {
-              children: "тем пройдено"
+              title: "Насколько ученик усваивает материал — по оценке репетитора",
+              children: "усвоение"
             })]
           }), _jsxs("div", {
             className: "parent-result-cell",
             children: [_jsx("strong", {
               children: homeworkStats.rate == null ? '—' : `${homeworkStats.rate}%`
             }), _jsx("span", {
+              title: "Доля выполненных домашних заданий (частично = половина)",
               children: "ДЗ выполнено"
             })]
           }), _jsxs("div", {
@@ -3933,6 +4785,7 @@ function ParentPortalPage({
             children: [_jsx("strong", {
               children: attendanceStats.rate == null ? '—' : `${attendanceStats.rate}%`
             }), _jsx("span", {
+              title: "Доля посещённых занятий от всех проведённых",
               children: "посещаемость"
             })]
           })]
@@ -3945,7 +4798,35 @@ function ParentPortalPage({
             return "Здесь будет видно, как идёт подготовка, — после первых проведённых занятий.";
           })()
         })]
-      }), portal.showProgress && _jsxs("section", {
+      }), portal.showHomework && hasHistory && (() => {
+        const current = payload.historyLessons.find(l => l.status === 'completed' && l.homework);
+        const statusInfo = current ? HOMEWORK_STATUS[current.homeworkStatus || 'unset'] || HOMEWORK_STATUS.unset : null;
+        const statusPending = current && (!current.homeworkStatus || current.homeworkStatus === 'unset');
+        return _jsxs("section", {
+          className: "parent-public-section parent-current-hw-section",
+          children: [_jsx("h2", {
+            children: "Текущее задание"
+          }), current ? _jsxs("div", {
+            className: "parent-homework-card",
+            children: [_jsxs("div", {
+              children: [_jsx("strong", {
+                children: current.homework
+              }), _jsxs("span", {
+                children: ["Задано ", fmtDate(current.date), " · ", getLessonSubject(current, groups)]
+              })]
+            }), !statusPending && _jsx("b", {
+              className: `homework-status-pill ${statusInfo.tone}`,
+              children: statusInfo.short
+            })]
+          }) : _jsx("p", {
+            className: "parent-muted",
+            children: "Активных заданий сейчас нет — новое появится после следующего урока."
+          }), statusPending && _jsx("p", {
+            className: "parent-hw-hint",
+            children: "Статус выполнения репетитор отметит на следующем занятии."
+          })]
+        });
+      })(), portal.showProgress && !portalIsFresh && _jsxs("section", {
         className: "parent-public-section parent-study-public-section",
         children: [_jsxs("div", {
           className: "parent-study-head",
@@ -4009,15 +4890,30 @@ function ParentPortalPage({
               })]
             })]
           })]
-        }), studyProgress.mockTests.length > 0 && _jsx("div", {
-          className: "parent-mock-list",
-          children: studyProgress.mockTests.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 4).map(test => _jsxs("div", {
-            children: [_jsx("b", {
-              children: `${mockTestPercent(test)}%`
-            }), _jsxs("span", {
-              children: [fmtDate(test.date), " · ", test.score, "/", test.maxScore, test.comment ? ` · ${test.comment}` : ""]
-            })]
-          }, test.id))
+        }), studyProgress.mockTests.length > 0 && _jsxs("div", {
+          className: "parent-mock-chart-wrap",
+          children: [_jsx("div", {
+            className: "parent-mock-chart-title",
+            children: "Динамика пробников"
+          }), _jsx("div", {
+            className: "parent-mock-chart",
+            children: studyProgress.mockTests.slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).map(test => {
+              const pct = mockTestPercent(test);
+              return _jsxs("div", {
+                className: "parent-mock-bar",
+                title: `${fmtDate(test.date)} · ${test.score}/${test.maxScore}${test.comment ? ` · ${test.comment}` : ''}`,
+                children: [_jsx("b", {
+                  children: `${pct}%`
+                }), _jsx("i", {
+                  style: {
+                    height: `${pct}%`
+                  }
+                }), _jsx("span", {
+                  children: fmtDate(test.date)
+                })]
+              }, test.id);
+            })
+          })]
         })]
       }), payload.parentComments.length > 0 && _jsxs("section", {
         className: "parent-public-section parent-comment-section",
@@ -4068,6 +4964,76 @@ function ParentPortalPage({
           className: "parent-muted",
           children: "Ближайших уроков пока нет."
         })]
+      }), portal.showSchedule && payload.historyLessons.length > 0 && _jsxs("section", {
+        className: "parent-public-section parent-history-section",
+        children: [_jsxs("div", {
+          className: "parent-section-head",
+          children: [_jsx("h2", {
+            children: "История занятий"
+          }), attendanceStats.total > 0 && _jsxs("span", {
+            className: "parent-section-sub",
+            children: [attendanceStats.total, " ", plural(attendanceStats.total, 'занятие', 'занятия', 'занятий'), " проведено"]
+          })]
+        }), _jsx("div", {
+          className: "parent-timeline",
+          children: payload.historyLessons.map((l, idx, arr) => {
+            const statusInfo = HOMEWORK_STATUS[l.homeworkStatus || 'unset'] || HOMEWORK_STATUS.unset;
+            const showStatus = l.homeworkStatus && l.homeworkStatus !== 'unset';
+            const isNoShow = l.status === 'no_show' || (l.attendance && l.attendance[student.id] === false);
+            const ratingWords = ['', 'Слабо', 'Ниже среднего', 'Норм', 'Хорошо', 'Отлично'];
+            const monthKey = String(l.date).slice(0, 7);
+            const newMonth = idx === 0 || monthKey !== String(arr[idx - 1].date).slice(0, 7);
+            return _jsxs(_Fragment, {
+              children: [newMonth && _jsx("div", {
+                className: "parent-timeline-month",
+                children: monthYearLabel(l.date)
+              }), _jsxs("div", {
+              className: "parent-timeline-item",
+              children: [_jsx("div", {
+                className: "parent-timeline-date",
+                children: fmtDate(l.date)
+              }), _jsxs("div", {
+                className: "parent-timeline-body",
+                children: [_jsxs("div", {
+                  className: "parent-timeline-head",
+                  children: [_jsx("strong", {
+                    children: getLessonSubject(l, groups)
+                  }), l.type === 'group' && _jsx("b", {
+                    className: "parent-group-chip",
+                    children: "группа"
+                  }), isNoShow && _jsx("b", {
+                    className: "parent-noshow-pill",
+                    children: "Пропуск"
+                  })]
+                }), !isNoShow && l.topic && _jsxs("span", {
+                  className: "parent-timeline-topic",
+                  children: ["Тема: ", l.topic]
+                }), !isNoShow && l.homework && _jsxs("div", {
+                  className: "parent-timeline-hw-row",
+                  children: [_jsxs("span", {
+                    className: "parent-timeline-hw",
+                    children: ["ДЗ: ", l.homework]
+                  }), showStatus && _jsx("b", {
+                    className: `homework-status-pill ${statusInfo.tone}`,
+                    children: statusInfo.short
+                  })]
+                }), !isNoShow && l.rating > 0 && _jsxs("div", {
+                  className: "parent-timeline-rating",
+                  children: [_jsx("span", {
+                    className: "parent-timeline-rating-label",
+                    children: "Оценка за урок:"
+                  }), _jsx("b", {
+                    className: "parent-rating-stars",
+                    children: '★'.repeat(l.rating) + '☆'.repeat(5 - l.rating)
+                  }), _jsx("em", {
+                    children: ratingWords[l.rating]
+                  })]
+                })]
+              })]
+            })]
+          }, l.id);
+          })
+        })]
       }), portal.showFinance && _jsxs("section", {
         className: "parent-public-section",
         children: [_jsx("h2", {
@@ -4091,18 +5057,34 @@ function ParentPortalPage({
             className: tx.type === 'payment' ? 'balance-plus' : 'balance-minus',
             children: `${tx.type === 'payment' ? '+' : '-'}${money(tx.amount)}`
           })]
-        }, tx.id)), portal.allowPaymentNotice && (noticeSent ? _jsx("div", {
+        }, tx.id)), paymentDetails && _jsxs("div", {
+          className: "parent-payment-details",
+          children: [_jsx("span", {
+            children: "Как оплатить"
+          }), _jsx("p", {
+            children: paymentDetails
+          })]
+        }), portal.allowPaymentNotice && (noticeSent ? _jsx("div", {
           className: "parent-payment-sent",
           children: "Заявка отправлена репетитору. Баланс изменится после подтверждения."
         }) : _jsxs("div", {
           className: "parent-payment-form",
-          children: [_jsx("input", {
+          children: [lastNotice && _jsxs("div", {
+            className: "parent-payment-trace",
+            children: ["Вы сообщали об оплате ", money(lastNotice.amount), " (", fmtDate(lastNotice.at.slice(0, 10)), "). Если это была та же оплата, второй раз отправлять не нужно."]
+          }), _jsx("input", {
             className: "input",
             type: "number",
             min: "1",
             placeholder: "Сумма оплаты",
             value: noticeAmount,
-            onChange: e => setNoticeAmount(e.target.value)
+            onChange: e => {
+              setNoticeAmount(e.target.value);
+              setNoticeError('');
+            }
+          }), noticeError && _jsx("p", {
+            className: "parent-payment-error",
+            children: noticeError
           }), _jsx("input", {
             className: "input",
             placeholder: "Комментарий, если нужно",
@@ -4114,33 +5096,7 @@ function ParentPortalPage({
             children: "Я оплатил(а)"
           })]
         }))]
-      }), portal.showHomework && _jsxs("section", {
-        className: "parent-public-section",
-        children: [_jsxs("h2", {
-          children: ["Домашние задания", payload.homeworkDoneRate != null ? ` · ${payload.homeworkDoneRate}%` : ""]
-        }), (() => {
-          const rows = payload.homeworkStatusLessons.length ? payload.homeworkStatusLessons : payload.homeworkLessons;
-          return rows.length ? rows.map(l => {
-            const statusInfo = HOMEWORK_STATUS[l.homeworkStatus || 'unset'] || HOMEWORK_STATUS.unset;
-            return _jsxs("div", {
-              className: "parent-homework-card",
-              children: [_jsxs("div", {
-                children: [_jsx("strong", {
-                  children: `${fmtDate(l.date)} · ${getLessonSubject(l, groups)}`
-                }), _jsx("span", {
-                  children: l.homework || "Статус ДЗ прошлого урока"
-                })]
-              }), _jsx("b", {
-                className: `homework-status-pill ${statusInfo.tone}`,
-                children: statusInfo.short
-              })]
-            }, l.id);
-          }) : _jsx("p", {
-          className: "parent-muted",
-          children: "Домашние задания пока не добавлены."
-          });
-        })()]
-      }), portal.showProgress && _jsxs("section", {
+      }), portal.showProgress && hasHistory && payload.progress.length > 1 && _jsxs("section", {
         className: "parent-public-section",
         children: [_jsx("h2", {
           children: "Активность по предметам"
@@ -4169,7 +5125,13 @@ function ParentPortalPage({
         children: [_jsx("strong", {
           children: "Личный кабинет ученика"
         }), _jsx("span", {
-          children: "Информацию ведёт репетитор и обновляет после каждого занятия. По вопросам — напишите напрямую."
+          children: contactHref ? "Информацию ведёт репетитор и обновляет после каждого занятия." : "Информацию ведёт репетитор и обновляет после каждого занятия. По вопросам — напишите напрямую."
+        }), contactHref && _jsx("a", {
+          className: "btn btn-black parent-contact-btn",
+          href: contactHref,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          children: "Написать репетитору"
         })]
       })]
     })
@@ -4195,6 +5157,8 @@ function StudentDetailModal({
   onSaveParentPortal,
   onAcceptPaymentNotice,
   onDismissPaymentNotice,
+  appSettings,
+  onUpdateSettings,
   initialTab
 }) {
   const [detailTab, setDetailTab] = useState(initialTab || 'overview');
@@ -4289,6 +5253,12 @@ function StudentDetailModal({
         className: "btn btn-sm btn-white",
         onClick: onProfile,
         children: "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C"
+      }), _jsxs("button", {
+        className: "btn btn-sm btn-yellow parent-portal-shortcut",
+        onClick: () => setDetailTab('parent'),
+        children: ["\u041A\u0430\u0431\u0438\u043D\u0435\u0442 \u0440\u043E\u0434\u0438\u0442\u0435\u043B\u044F", _jsx("i", {
+          className: `portal-status-dot ${getParentPortalSettings(student).enabled ? 'on' : ''}`
+        })]
       }), _jsx("button", {
         className: `btn btn-sm ${student.archived ? 'btn-green' : 'btn-white'}`,
         onClick: () => onArchive(student.id, !student.archived),
@@ -4445,7 +5415,7 @@ function StudentDetailModal({
                 }
               }), _jsx("span", {
                 style: {
-                  fontSize: 8,
+                  fontSize: 10,
                   color: 'var(--text-muted)',
                   fontFamily: 'Martian Mono,monospace'
                 },
@@ -4749,7 +5719,9 @@ function StudentDetailModal({
       txs: txs,
       onSave: onSaveParentPortal,
       onAcceptPaymentNotice: onAcceptPaymentNotice,
-      onDismissPaymentNotice: onDismissPaymentNotice
+      onDismissPaymentNotice: onDismissPaymentNotice,
+      appSettings: appSettings,
+      onUpdateSettings: onUpdateSettings
       })]
     }), detailTab === 'notes' && _jsxs("div", {
       className: "card",
@@ -5666,7 +6638,7 @@ function MessageModal({
         className: "btn btn-sm btn-white",
         style: {
           padding: '5px 10px',
-          fontSize: 9,
+          fontSize: 11,
           marginLeft: 'auto'
         },
         onClick: () => setEditMode(true),
@@ -6322,8 +7294,58 @@ function DataModal({
   onImport,
   onTextImport,
   onLocalBackup,
-  onClose
+  onClose,
+  syncKey,
+  syncEmail,
+  syncStatus,
+  onEnableSync,
+  onConnectSync,
+  onDisableSync,
+  onRegister,
+  onLogin,
+  onChangePassword
 }) {
+  const [connectInput, setConnectInput] = useState('');
+  const [connectError, setConnectError] = useState('');
+  const [keyCopied, setKeyCopied] = useState(false);
+  const [showKeyTools, setShowKeyTools] = useState(false);
+  const [showPassForm, setShowPassForm] = useState(false);
+  const [passOld, setPassOld] = useState('');
+  const [passNew, setPassNew] = useState('');
+  const [passMsg, setPassMsg] = useState('');
+  const [passBusy, setPassBusy] = useState(false);
+  const submitPassChange = async e => {
+    e.preventDefault();
+    if (passNew.length < 8) {
+      setPassMsg('err:Новый пароль должен быть от 8 символов.');
+      return;
+    }
+    setPassBusy(true);
+    try {
+      await onChangePassword(syncEmail, passOld, passNew);
+      setPassMsg('ok:Пароль изменён.');
+      setPassOld('');
+      setPassNew('');
+    } catch (err) {
+      setPassMsg('err:' + authErrorText(err));
+    } finally {
+      setPassBusy(false);
+    }
+  };
+  const syncAvailable = !!SYNC_API_BASE;
+  const copyKey = async () => {
+    await copyTextSafe(syncKey);
+    setKeyCopied(true);
+    setTimeout(() => setKeyCopied(false), 1800);
+  };
+  const tryConnect = () => {
+    if (onConnectSync(connectInput)) {
+      setConnectInput('');
+      setConnectError('');
+    } else {
+      setConnectError('Код должен быть от 12 символов: латиница, цифры, - и _');
+    }
+  };
   const stamp = value => value ? new Date(value).toLocaleString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
@@ -6332,9 +7354,27 @@ function DataModal({
   }) : 'нет';
   const rows = [['Ученики', stats.students], ['Группы', stats.groups], ['Уроки', stats.lessons], ['Финансы', stats.txs], ['Шаблоны', stats.templates]];
   return _jsxs(Modal, {
-    title: "\u0414\u0430\u043D\u043D\u044B\u0435",
+    title: "\u0410\u043A\u043A\u0430\u0443\u043D\u0442 \u0438 \u0434\u0430\u043D\u043D\u044B\u0435",
     onClose: onClose,
-    children: [_jsx("div", {
+    children: [syncAvailable && _jsxs("div", {
+      className: `data-account-strip ${syncKey ? 'on' : 'off'}`,
+      children: [_jsxs("div", {
+        children: [_jsx("span", {
+          children: "\u0410\u043A\u043A\u0430\u0443\u043D\u0442"
+        }), _jsx("strong", {
+          children: syncKey ? syncEmail || '\u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0451\u043D (\u043F\u043E \u043A\u043E\u0434\u0443, \u0431\u0435\u0437 \u043F\u043E\u0447\u0442\u044B)' : '\u043D\u0435 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0451\u043D'
+        }), !syncKey && _jsx("em", {
+          children: "\u0414\u0430\u043D\u043D\u044B\u0435 \u0445\u0440\u0430\u043D\u044F\u0442\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 \u044D\u0442\u043E\u043C \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0435 \u0438 \u043F\u0440\u043E\u043F\u0430\u0434\u0443\u0442 \u0432\u043C\u0435\u0441\u0442\u0435 \u0441 \u043D\u0438\u043C."
+        })]
+      }), !syncKey && _jsx("button", {
+        className: "btn btn-sm btn-black",
+        onClick: () => document.querySelector('.sync-section')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        }),
+        children: "\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u044C"
+      })]
+    }), _jsx("div", {
       className: "data-modal-note",
       children: "\u041F\u043E\u043B\u043D\u044B\u0439 \u0431\u044D\u043A\u0430\u043F \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442 \u0432\u0441\u044E \u0431\u0430\u0437\u0443: \u0443\u0447\u0435\u043D\u0438\u043A\u043E\u0432, \u0433\u0440\u0443\u043F\u043F\u044B, \u0443\u0440\u043E\u043A\u0438, \u0444\u0438\u043D\u0430\u043D\u0441\u044B, \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u0438 \u0448\u0430\u0431\u043B\u043E\u043D\u044B \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439."
     }), _jsx("div", {
@@ -6384,11 +7424,401 @@ function DataModal({
         onClick: onLocalBackup,
         children: "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043A\u043E\u043F\u0438\u044E \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435"
       })]
+    }), syncAvailable && _jsxs("div", {
+      className: "sync-section",
+      children: [_jsxs("div", {
+        className: "sync-section-head",
+        children: [_jsx("strong", {
+          children: "Онлайн-синхронизация"
+        }), syncKey ? _jsx("span", {
+          className: `sync-status ${syncStatus?.error ? 'err' : 'ok'}`,
+          children: syncStatus?.error ? syncStatus.error : syncStatus?.at ? `синхронизировано ${new Date(syncStatus.at).toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit'
+          })}` : "подключение…"
+        }) : _jsx("span", {
+          className: "sync-status off",
+          children: "выключена"
+        })]
+      }), !syncKey && _jsxs(_Fragment, {
+        children: [_jsx("p", {
+          className: "sync-text",
+          children: "Аккаунт хранит данные на сервере: они доступны на всех ваших устройствах, восстановятся при потере телефона, а родительские ссылки работают у родителей."
+        }), _jsx(SyncAuthForm, {
+          onLogin: onLogin,
+          onRegister: onRegister,
+          note: "Регистрация сразу включит синхронизацию — текущие данные никуда не денутся."
+        }), _jsx("button", {
+          type: "button",
+          className: "sync-key-tools-link",
+          onClick: () => setShowKeyTools(v => !v),
+          children: showKeyTools ? "Скрыть вход по коду" : "Вход по коду синхронизации (без почты)"
+        }), showKeyTools && _jsxs(_Fragment, {
+          children: [_jsxs("div", {
+            className: "sync-connect-row",
+            children: [_jsx("input", {
+              className: "input",
+              value: connectInput,
+              onChange: e => {
+                setConnectInput(e.target.value);
+                setConnectError('');
+              },
+              placeholder: "Код с другого устройства"
+            }), _jsx("button", {
+              className: "btn btn-white",
+              onClick: tryConnect,
+              children: "Подключить"
+            })]
+          }), connectError && _jsx("p", {
+            className: "sync-error",
+            children: connectError
+          }), _jsx("button", {
+            className: "btn btn-white btn-full",
+            onClick: onEnableSync,
+            children: "Включить синхронизацию без аккаунта"
+          })]
+        })]
+      }), syncKey && _jsxs(_Fragment, {
+        children: [syncEmail ? _jsxs("p", {
+          className: "sync-text",
+          children: ["Аккаунт: ", _jsx("b", {
+            children: syncEmail
+          }), ". Войдите с этой почтой на другом устройстве — и увидите ту же базу."]
+        }) : _jsxs(_Fragment, {
+          children: [_jsx("p", {
+            className: "sync-text",
+            children: "Синхронизация работает по коду. Добавьте почту и пароль — тогда доступ можно будет восстановить, даже если код и телефон потеряются."
+          }), _jsx(SyncAuthForm, {
+            onLogin: onLogin,
+            onRegister: onRegister,
+            initialMode: "register",
+            note: "Почта привяжется к текущему коду — данные останутся на месте."
+          })]
+        }), _jsx("button", {
+          type: "button",
+          className: "sync-key-tools-link",
+          onClick: () => setShowKeyTools(v => !v),
+          children: showKeyTools ? "Скрыть код синхронизации" : "Показать код синхронизации"
+        }), showKeyTools && _jsxs(_Fragment, {
+          children: [_jsx("p", {
+            className: "sync-text",
+            children: "Код — запасной способ входа на другом устройстве. Никому постороннему его не показывайте."
+          }), _jsxs("div", {
+            className: "sync-connect-row",
+            children: [_jsx("input", {
+              className: "input",
+              readOnly: true,
+              value: syncKey
+            }), _jsx("button", {
+              className: "btn btn-black",
+              onClick: copyKey,
+              children: keyCopied ? "Скопировано" : "Копировать"
+            })]
+          })]
+        }), syncEmail && _jsx("button", {
+          type: "button",
+          className: "sync-key-tools-link",
+          onClick: () => {
+            setShowPassForm(v => !v);
+            setPassMsg('');
+          },
+          children: showPassForm ? "Скрыть смену пароля" : "Сменить пароль"
+        }), syncEmail && showPassForm && _jsxs("form", {
+          className: "sync-auth-form",
+          onSubmit: submitPassChange,
+          children: [_jsx("input", {
+            className: "input",
+            type: "password",
+            autoComplete: "current-password",
+            value: passOld,
+            onChange: e => setPassOld(e.target.value),
+            placeholder: "Текущий пароль"
+          }), _jsx("input", {
+            className: "input",
+            type: "password",
+            autoComplete: "new-password",
+            value: passNew,
+            onChange: e => setPassNew(e.target.value),
+            placeholder: "Новый пароль (от 8 символов)"
+          }), _jsx("button", {
+            className: "btn btn-black btn-full",
+            type: "submit",
+            disabled: passBusy,
+            children: passBusy ? 'Секунду…' : 'Изменить пароль'
+          }), passMsg && _jsx("p", {
+            className: passMsg.startsWith('ok:') ? 'sync-auth-ok' : 'sync-error',
+            children: passMsg.slice(passMsg.indexOf(':') + 1)
+          })]
+        }), _jsx("button", {
+          className: "btn btn-white btn-full",
+          onClick: () => {
+            if (window.confirm('Выйти на этом устройстве? Данные на сервере и других устройствах останутся.')) onDisableSync();
+          },
+          children: syncEmail ? "Выйти на этом устройстве" : "Отключить на этом устройстве"
+        })]
+      })]
+    }), _jsxs("div", {
+      className: "data-modal-about",
+      children: [_jsxs("span", {
+        children: ["TutorApp \u00B7 ", APP_VERSION]
+      }), _jsx("a", {
+        href: `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('TutorApp: \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430 \u0438\u043B\u0438 \u0438\u0434\u0435\u044F')}&body=${encodeURIComponent(`\u0412\u0435\u0440\u0441\u0438\u044F: ${APP_VERSION}\n\n\u041E\u043F\u0438\u0448\u0438\u0442\u0435, \u0447\u0442\u043E \u043F\u0440\u043E\u0438\u0437\u043E\u0448\u043B\u043E:\n`)}`,
+        children: "\u0421\u043E\u043E\u0431\u0449\u0438\u0442\u044C \u043E \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0435"
+      })]
     })]
+  });
+}
+function SyncAuthForm({
+  onLogin,
+  onRegister,
+  initialMode = 'login',
+  note
+}) {
+  const [mode, setMode] = useState(initialMode);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const submit = async e => {
+    e.preventDefault();
+    const em = email.trim();
+    if (!/^\S+@\S+\.\S+$/.test(em)) {
+      setError('Проверьте адрес почты.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Пароль должен быть от 8 символов.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      await (mode === 'register' ? onRegister(em, password) : onLogin(em, password));
+    } catch (err) {
+      setError(authErrorText(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return _jsxs("form", {
+    className: "sync-auth-form",
+    onSubmit: submit,
+    children: [_jsxs("div", {
+      className: "sync-auth-tabs",
+      children: [_jsx("button", {
+        type: "button",
+        className: mode === 'login' ? 'active' : '',
+        onClick: () => {
+          setMode('login');
+          setError('');
+        },
+        children: "Войти"
+      }), _jsx("button", {
+        type: "button",
+        className: mode === 'register' ? 'active' : '',
+        onClick: () => {
+          setMode('register');
+          setError('');
+        },
+        children: "Создать аккаунт"
+      })]
+    }), _jsx("input", {
+      className: "input",
+      type: "email",
+      autoComplete: "email",
+      value: email,
+      onChange: e => {
+        setEmail(e.target.value);
+        setError('');
+      },
+      placeholder: "Почта"
+    }), _jsx("input", {
+      className: "input",
+      type: "password",
+      autoComplete: mode === 'register' ? 'new-password' : 'current-password',
+      value: password,
+      onChange: e => {
+        setPassword(e.target.value);
+        setError('');
+      },
+      placeholder: mode === 'register' ? 'Придумайте пароль (от 8 символов)' : 'Пароль'
+    }), _jsx("button", {
+      className: "btn btn-black btn-full",
+      type: "submit",
+      disabled: busy,
+      children: busy ? 'Секунду…' : mode === 'register' ? 'Создать аккаунт' : 'Войти'
+    }), note && mode === 'register' && _jsx("p", {
+      className: "sync-auth-note",
+      children: note
+    }), mode === 'login' && _jsxs("p", {
+      className: "sync-auth-note",
+      children: ["Забыли пароль? ", _jsx("a", {
+        href: `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('TutorApp: восстановление пароля')}&body=${encodeURIComponent('Прошу сбросить пароль для аккаунта. Пишу с той почты, на которую он зарегистрирован.')}`,
+        children: "Напишите нам"
+      }), " с почты аккаунта — восстановим вручную."]
+    }), error && _jsx("p", {
+      className: "sync-error",
+      children: error
+    })]
+  });
+}
+function RemoteParentPortal({
+  token
+}) {
+  const [snap, setSnap] = useState(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    if (!SYNC_API_BASE) {
+      setSnap(null);
+      return;
+    }
+    syncFetch(`parent/${encodeURIComponent(token)}`).then(r => {
+      if (!cancelled) setSnap(r?.snapshot || null);
+    }).catch(() => {
+      if (!cancelled) setSnap(null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+  const sendRemoteNotice = (studentId, notice) => {
+    syncFetch(`parent/${encodeURIComponent(token)}/notice`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: notice.id,
+        amount: notice.amount,
+        comment: notice.comment
+      })
+    }).catch(() => {});
+  };
+  if (snap === undefined) return _jsx("div", {
+    className: "parent-public-page",
+    children: _jsx("main", {
+      className: "parent-public-shell",
+      children: _jsx(EmptyState, {
+        title: "Загрузка…",
+        text: "Получаем данные кабинета."
+      })
+    })
+  });
+  if (!snap || !snap.student) return _jsx(ParentPortalPage, {
+    student: null,
+    students: [],
+    groups: [],
+    lessons: [],
+    txs: [],
+    appSettings: null,
+    onPaymentNotice: () => {}
+  });
+  return _jsx(ParentPortalPage, {
+    student: snap.student,
+    students: [snap.student],
+    groups: snap.groups || [],
+    lessons: snap.lessons || [],
+    txs: snap.txs || [],
+    appSettings: snap.settings || {},
+    onPaymentNotice: sendRemoteNotice
+  });
+}
+function WelcomeScreen({
+  onAddStudent,
+  onDemo,
+  onConnectSync,
+  onLogin,
+  onRegister
+}) {
+  const [showConnect, setShowConnect] = useState(false);
+  const [showKeyInput, setShowKeyInput] = useState(false);
+  const [connectInput, setConnectInput] = useState('');
+  const [connectError, setConnectError] = useState('');
+  return _jsx("div", {
+    className: "welcome-screen",
+    children: _jsxs("div", {
+      className: "welcome-card",
+      children: [_jsx("div", {
+        className: "welcome-logo",
+        children: "T"
+      }), _jsx("h1", {
+        className: "welcome-title",
+        children: "TutorApp"
+      }), _jsx("p", {
+        className: "welcome-tag",
+        children: "Расписание, ученики и финансы репетитора — в одном приложении."
+      }), _jsxs("ul", {
+        className: "welcome-features",
+        children: [_jsx("li", {
+          children: "Уроки и группы в удобном расписании"
+        }), _jsx("li", {
+          children: "Балансы, долги и абонементы считаются сами"
+        }), _jsx("li", {
+          children: "Кабинет для родителей — по ссылке"
+        })]
+      }), _jsxs("div", {
+        className: "welcome-actions",
+        children: [_jsx("button", {
+          className: "btn btn-black btn-full welcome-btn",
+          onClick: onAddStudent,
+          children: "Добавить первого ученика"
+        }), _jsx("button", {
+          className: "btn btn-white btn-full welcome-btn",
+          onClick: onDemo,
+          children: "Посмотреть с демо-данными"
+        })]
+      }), onLogin && !showConnect && _jsx("button", {
+        className: "welcome-sync-link",
+        onClick: () => setShowConnect(true),
+        children: "Уже пользуетесь TutorApp? Войти в аккаунт"
+      }), onLogin && showConnect && _jsxs("div", {
+        className: "welcome-sync-form",
+        children: [_jsx(SyncAuthForm, {
+          onLogin: onLogin,
+          onRegister: onRegister,
+          note: "Аккаунт хранит данные на сервере и открывает их на всех ваших устройствах."
+        }), onConnectSync && _jsx("button", {
+          type: "button",
+          className: "sync-key-tools-link",
+          onClick: () => setShowKeyInput(v => !v),
+          children: showKeyInput ? "Скрыть вход по коду" : "Вход по коду синхронизации"
+        }), onConnectSync && showKeyInput && _jsxs(_Fragment, {
+          children: [_jsx("input", {
+            className: "input",
+            value: connectInput,
+            onChange: e => {
+              setConnectInput(e.target.value);
+              setConnectError('');
+            },
+            placeholder: "Код синхронизации с другого устройства"
+          }), _jsx("button", {
+            className: "btn btn-black",
+            onClick: () => {
+              if (!onConnectSync(connectInput)) setConnectError('Код должен быть от 12 символов: латиница, цифры, - и _');
+            },
+            children: "Подключить"
+          }), connectError && _jsx("span", {
+            className: "welcome-sync-error",
+            children: connectError
+          })]
+        })]
+      }), _jsx("p", {
+        className: "welcome-hint",
+        children: "Демо-данные можно удалить в один клик — вы ничего не сломаете."
+      })]
+    })
   });
 }
 function App() {
   const [tab, setTab] = useState('today');
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+  const [syncKey, setSyncKey] = useState(getStoredSyncKey);
+  const [syncEmail, setSyncEmail] = useState(getStoredSyncEmail);
+  const [syncStatus, setSyncStatus] = useState(null);
+  const pendingNoticeAckRef = useRef([]);
+  const syncPushTimerRef = useRef(null);
+  const forceAdoptRef = useRef(false);
+  const syncReadyRef = useRef(false);
   const [students, setStudents] = useState([]);
   const [groups, setGroups] = useState([]);
   const [lessons, setLessons] = useState([]);
@@ -6507,6 +7937,163 @@ function App() {
     }
   }, [loaded, students, groups, lessons, txs, settings, customTemplates]);
 
+  // Онлайн-синхронизация: подтянуть состояние с сервера при загрузке / смене ключа
+  useEffect(() => {
+    if (!loaded || !syncKey || !SYNC_API_BASE) return;
+    syncReadyRef.current = false;
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await syncFetch(`state?key=${encodeURIComponent(syncKey)}`);
+        if (cancelled || !resp?.ok) return;
+        const remote = resp.state;
+        const noticeMap = resp.notices || {};
+        const shouldAdopt = remote?.data && (localBaseIsEmpty() || forceAdoptRef.current || String(remote.savedAt || '') > String(getSyncSeen()));
+        forceAdoptRef.current = false;
+        let mergedStudents;
+        if (shouldAdopt) {
+          const d = remote.data;
+          mergedStudents = mergeServerNotices(d.students || [], noticeMap);
+          setStudents(mergedStudents);
+          setGroups(d.groups || []);
+          setLessons(d.lessons || []);
+          setTxs(d.txs || []);
+          setSettings({
+            theme: 'light',
+            ...(d.settings || {})
+          });
+          if (d.customTemplates?.length) setCustomTemplates(d.customTemplates);
+          setSyncSeen(String(remote.savedAt || ''));
+        } else {
+          setStudents(p => {
+            mergedStudents = mergeServerNotices(p, noticeMap);
+            return mergedStudents;
+          });
+        }
+        // квитируем только заявки, чей токен реально нашёлся у ученика
+        setTimeout(() => {
+          const tokens = new Set((mergedStudents || []).map(s => getParentPortalSettings(s).token).filter(Boolean));
+          pendingNoticeAckRef.current = Object.entries(noticeMap).filter(([token]) => tokens.has(token)).flatMap(([, list]) => list.map(n => n.id));
+          syncReadyRef.current = true;
+        }, 0);
+        setSyncStatus({
+          at: new Date().toISOString(),
+          error: null
+        });
+      } catch {
+        if (!cancelled) setSyncStatus(p => ({
+          at: p?.at || null,
+          error: 'Нет связи с сервером — работаем локально'
+        }));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loaded, syncKey]);
+
+  // Онлайн-синхронизация: отложенная выгрузка изменений на сервер
+  useEffect(() => {
+    if (!loaded || !syncKey || !SYNC_API_BASE) return;
+    clearTimeout(syncPushTimerRef.current);
+    syncPushTimerRef.current = setTimeout(async () => {
+      if (!syncReadyRef.current) return; // не выгружаем, пока не принят ответ сервера
+      try {
+        const stateSavedAt = new Date().toISOString();
+        await syncFetch('state', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            key: syncKey,
+            state: {
+              version: STORAGE_VERSION,
+              savedAt: stateSavedAt,
+              data: {
+                students,
+                groups,
+                lessons,
+                txs,
+                settings,
+                customTemplates
+              }
+            },
+            snapshots: buildPortalSnapshots(students, groups, lessons, txs, settings),
+            ackNoticeIds: pendingNoticeAckRef.current
+          })
+        });
+        pendingNoticeAckRef.current = [];
+        setSyncSeen(stateSavedAt);
+        setSyncStatus({
+          at: new Date().toISOString(),
+          error: null
+        });
+      } catch {
+        setSyncStatus(p => ({
+          at: p?.at || null,
+          error: 'Синхронизация не удалась — данные сохранены локально'
+        }));
+      }
+    }, 1500);
+    return () => clearTimeout(syncPushTimerRef.current);
+  }, [loaded, syncKey, students, groups, lessons, txs, settings, customTemplates]);
+  const enableSync = () => {
+    const key = createSyncKey();
+    storeSyncKey(key);
+    setSyncKey(key);
+  };
+  const connectSync = raw => {
+    const key = String(raw || '').trim();
+    if (!/^[A-Za-z0-9_-]{12,80}$/.test(key)) return false;
+    if (!localBaseIsEmpty() && !window.confirm('На этом устройстве уже есть данные. Если на сервере под этим кодом есть база, она заменит локальную. Продолжить?')) return true;
+    forceAdoptRef.current = true;
+    storeSyncKey(key);
+    setSyncKey(key);
+    return true;
+  };
+  const disableSync = () => {
+    storeSyncKey('');
+    storeSyncEmail('');
+    setSyncSeen('');
+    setSyncKey('');
+    setSyncEmail('');
+    setSyncStatus(null);
+  };
+  // Аккаунт (почта+пароль) поверх ключа синхронизации: регистрация привязывает
+  // текущий ключ (данные сохраняются), вход подтягивает ключ с сервера.
+  const registerAccount = async (email, password) => {
+    const key = syncKey || createSyncKey();
+    await authRequest('register', {
+      email,
+      password,
+      key
+    });
+    storeSyncEmail(email);
+    setSyncEmail(email);
+    if (!syncKey) {
+      storeSyncKey(key);
+      setSyncKey(key);
+    }
+  };
+  const loginAccount = async (email, password) => {
+    const json = await authRequest('login', {
+      email,
+      password
+    });
+    if (json.key !== syncKey && !localBaseIsEmpty() && !window.confirm('На этом устройстве уже есть данные. База аккаунта с сервера заменит локальную. Продолжить?')) return;
+    forceAdoptRef.current = true;
+    storeSyncEmail(email);
+    setSyncEmail(email);
+    storeSyncKey(json.key);
+    setSyncKey(json.key);
+  };
+  const changeAccountPassword = (email, password, newPassword) => authRequest('password', {
+    email,
+    password,
+    newPassword
+  });
+
   // Auto-backup every 5 minutes with rotation (keep last 3)
   useEffect(() => {
     if (!loaded) return;
@@ -6550,7 +8137,7 @@ function App() {
   useEffect(() => {
     const theme = settings.theme || 'light';
     document.body.dataset.theme = theme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#12110f' : '#fffdf2');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#10131a' : '#fffdf2');
   }, [settings.theme]);
 
   // ── handlers ──
@@ -7505,7 +9092,7 @@ function App() {
             children: [_jsx("div", {
               style: {
                 fontFamily: 'Unbounded, Arial Black, Segoe UI, sans-serif',
-                fontSize: 9,
+                fontSize: 11,
                 color: 'var(--red)',
                 textTransform: 'uppercase'
               },
@@ -7557,7 +9144,30 @@ function App() {
               children: dueToday.length || debtors ? "\u0427\u0442\u043E \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u0441\u0435\u0433\u043E\u0434\u043D\u044F" : "\u0412\u0441\u0451 \u0441\u0434\u0435\u043B\u0430\u043D\u043E \u2014 \u0434\u0435\u043D\u044C \u043F\u043E\u0434 \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u0435\u043C"
             })]
           })]
-        }), _jsxs("div", {
+        }), SYNC_API_BASE && !syncKey && !settings.demoMode && (students.length > 0 || lessons.length > 0) && !settings.accountHintDismissed && _jsxs("div", {
+        className: "card account-hint-card",
+        children: [_jsxs("div", {
+          children: [_jsx("strong", {
+            children: "Данные только на этом устройстве"
+          }), _jsx("span", {
+            children: "Подключите аккаунт — база сохранится при потере телефона, а родительские ссылки заработают везде."
+          })]
+        }), _jsx("button", {
+          className: "btn btn-sm btn-black",
+          onClick: () => setModal({
+            type: 'data'
+          }),
+          children: "Подключить"
+        }), _jsx("button", {
+          className: "btn btn-sm btn-white",
+          "aria-label": "Скрыть подсказку об аккаунте",
+          onClick: () => setSettings({
+            ...settings,
+            accountHintDismissed: true
+          }),
+          children: "×"
+        })]
+      }), (dueToday.length > 0 || debtors > 0) && _jsxs("div", {
           className: "today-work-grid",
           children: [dueToday.length > 0 && _jsxs("button", {
             type: "button",
@@ -7585,17 +9195,6 @@ function App() {
               children: money(debt)
             }), _jsx("small", {
               children: `${debtors} \u0447\u0435\u043B. \u00B7 \u043E\u0442\u043A\u0440\u044B\u0442\u044C \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u044C`
-            })]
-          }), _jsxs("button", {
-            type: "button",
-            className: "today-work-card neutral",
-            onClick: () => setTab('schedule'),
-            children: [_jsx("span", {
-              children: "\u0423\u0440\u043E\u043A\u0438 \u0441\u0435\u0433\u043E\u0434\u043D\u044F"
-            }), _jsx("strong", {
-              children: todayLessons.length ? `${todayLessons.length} \u0443\u0440.` : "\u043F\u0443\u0441\u0442\u043E"
-            }), _jsx("small", {
-              children: plannedToday[0] ? `${plannedToday[0].time} \u00B7 ${getLessonName(plannedToday[0])}` : "\u043C\u043E\u0436\u043D\u043E \u0434\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0443\u0440\u043E\u043A"
             })]
           })]
         })]
@@ -7693,7 +9292,7 @@ function App() {
             children: "\u0417\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u043E"
           }), _jsx("div", {
             className: "stat-value",
-            children: chargedToday > 0 ? money(chargedToday) : '—'
+            children: money(chargedToday)
           })]
         })]
       }), actionItems.length > 0 && _jsxs("div", {
@@ -8120,6 +9719,7 @@ function App() {
             type: "button",
             className: "mobile-lab-action move",
             title: "Перенести",
+            "aria-label": "Перенести урок",
             onPointerDown: e => {
               e.stopPropagation();
             },
@@ -8134,6 +9734,7 @@ function App() {
             type: "button",
             className: `mobile-lab-action ${l.status === 'planned' ? 'primary' : ''}`,
             title: l.status === 'planned' ? "Провести" : "Открыть статус",
+            "aria-label": l.status === 'planned' ? "Провести урок" : "Открыть статус урока",
             onClick: e => {
               e.stopPropagation();
               setModal({
@@ -8180,7 +9781,8 @@ function App() {
             className: `mobile-lab-grid ${mobileFocusClass}`,
             children: [_jsx("div", {
               className: "mobile-lab-grid-corner",
-              children: "Время"
+              "aria-hidden": "true",
+              children: ""
             }), mobileThreeDays.map(day => _jsxs("button", {
               type: "button",
               className: `mobile-lab-day-head ${day.date === selDate ? 'selected' : ''} ${day.isToday ? 'today' : ''}`,
@@ -9463,6 +11065,8 @@ function App() {
         className: "page-title",
         children: [view === 'students' ? 'Ученики' : 'Группы', _jsx("button", {
           className: "btn btn-sm btn-black",
+          "aria-label": view === 'students' ? 'Добавить ученика' : 'Добавить группу',
+          title: view === 'students' ? 'Добавить ученика' : 'Добавить группу',
           onClick: () => setModal({
             type: view === 'students' ? 'student' : 'group',
             payload: null
@@ -9994,7 +11598,8 @@ function App() {
           earned: 0,
           lost: 0,
           scheduled: 0,
-          attended: 0
+          attended: 0,
+          minutes: 0
         };
       });
       periodCompleted.forEach(lesson => {
@@ -10009,6 +11614,7 @@ function App() {
           if (present) {
             st[s.id].attended++;
             st[s.id].earned += rate;
+            st[s.id].minutes += Number(lesson.duration || 60);
           } else {
             st[s.id].lost += rate;
           }
@@ -10068,6 +11674,80 @@ function App() {
     });
     const weekForecastRows = Object.values(weekForecastMap).sort((a, b) => a.key.localeCompare(b.key)).slice(-8);
     const maxWeekForecast = Math.max(...weekForecastRows.map(row => row.fact + row.plan), 1);
+
+    // ── Аналитика 2.0: сравнение с прошлым месяцем, темп к цели, цена часа ──
+    const genMonths = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const datMonths = ['январю', 'февралю', 'марту', 'апрелю', 'маю', 'июню', 'июлю', 'августу', 'сентябрю', 'октябрю', 'ноябрю', 'декабрю'];
+    const prevCompare = (() => {
+      if (analyticsPeriod !== 'current_month' && analyticsPeriod !== 'last_month') return null;
+      const now = new Date();
+      const y = now.getFullYear(),
+        m = now.getMonth();
+      const back = analyticsPeriod === 'current_month' ? 1 : 2;
+      const start = new Date(y, m - back, 1);
+      const fullEnd = new Date(y, m - back + 1, 0, 23, 59, 59);
+      let end = fullEnd;
+      let partial = false;
+      if (analyticsPeriod === 'current_month') {
+        // честное сравнение: месяц-к-месяцу по одинаковому числу дней
+        const day = Math.min(now.getDate(), fullEnd.getDate());
+        end = new Date(y, m - 1, day, 23, 59, 59);
+        partial = end < fullEnd;
+      }
+      return {
+        start,
+        end,
+        partial,
+        monthGen: genMonths[start.getMonth()],
+        monthDat: datMonths[start.getMonth()]
+      };
+    })();
+    let prevEarned = 0,
+      prevLessonsCount = 0,
+      prevRateSamples = 0,
+      prevRateSum = 0;
+    if (prevCompare) {
+      lessons.forEach(lesson => {
+        if (lesson.status !== 'completed' && lesson.status !== 'no_show') return;
+        const d = new Date(lesson.date + 'T00:00:00');
+        if (d < prevCompare.start || d > prevCompare.end) return;
+        prevLessonsCount += 1;
+        getLessonStudents(lesson, students, groups, {
+          includeArchived: true
+        }).forEach(s => {
+          const rate = getLessonRate(lesson, s, groups);
+          prevRateSamples += 1;
+          prevRateSum += rate;
+          const present = lesson.status !== 'no_show' && lesson.attendance?.[s.id] !== false;
+          if (present) prevEarned += rate;
+        });
+      });
+    }
+    const prevAvgCheck = prevRateSamples ? Math.round(prevRateSum / prevRateSamples) : 0;
+    const earnedDeltaPct = prevCompare && prevEarned > 0 ? Math.round((periodEarned - prevEarned) / prevEarned * 100) : null;
+    const goalPace = (() => {
+      if (analyticsPeriod !== 'current_month' || periodGoal <= 0) return null;
+      const now = new Date();
+      const daysIn = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const expected = Math.round(periodGoal * now.getDate() / daysIn);
+      return {
+        diff: periodEarned - expected,
+        expected
+      };
+    })();
+    let taughtMinutes = 0;
+    periodCompleted.forEach(lesson => {
+      const anyPresent = getLessonStudents(lesson, students, groups, {
+        includeArchived: true
+      }).some(s => lesson.status !== 'no_show' && lesson.attendance?.[s.id] !== false);
+      if (anyPresent) taughtMinutes += Number(lesson.duration || 60);
+    });
+    const effectiveHourly = taughtMinutes > 0 ? Math.round(periodEarned / (taughtMinutes / 60)) : 0;
+    const hourlyRows = revenueRows.map(r => ({
+      ...r,
+      hourly: r.minutes > 0 ? Math.round(r.earned / (r.minutes / 60)) : 0
+    })).filter(r => r.hourly > 0);
+    const cheapRows = hourlyRows.filter(r => r.hourly < effectiveHourly * 0.85).sort((a, b) => a.hourly - b.hourly).slice(0, 3);
     const Stat = ({
       label,
       value,
@@ -10233,6 +11913,7 @@ function App() {
               fontSize: 14
             },
             title: "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435",
+            "aria-label": "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435 \u043E \u0434\u043E\u043B\u0433\u0435",
             onClick: () => setModal({
               type: 'message',
               payload: {
@@ -10641,6 +12322,9 @@ function App() {
           }), _jsx("div", {
             className: "fin-hero-value",
             children: money(periodEarned)
+          }), earnedDeltaPct !== null && _jsxs("div", {
+            className: `fin-delta-chip ${earnedDeltaPct > 3 ? 'up' : earnedDeltaPct < -3 ? 'down' : 'flat'}`,
+            children: [earnedDeltaPct > 0 ? '▲ +' : earnedDeltaPct < 0 ? '▼ −' : '≈ ', Math.abs(earnedDeltaPct), '% ', prevCompare.partial ? `к той же дате ${prevCompare.monthGen}` : `к ${prevCompare.monthDat}`]
           }), _jsxs("div", {
             className: "fin-hero-subrow",
             children: [_jsxs("span", {
@@ -10694,7 +12378,7 @@ function App() {
               })
             }), _jsx("div", {
               className: "finance-goal-note",
-              children: goalGap > 0 ? `Прогноз ≈ ${money(realisticForecast)} — это ${goalPct}% цели. Не хватает ${money(goalGap)}, примерно ${pluralLessons(lessonsToGoal)}.` : 'Прогноз уже выше цели. Можно поднять планку — кнопка «Изменить».'
+              children: [goalGap > 0 ? `Прогноз ≈ ${money(realisticForecast)} — это ${goalPct}% цели. Не хватает ${money(goalGap)}, примерно ${pluralLessons(lessonsToGoal)}.` : 'Прогноз уже выше цели. Можно поднять планку — кнопка «Изменить».', goalPace ? goalPace.diff >= 0 ? ` По темпу месяца вы впереди на ${money(goalPace.diff)}.` : ` Чтобы идти в темпе цели, к сегодняшнему дню нужно ${money(goalPace.expected)} — отставание ${money(-goalPace.diff)}.` : '']
             })]
           }) : _jsxs("form", {
             className: "fin-goal-form",
@@ -10765,6 +12449,36 @@ function App() {
             }), _jsxs("span", {
               children: [_jsx("b", {}), "запланировано"]
             })]
+          })]
+        }), effectiveHourly > 0 && _jsxs("div", {
+          className: "finance-panel fin-hour-panel",
+          children: [_jsx("div", {
+            className: "finance-section-title compact",
+            children: "ЦЕНА ВАШЕГО ЧАСА"
+          }), _jsxs("div", {
+            className: "fin-hour-value",
+            children: [effectiveHourly.toLocaleString(), " ₽/час"]
+          }), _jsxs("div", {
+            className: "metric-sub",
+            children: ["за ", Math.round(taughtMinutes / 6) / 10, " ч занятий в выбранном периоде — это ваша реальная ставка, а не цена «за урок»"]
+          }), cheapRows.length > 0 && _jsx("div", {
+            className: "fin-hour-list",
+            children: cheapRows.map(r => _jsxs("div", {
+              className: "fin-hour-row",
+              children: [_jsx("span", {
+                children: r.name
+              }), _jsxs("b", {
+                children: [r.hourly.toLocaleString(), " ₽/ч"]
+              }), _jsxs("em", {
+                children: ["−", Math.round((1 - r.hourly / effectiveHourly) * 100), "% к средней"]
+              })]
+            }, r.id))
+          }), cheapRows.length > 0 && _jsx("div", {
+            className: "metric-sub",
+            style: {
+              marginTop: 8
+            },
+            children: "Эти занятия дешевле вашего среднего часа — обычно из-за длинного урока по цене короткого. Повод пересмотреть ставку при следующем повышении."
           })]
         }), _jsxs("div", {
           className: "finance-split-grid",
@@ -10864,11 +12578,11 @@ function App() {
           children: [_jsx(Stat, {
             label: "Проведено уроков",
             value: String(periodCompleted.length),
-            sub: "за выбранный период"
+            sub: prevCompare && prevLessonsCount > 0 ? `${prevCompare.partial ? 'к этой дате в прошлом мес.' : 'в позапрошлом мес.'} ${prevLessonsCount}` : "за выбранный период"
           }), _jsx(Stat, {
             label: "Средний чек",
             value: `${averageSeatRate.toLocaleString()} ₽`,
-            sub: "за занятие одного ученика"
+            sub: prevCompare && prevAvgCheck > 0 && prevAvgCheck !== averageSeatRate ? `месяцем ранее ${prevAvgCheck.toLocaleString()} ₽` : "за занятие одного ученика"
           }), _jsx(Stat, {
             label: "Посещаемость",
             value: attendancePct === null ? '—' : `${attendancePct}%`,
@@ -10920,7 +12634,7 @@ function App() {
                 setFinMenuOpen(false);
                 setModal({ type: 'data' });
               },
-              children: "\u0414\u0430\u043D\u043D\u044B\u0435 \u0438 \u0431\u044D\u043A\u0430\u043F"
+              children: "\u0410\u043A\u043A\u0430\u0443\u043D\u0442 \u0438 \u0434\u0430\u043D\u043D\u044B\u0435"
             }), _jsxs("button", {
               onClick: () => {
                 setFinMenuOpen(false);
@@ -10954,6 +12668,35 @@ function App() {
       }), finTab === 'history' ? _jsx(HistoryTab, {}) : finTab === 'analytics' ? _jsx(AnalyticsTab, {}) : _jsx(ControlTab, {})]
     });
   };
+  const startDemoMode = () => {
+    const demo = buildDemoData();
+    setStudents(demo.students);
+    setGroups(demo.groups);
+    setLessons(demo.lessons);
+    setTxs(demo.txs);
+    setSettings(p => ({
+      ...p,
+      demoMode: true
+    }));
+    setTab('today');
+  };
+  const clearDemoMode = () => {
+    if (!window.confirm(syncKey ? 'Удалить демо-данные и начать с чистого листа? База очистится и на сервере — на всех устройствах аккаунта.' : 'Удалить демо-данные и начать с чистого листа?')) return;
+    setStudents([]);
+    setGroups([]);
+    setLessons([]);
+    setTxs([]);
+    setSettings(p => {
+      const next = {
+        ...p
+      };
+      delete next.demoMode;
+      return next;
+    });
+    setWelcomeDismissed(false);
+    setModal(null);
+    setTab('today');
+  };
   const dataStats = {
     students: students.length,
     groups: groups.length,
@@ -10978,13 +12721,43 @@ function App() {
       const portal = getParentPortalSettings(s);
       return portal.enabled && portal.token === parentToken;
     });
+    if (!parentStudent && SYNC_API_BASE) return _jsx(RemoteParentPortal, {
+      token: parentToken
+    });
     return _jsx(ParentPortalPage, {
       student: parentStudent || null,
       students: students,
       groups: groups,
       lessons: lessons,
       txs: txs,
+      appSettings: settings,
       onPaymentNotice: saveParentPaymentNotice
+    });
+  }
+  if (!welcomeDismissed && !students.length && !groups.length && !lessons.length && !txs.length) {
+    return _jsx(WelcomeScreen, {
+      onAddStudent: () => {
+        setWelcomeDismissed(true);
+        setTab('students');
+        setModal({
+          type: 'student',
+          payload: null
+        });
+      },
+      onDemo: startDemoMode,
+      onConnectSync: SYNC_API_BASE ? key => {
+        const ok = connectSync(key);
+        if (ok) setWelcomeDismissed(true);
+        return ok;
+      } : null,
+      onLogin: SYNC_API_BASE ? async (email, password) => {
+        await loginAccount(email, password);
+        setWelcomeDismissed(true);
+      } : null,
+      onRegister: SYNC_API_BASE ? async (email, password) => {
+        await registerAccount(email, password);
+        setWelcomeDismissed(true);
+      } : null
     });
   }
   return _jsxs("div", {
@@ -10993,7 +12766,17 @@ function App() {
       onUndo: handleUndo
     }), _jsxs("div", {
       className: "main",
-      children: [tab === 'today' && _jsx(PageToday, {}), tab === 'schedule' && _jsx(PageSchedule, {}), tab === 'students' && _jsx(PageStudents, {}), tab === 'finance' && _jsx(PageFinance, {})]
+      children: [settings.demoMode && _jsxs("div", {
+        className: "demo-banner",
+        children: [_jsx("span", {
+          children: "Демо-данные — всё можно менять"
+        }), _jsx("button", {
+          className: "demo-banner-btn",
+          onClick: clearDemoMode,
+          "aria-label": "Удалить демо-данные и начать с чистого листа",
+          children: "Очистить"
+        })]
+      }), tab === 'today' && _jsx(PageToday, {}), tab === 'schedule' && _jsx(PageSchedule, {}), tab === 'students' && _jsx(PageStudents, {}), tab === 'finance' && _jsx(PageFinance, {})]
     }), tab === 'today' && _jsxs(_Fragment, {
       children: [fabOpen && _jsx("div", {
         className: "fab-overlay",
@@ -11437,7 +13220,12 @@ function App() {
       }),
       onSaveParentPortal: saveParentPortal,
       onAcceptPaymentNotice: acceptParentPaymentNotice,
-      onDismissPaymentNotice: dismissParentPaymentNotice
+      onDismissPaymentNotice: dismissParentPaymentNotice,
+      appSettings: settings,
+      onUpdateSettings: patch => setSettings(p => ({
+        ...p,
+        ...patch
+      }))
     }), modal?.type === 'studentReport' && _jsx(StudentReportModal, {
       student: modal.payload,
       students: students,
@@ -11520,7 +13308,16 @@ function App() {
         type: 'studentTextImport'
       }),
       onLocalBackup: () => createLocalBackup(true),
-      onClose: () => setModal(null)
+      onClose: () => setModal(null),
+      syncKey: syncKey,
+      syncEmail: syncEmail,
+      syncStatus: syncStatus,
+      onEnableSync: enableSync,
+      onConnectSync: connectSync,
+      onDisableSync: disableSync,
+      onRegister: registerAccount,
+      onLogin: loginAccount,
+      onChangePassword: changeAccountPassword
     }), modal?.type === 'studentTextImport' && _jsx(StudentTextImportModal, {
       students: students,
       groups: groups,
@@ -12042,14 +13839,14 @@ function LessonCard({
         children: lesson.time
       }), lesson.duration && lesson.duration !== 60 && _jsx("span", {
         style: {
-          fontSize: 8,
+          fontSize: 10,
           color: 'var(--text-muted)',
           marginTop: 1
         },
         children: lesson.duration < 60 ? `${lesson.duration}м` : lesson.duration === 90 ? '1.5ч' : lesson.duration === 120 ? '2ч' : `${lesson.duration}м`
       }), done && _jsx("span", {
         style: {
-          fontSize: 8,
+          fontSize: 10,
           color: 'var(--text-sec)',
           marginTop: 2,
           textAlign: 'center'
